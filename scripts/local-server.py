@@ -112,7 +112,23 @@ def autopull():
                 sys.stderr.write("[git] pull skipped: " + (r.stderr.strip() or r.stdout.strip())[:200] + "\n")
         except Exception as e:
             sys.stderr.write("[git] pull failed: %s\n" % e)
+        settle_bets()
         time.sleep(300)
+
+
+def settle_bets():
+    """Settle logged bets from final results (private: bets.json stays on this Mac, never in git).
+    Keeps the previous copy in ~/Desktop/StatSniper/backups if anything changed."""
+    f = ROOT / "data" / "bets.json"
+    try:
+        before = f.read_bytes() if f.exists() else b""
+        subprocess.run(["node", "scripts/grade-bets.js"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+        if f.exists() and f.read_bytes() != before and before:
+            bk = Path.home() / "Desktop" / "StatSniper" / "backups"
+            if bk.is_dir():
+                (bk / "bets-before-last-auto-settle.json").write_bytes(before)
+    except Exception as e:
+        sys.stderr.write("[bets] settle failed: %s\n" % e)
 
 
 if __name__ == "__main__":
