@@ -26,12 +26,12 @@ const pair = (s) => String(s || '0-0').split('-').map(Number);
 
 (async () => {
   const sb = await getJson(`${SITE}scoreboard?dates=${US}`);
-  const boxes = read('boxes.json'), pact = [];
+  const boxes = read('boxes.json'), pact = [], fetched = new Set(); // pact keeps rows of other games; only re-fetched games are replaced
   let added = 0, bad = 0;
   for (const ev of sb.events || []) {
     const c = ev.competitions[0]; if (!c.status.type.completed) continue;
     const H = c.competitors.find((x) => x.homeAway === 'home'), A = c.competitors.find((x) => x.homeAway === 'away');
-    const hc = code(H.team.abbreviation), ac = code(A.team.abbreviation), id = `${ac}-${hc}`, date = sydKey(ev.date);
+    const hc = code(H.team.abbreviation), ac = code(A.team.abbreviation), id = `${ac}-${hc}`, date = sydKey(ev.date); fetched.add(id);
     const s = await getJson(`${SITE}summary?event=${ev.id}`);
     const teamTot = (abbr) => {
       const t = (s.boxscore.teams || []).find((x) => x.team.abbreviation === abbr); const st = Object.fromEntries((t ? t.statistics : []).map((x) => [x.name, x.displayValue]));
@@ -60,6 +60,6 @@ const pair = (s) => String(s || '0-0').split('-').map(Number);
     const i = boxes.findIndex((b) => b.id === id && b.date === date); if (i >= 0) boxes[i] = row; else boxes.push(row);
     added++;
   }
-  write('boxes.json', boxes); write('pact.json', pact);
+  write('boxes.json', boxes); write('pact.json', [...read('pact.json').filter((r) => !fetched.has(r.game)), ...pact]);
   console.log(`boxes: ${added} final games for US ${US} (${boxes.length} rows on file); pact: ${pact.length} player lines; ${bad} lines where FG*2+3PM+FTM != points`);
 })().catch((e) => { console.error(e.message || e); process.exit(1); });

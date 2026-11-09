@@ -7,8 +7,15 @@ name: Refresh data and deploy
 
 on:
   schedule:
-    - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney (AEDT)
+    - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney: full daily refresh
+    - cron: '7,37 * * * *'  # every 30 minutes: grade finished games (results)
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'What to run by hand'
+        type: choice
+        options: [full, results]
+        default: full
   push:
     branches: [main]
 
@@ -23,8 +30,8 @@ concurrency:
 
 jobs:
   refresh:
-    # Data refresh runs on the schedule and by hand, not on ordinary code pushes.
-    if: github.event_name != 'push'
+    # Full data refresh: the daily schedule, or by hand with job = full. Not on code pushes.
+    if: github.event.schedule == '17 19 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job != 'results')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -62,9 +69,45 @@ jobs:
           git add public/data public/logos*.js
           if git diff --cached --quiet; then echo "No data changes"; else git commit -m "Daily data refresh $(date -u +%F)" && git push; fi
 
+  results:
+    # Every 30 minutes (and by hand with job = results): grade finished games against ESPN,
+    # save their game pages and NBA box scores. Needs no AI and no private data.
+    if: github.event.schedule == '7,37 * * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'results')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Grade results and fetch box scores
+        run: |
+          retry() { for i in 1 2 3; do "$@" && return 0; echo "attempt $i of $* failed"; sleep 20; done; return 1; }
+          retry node scripts/grade.js
+          node scripts/archive.js
+          # NBA slate dates: a Sydney day D is the US evening of D-1. Do the older day first.
+          retry node scripts/fetch-boxes.js "$(TZ=Australia/Sydney date -d '2 days ago' +%Y%m%d)"
+          retry node scripts/fetch-boxes.js "$(TZ=Australia/Sydney date -d yesterday +%Y%m%d)"
+      - name: Commit changed data
+        id: commit
+        run: |
+          git config user.name "StatSniper data bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "No result changes"; echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Results update $(date -u +%F\ %H:%M) UTC"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
-    needs: refresh
-    if: always() && (needs.refresh.result == 'success' || needs.refresh.result == 'skipped')
+    needs: [refresh, results]
+    # Publish on a code push, after a successful full refresh, or when a results run changed data.
+    if: always() && !cancelled() && (github.event_name == 'push' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
