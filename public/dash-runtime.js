@@ -13,6 +13,8 @@
   let booted = false;
   let WEB = null;                 // web build: {id: {v, lazy}} from the page's ss-web tag
   const loadedV = {};              // web build: the data version each dataset was loaded at
+  let LIVE = null;                // web build: {url} of the public live-scores file (livegames / livebox come from it)
+  let liveP = null, liveAt = 0, liveSig = '', liveDirty = false;
   const inflight = new Map();     // id -> promise, so each file is fetched once
 
   const toRows = (raw) => {
@@ -83,7 +85,7 @@
     onData(fn) { listeners.push(fn); if (booted) fn(); },
     calc(id, spec) { calcs.set(id, spec); },
     loader() { /* only used by live connector queries; local data is already rows */ },
-    refresh(id) { return loadDataset(id).then(() => runAll()); },
+    refresh(id) { if (LIVE && (id === 'livegames' || id === 'livebox')) return loadLive().then(redrawIfLive); return loadDataset(id).then(() => runAll()); },
     // Reload several datasets and redraw once, only if any of them changed. In the web build the newest
     // data versions come from web.json (tiny, never cached); datasets not opened yet are skipped.
     async refreshMany(ids) {
@@ -113,7 +115,29 @@
   const embedded = (id) => document.getElementById(id);
   const readJson = (id) => JSON.parse(embedded(id).textContent);
 
+  // Hosted site: live scores and box scores come from one small public file (written every minute by Google Cloud).
+  // The page's two live datasets are filled from it; a redraw is only needed when it really changed.
+  function loadLive() {
+    if (liveP && Date.now() - liveAt < 4000) return liveP;
+    liveAt = Date.now();
+    liveP = (async () => {
+      try {
+        const r = await fetch(`${LIVE.url}?t=${Math.floor(Date.now() / 15000)}`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json(), games = j.games || [], box = j.box || [];
+        const sig = JSON.stringify([games, box]);
+        if (sig === liveSig && store.has('livegames')) return;
+        liveSig = sig; liveDirty = true;
+        store.set('livegames', { status: 'ok', data: games, columns: columnsOf(games), meta: [] });
+        store.set('livebox', { status: 'ok', data: box, columns: columnsOf(box), meta: [] });
+      } catch (e) { /* no live feed right now: the page just shows no live scores */ }
+    })();
+    return liveP;
+  }
+  const redrawIfLive = () => { if (liveDirty) { liveDirty = false; runAll(); } };
+
   async function loadDataset(id) {
+    if (LIVE && (id === 'livegames' || id === 'livebox')) return loadLive();
     try {
       let raw;
       if (embedded('ss-manifest')) {
@@ -184,11 +208,13 @@
   // load before the first draw, large ones on demand. See scripts/build-web.js.
   if (embedded('ss-web')) {
     WEB = readJson('ss-web');
+    if (embedded('ss-live')) { try { LIVE = readJson('ss-live'); } catch (e) { LIVE = null; } }
     window.DASH_MANIFEST = WEB;
     const eager = Object.keys(WEB).filter((id) => !WEB[id].lazy);
     const parsed = new Promise((ok) => (document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', ok) : ok()));
     Promise.all([parsed, ...eager.map(lazyLoad)]).then(() => {
       booted = true; runAll(); watch();
+      if (LIVE) loadLive().then(redrawIfLive);
       // Warm the search names once the first screen is up.
       const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1200));
       idle(() => { if (WEB.pidx) lazyLoad('pidx'); });

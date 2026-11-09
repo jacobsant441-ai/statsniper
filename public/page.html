@@ -2114,7 +2114,8 @@ dash.draw('livetick', {
       if (document.hidden) return;
       // every 3 minutes: pick up newly graded games and box scores (hosted site: only re-downloads what changed)
       if (++n % 6 === 0 && dash.refreshMany) dash.refreshMany(['history', 'final', 'nflresults', 'ufcfights', 'boxes', 'pact', 'archive', 'results']);
-      if (!liveWanted()) return; dash.refresh('livegames'); dash.refresh('livebox');
+      if (!liveWanted()) { if (n % 2 === 0) { dash.refresh('livegames'); dash.refresh('livebox'); } return; } // idle: look once a minute for a game starting
+      dash.refresh('livegames'); dash.refresh('livebox');
     } catch (e) {}
   }, 30000); },
   update: () => {},

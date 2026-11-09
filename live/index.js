@@ -127,12 +127,34 @@ async function write({ games, box }) {
   return `${games.length} games, ${box.length} player lines`;
 }
 
+// Public live feed: the same data, as one small gzip JSON file in a public bucket, so the hosted website
+// (which cannot query BigQuery) can show live scores. Written while games are on or just finished, plus once
+// (empty) when everything ends so no stale "live" game lingers. Optional: only when LIVE_BUCKET is set.
+const LIVE_BUCKET = process.env.LIVE_BUCKET || '';
+let lastWasEmpty = false;
+function feedBody({ games, box }) {
+  const now = new Date().toISOString();
+  return JSON.stringify({ updated: now, games: games.map((g) => ({ ...g, updated_at: now })), box: box.map((b) => ({ ...b, updated_at: now })) });
+}
+async function publish(data) {
+  if (!LIVE_BUCKET) return '';
+  const empty = !data.games.length;
+  if (empty && lastWasEmpty) return 'feed unchanged';
+  const zlib = require('zlib');
+  const { Storage } = require('@google-cloud/storage');
+  await new Storage({ projectId: PROJECT }).bucket(LIVE_BUCKET).file('live.json').save(zlib.gzipSync(feedBody(data)), {
+    resumable: false, contentType: 'application/json', metadata: { contentEncoding: 'gzip', cacheControl: 'public, max-age=15' },
+  });
+  lastWasEmpty = empty;
+  return empty ? 'feed emptied' : 'feed updated';
+}
+
 // Cloud Functions (gen2) HTTP entry point, called by Cloud Scheduler every minute.
 exports.poll = async (req, res) => {
-  try { const data = await collect(); const msg = await write(data); console.log(msg); res.status(200).send(msg); } catch (e) { console.error(e); res.status(500).send(String(e.message || e)); }
+  try { const data = await collect(); let msg = await write(data); try { msg += ' | ' + (await publish(data)); } catch (e) { console.error('feed failed', e.message); msg += ' | feed failed'; } console.log(msg); res.status(200).send(msg); } catch (e) { console.error(e); res.status(500).send(String(e.message || e)); }
 };
-exports.SQL = SQL; exports.collect = collect;
+exports.SQL = SQL; exports.collect = collect; exports.feedBody = feedBody;
 
 if (require.main === module && process.env.DRY) {
-  collect().then((d) => { console.log(JSON.stringify({ games: d.games.length, box: d.box.length, sample: d.games.slice(0, 2), boxSample: d.box.slice(0, 2) }, null, 1)); });
+  collect().then((d) => { const raw = feedBody(d); console.log(JSON.stringify({ games: d.games.length, box: d.box.length, feedKB: Math.round(raw.length / 1024), feedGzipKB: Math.round(require('zlib').gzipSync(raw).length / 1024), sample: d.games.slice(0, 1) }, null, 1)); });
 }

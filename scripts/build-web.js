@@ -19,6 +19,8 @@ const ROOT = path.join(__dirname, '..');
 const PUB = path.join(ROOT, 'public');
 const OUT = path.join(ROOT, 'dist', 'web');
 const LAZY_KB = 300;
+// Public live-scores file (Google Cloud function writes it every minute). Override with LIVE_URL for tests.
+const LIVE_URL = process.env.LIVE_URL || 'https://storage.googleapis.com/statsniper-live-ab030f51/live.json';
 
 const read = (f) => fs.readFileSync(path.join(PUB, f), 'utf8');
 const hash = (buf) => crypto.createHash('sha1').update(buf).digest('hex').slice(0, 10);
@@ -98,6 +100,7 @@ ${style}
 <link rel="stylesheet" href="app.css?v=${cssV}">
 <style>html,body{background:#0a0d12;color-scheme:dark}#dash-root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <script type="application/json" id="ss-web">${safeJson(JSON.stringify(web))}</script>
+<script type="application/json" id="ss-live">${safeJson(JSON.stringify({ url: LIVE_URL }))}</script>
 <script src="dash-runtime.js?v=${runtimeV}"></script>
 </head>
 <body>
