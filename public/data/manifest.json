@@ -1,0 +1,410 @@
+{
+ "boxes": {
+  "title": "Box scores",
+  "description": "Team and player box scores for finished NBA games (shots made, missed, attempted, turnovers, rebounds, paint, fast break). Sun 1 Nov: only Timberwolves at Spurs had a readable final box score this run.",
+  "updated": {
+   "at": "2026-11-01T09:10:00Z",
+   "by": "Claude"
+  }
+ },
+ "final": {
+  "title": "Final scores",
+  "description": "Final score for each NBA game on the Saturday 31 October and Sunday 1 November AEDT slates. All 17 games are final. Ticks and crosses on the game pages are graded from the final scores only.",
+  "updated": {
+   "at": "2026-11-01T09:10:00Z",
+   "by": "Claude"
+  }
+ },
+ "fixtures": {
+  "title": "Football fixtures",
+  "description": "Upcoming Premier League and La Liga fixtures with win chances, goals and both-teams-to-score picks, records, head-to-head and lineups.",
+  "updated": {
+   "at": "2026-10-29T10:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "games": {
+  "title": "Games and total lines",
+  "description": "One row per game, each with its own Sydney (AEDT) date. Morning update Mon 2 Nov (about 06:50 AEDT): lines for the 4 Mon 2 Nov games refreshed from the ESPN betting article of 1 Nov (Celtics at Magic BOS -6.5 / 221.5, Nets at Pacers IND -3.5 / 231.5, Clippers at Warriors GSW -2.5 / 219.5, Raptors at Lakers LAL -4.5 / 227.5). Rotowire showed softer Lakers and Celtics lines, so those two are not settled. Over/under fields count both teams' 2026-27 games through 30 Oct US, with a mutual game counted once, and were not recomputed for the new totals. Earlier days' rows are kept.",
+  "updated": {
+   "at": "2026-11-01T19:45:00Z",
+   "by": "Claude"
+  }
+ },
+ "history": {
+  "title": "Pick history",
+  "description": "Past days' picks and results for every sport, one row per game.",
+  "updated": {
+   "at": "2026-11-01T09:10:00Z",
+   "by": "Claude"
+  }
+ },
+ "ladder": {
+  "title": "Totals ladder",
+  "description": "Over and under hit rates of both teams' games at lines stepping 5 points either side of the posted total.",
+  "updated": {
+   "at": "2026-11-01T09:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "lineups": {
+  "title": "Starting lineups",
+  "description": "Starting five per team for each game, marked Projected or Confirmed. Morning update Mon 2 Nov (about 06:50 AEDT) for the 4 games on the Mon 2 Nov slate: all 8 teams are Projected, because Rotowire labels every five Expected and no source states a starting five. Changes: Stephen Curry and Draymond Green are out for the Warriors (Melton, Podziemski, Lendeborg, Santos, Ike projected), Zubac confirmed out and Mikel Brown Jr. out (rest) for the Nets, Nesmith probable and Toppin questionable for the Pacers, Hachimura has no tag for the Clippers, Bittle out for the Raptors, Ziaire Williams questionable for the Lakers and Doncic untagged but unconfirmed. Final fives are announced about 30 minutes before tip. Earlier days' rows are kept.",
+  "updated": {
+   "at": "2026-11-01T19:45:00Z",
+   "by": "Claude"
+  }
+ },
+ "log": {
+  "title": "Season game logs",
+  "description": "Every game each tracked team has played this season, with opponent, venue and score. Evening update 30 Oct adds the 20 teams on the Sat 31 Oct slate (results through 29 Oct US).",
+  "updated": {
+   "at": "2026-11-01T09:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "nflgames": {
+  "title": "NFL games",
+  "description": "This week's NFL games with lines, projections and picks.",
+  "updated": {
+   "at": "2026-10-29T03:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "nflinfo": {
+  "title": "NFL breakdown: ratings, style, injuries, lineups",
+  "description": "Per NFL game (13 games, Mon 2 to Tue 3 Nov Sydney): offence and defence ratings (points a game against the league average, from every 2026 game played), home and away splits, passing and rushing style, pass and rush yards allowed, sacks and takeaways from the ESPN team statistics feed, games over and under the posted total, the line both teams' games combined cleared in 75% of games, injuries from NFL.com and ESPN, and Projected lineups. Checked 1 Nov 2026 (AEDT). For the Cardinals, Cowboys, Falcons, Buccaneers, Ravens, Bills, Titans and Bengals the defence yardage, sacks and takeaways come from ESPN's team statistics feed; for the Cowboys, Ravens and Bengals it is one game behind (6, 6 and 5 games), shown on the page. Every lineup is Projected: no source has stated actual starters or inactives yet.",
+  "updated": {
+   "at": "2026-11-01T05:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "nflresults": {
+  "title": "NFL last week",
+  "description": "Last week's NFL results.",
+  "updated": {
+   "at": "2026-10-29T03:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "nfltable": {
+  "title": "NFL teams",
+  "description": "Season scoring, records and form for all 32 teams.",
+  "updated": {
+   "at": "2026-10-29T03:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "notes": {
+  "title": "Injuries, lineups, props",
+  "description": "Notes per game from web searches, refreshed Monday morning 2 Nov AEDT (about 06:50) for the 4 Mon 2 Nov games: lines from the ESPN betting article of 1 Nov and Rotowire, injuries from the ESPN injuries page, Rotowire and ClutchPoints (NBA.com official report could not be retrieved). Curry and Draymond Green out for the Warriors. No player prop lines found. Earlier days' rows are kept.",
+  "updated": {
+   "at": "2026-11-01T19:45:00Z",
+   "by": "Claude"
+  }
+ },
+ "pact": {
+  "title": "Player box scores",
+  "description": "Points, rebounds, assists and threes for every player who played in the 10 finished games on 31 October AEDT, from the ESPN box score feed.",
+  "updated": {
+   "at": "2026-10-31T05:15:00Z",
+   "by": "Claude"
+  }
+ },
+ "players": {
+  "title": "Player prop picks",
+  "description": "One row per player (29 players, up to 3 per game): his games against tomorrow's opponent since the 2025-26 season, a main over line and a safer alternate line that cleared 70%+. Game logs from StatMuse, Land of Basketball, ClutchPoints and FantasyData on 28 October.",
+  "updated": {
+   "at": "2026-10-28T19:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "plog": {
+  "title": "Every tracked player",
+  "description": "One row per player on tonight's 24 teams with 3+ games and 15+ minutes a game this season (190 players): average, game-by-game values, the highest line cleared in 75%+ of games and the line cleared in every game, for points, rebounds, assists, threes and points + rebounds + assists. Lines too low to matter are blank. Status is from the 29 October morning injury reports.",
+  "updated": {
+   "at": "2026-10-28T20:40:00Z",
+   "by": "Claude"
+  }
+ },
+ "pred": {
+  "title": "Predicted outcomes",
+  "description": "My most likely result for each game: points projection (55% stats model and 45% posted line for margins, 30/70 when a team has under 8 games and model and market are over 5 points apart; totals 25% model and 75% market while a team has under 6 games) plus a moneyline pick, win chance and confidence. Morning update Mon 2 Nov for the 4 Mon 2 Nov games: Clippers at Warriors recomputed after Curry and Draymond Green were ruled out (Warriors margin cut from 4.6 to 1.6, now Low confidence); Nets at Pacers nudged for Mikel Brown Jr. out; Celtics at Magic and Raptors at Lakers re-blended on the new lines. Earlier days' rows are kept. Back-to-backs cost 2 points each.",
+  "updated": {
+   "at": "2026-11-01T19:45:00Z",
+   "by": "Claude"
+  }
+ },
+ "props75": {
+  "title": "75% props",
+  "description": "Players who cleared a stat line in at least 75% of their games this season, per NBA and NFL game.",
+  "updated": {
+   "at": "2026-11-01T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "pstats": {
+  "title": "Player prop stats by category",
+  "description": "Per player and stat (points, rebounds, assists, threes, points + rebounds + assists): average, range, main line hit rate, and the alternate lines that cleared 70% and 100% of his games against tomorrow's opponent since 2025-26.",
+  "updated": {
+   "at": "2026-10-28T19:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "results": {
+  "title": "Football results",
+  "description": "Last round's results for both leagues.",
+  "updated": {
+   "at": "2026-10-29T10:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "review": {
+  "title": "Daily review",
+  "description": "Our picks against final scores and box scores for finished NBA games, with the reasons for each miss, by day. Latest: Sunday 1 November AEDT, 7 finished games (winners 5 of 7). Props and slip legs are not graded for that day because none were on file.",
+  "updated": {
+   "at": "2026-11-01T09:10:00Z",
+   "by": "Claude"
+  }
+ },
+ "schedule": {
+  "title": "Upcoming schedule",
+  "description": "Basic game logs (matchup, time) for Tue 3 Nov to Sun 8 Nov Sydney time (NBA.com 2026-27 schedule PDF and plaintextsports, ET tip times converted to AEDT; the Sun 8 Nov rows assume plaintextsports lists Sat 7 Nov US in ET). Mon 2 Nov games now have full stats in games. Wed 4 Nov has no games (US Election Day). Provider win percentages were not available.",
+  "updated": {
+   "at": "2026-11-01T09:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "slips": {
+  "title": "Same-game slips",
+  "description": "Two four-leg same-game slips per game built from player box scores of the 2026-27 season only (52 games, 20 to 27 October, box scores from Basketball Reference and ESPN; the 27 October Portland at Lakers box score could not be found, so the Lakers have 3 games). Safe slip: each leg is at the player's lowest total this season, so it cleared every game. Stretch slip: each leg is the highest line the player cleared in at least 75% of his games. Only players with 3+ games, 15+ minutes a game and not ruled out or questionable tonight. Chance = product of (hits+1)/(games+2), assuming legs are independent; no sportsbook prices are used.",
+  "updated": {
+   "at": "2026-10-29T09:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "table": {
+  "title": "Football tables",
+  "description": "Premier League and La Liga standings.",
+  "updated": {
+   "at": "2026-10-29T10:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "teams": {
+  "title": "Team stats and splits",
+  "description": "One row per team per game: record, scoring, home/away splits, over/under counts, own-points lines, alternate lines and spread cover counts. Evening update 1 Nov: 8 team rows added for the Mon 2 Nov slate, recomputed from every 2026-27 result through 31 Oct US that was found (the Cavaliers-Bucks and Hawks-Pelicans scores could not be read, so those two games are missing from the offence and defence ranks, which are across 30 teams). Earlier days' rows are kept.",
+  "updated": {
+   "at": "2026-11-01T09:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "top": {
+  "title": "Highest-confidence props",
+  "description": "Props cleared in every head-to-head game, every game this season and 80%+ of games across last regular season and this one. Ranked by season hit rate, head-to-head sample and line closeness to his average. Kawhi Leonard was removed on 29 October: he now plays for Toronto and is out.",
+  "updated": {
+   "at": "2026-10-28T19:55:00Z",
+   "by": "Claude"
+  }
+ },
+ "ufcevents": {
+  "title": "UFC events",
+  "description": "Upcoming UFC events: name, venue, Sydney date and times, card status and sources.",
+  "updated": {
+   "at": "2026-10-29T06:40:00Z",
+   "by": "Claude"
+  }
+ },
+ "ufcfights": {
+  "title": "UFC fights",
+  "description": "Every announced bout on upcoming UFC cards: records, odds where posted, a basic win-chance blend (70% market, 30% record model) and the pick. Dates are Sydney time. Fighter profiles, career UFC striking and grappling averages, last three fights and matchup notes from UFC.com athlete pages, with bjjmetrics.com, Sherdog, UFCalendar and ESPN filling gaps. Full pro fight lists (opponent, result, method, round, time) were added 30 Oct from Sherdog, Wikipedia and UFCalendar; a few rows have blank round, time or method detail where sources disagreed. Style tags are my own rule from takedown and submission rates. Fighters with one or two UFC fights are flagged small sample; blank means not found.",
+  "updated": {
+   "at": "2026-10-29T13:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "pgl": {
+  "title": "Player game logs",
+  "description": "Every regular-season and playoff game since 2024-25 for each player on a current NBA roster: date, opponent, home or away, result, minutes and box score line. From ESPN, refreshed with npm run fetch:gamelogs.",
+  "updated": {
+   "at": "2026-11-02T03:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "ufcp": {
+  "title": "UFC fighter profiles",
+  "description": "Every fighter on a UFC card since 2025, including booked bouts: height, reach, age, stance, style, team, next fight, and every pro fight inside and outside the UFC with result, method, round, time and per-fight strike and takedown numbers for both fighters. From ESPN, refreshed with npm run fetch:ufc.",
+  "updated": {
+   "at": "2026-11-02T04:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "nflp": {
+  "title": "NFL player game logs",
+  "description": "Every game since 2024 for each NFL player on a current roster (offensive linemen left out), with the stats ESPN keeps for his position. From ESPN, refreshed with npm run fetch:athletes.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "socp": {
+  "title": "Football player game logs",
+  "description": "Every league game since 2024-25 for each Premier League and La Liga player: goals, assists, shots, cards, and saves for goalkeepers. From ESPN, refreshed with npm run fetch:athletes.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "tsched": {
+  "title": "Upcoming team games",
+  "description": "Upcoming NFL games and Premier League and La Liga fixtures for every team, from ESPN.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "pidx": {
+  "title": "Search names",
+  "description": "Names, teams and positions of every player and fighter, used by search. Built with npm run build:index.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_nba": {
+  "title": "NBA player photos",
+  "description": "Small headshots from ESPN, keyed by ESPN player id. Built with npm run fetch:headshots.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_nfl": {
+  "title": "NFL player photos",
+  "description": "Small headshots from ESPN, keyed by ESPN player id. Built with npm run fetch:headshots.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_soc": {
+  "title": "Football player photos",
+  "description": "Small headshots from ESPN, keyed by ESPN player id. Built with npm run fetch:headshots.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_ufc": {
+  "title": "UFC fighter photos",
+  "description": "Small headshots from ESPN, keyed by ESPN player id. Built with npm run fetch:headshots.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "insights": {
+  "title": "Suggested improvements",
+  "description": "Suggestions from the 11 pm review on how to improve our picks, each with the evidence behind it and a status: pending (awaiting the owner's OK), approved or declined.",
+  "updated": {
+   "at": "2026-11-02T09:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "ucl_teams": {
+  "title": "Champions League clubs",
+  "description": "The 36 Champions League clubs with their ESPN id, StatSniper code, name and domestic league. Used by the data scripts to keep club codes consistent; not shown on the page.",
+  "updated": {
+   "at": "2026-11-02T09:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "tprof": {
+  "title": "Team profiles",
+  "description": "Every NBA and NFL team and every Premier League, La Liga and Champions League club: colours, record, standing, season stats with league ranks, home and away splits, every game this season, the next five games and key players. From ESPN, refreshed with npm run fetch:teams.",
+  "updated": {
+   "at": "2026-11-02T10:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_ufc_hd": {
+  "title": "UFC fight-page photos",
+  "description": "Large 3:4 portraits (300x400) of every fighter on an upcoming UFC card, for the fight page. From ESPN, built with npm run fetch:headshots ufc_hd.",
+  "updated": {
+   "at": "2026-11-02T06:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "troster": {
+  "title": "Team rosters and injuries",
+  "description": "Full roster for every NBA, NFL and football team on a team page, plus current NBA and NFL injuries from ESPN.",
+  "updated": {
+   "at": "2026-11-02T00:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "archive": {
+  "title": "Saved game breakdowns",
+  "description": "Each graded game's pre-game rows (pick, lines, team numbers, lineups, notes, props) kept so Review can open the full game page after the slate moves on. Written by scripts/archive.js after grading; about the last ten days.",
+  "updated": {
+   "at": "2026-11-02T07:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "h2h": {
+  "title": "Older head-to-head games",
+  "description": "For each NBA player, only the older games (before 2024-25) needed to reach his last 10 against each team, for the player chart's 'vs next opponent' button. Everything else is dropped. From scripts/fetch-h2h.js.",
+  "updated": {
+   "at": "2026-11-02T13:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "uclx": {
+  "title": "Champions League match extras",
+  "description": "Per Champions League fixture: past meetings since 2014-15, each club's last five games, and a projected XI from its latest league or Champions League starting lineup (ESPN).",
+  "updated": {
+   "at": "2026-11-02T13:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "pbp": {
+  "title": "NBA play-by-play extras",
+  "description": "From ESPN play-by-play, this season: each player's 1st-quarter and 1st-half points, rebounds, assists and threes per game; shooting zones, shot types and scoring types per player; and what each defence allows (with ranks). From scripts/fetch-pbp.js.",
+  "updated": {
+   "at": "2026-11-03T23:30:00Z",
+   "by": "Claude"
+  }
+ },
+ "odds": {
+  "title": "Australian bookmaker odds",
+  "description": "Best Australian prices for bets we rate. From scripts/fetch-odds.js.",
+  "updated": {
+   "at": "2026-11-04T01:40:00Z",
+   "by": "Claude"
+  }
+ },
+ "hs_nfl2": {
+  "title": "NFL player photos (part 2)",
+  "description": "Second half of the NFL player photos (132px), split so each file stays under 8 MB. Built with fetch_headshots.py nfl.",
+  "updated": {
+   "at": "2026-11-02T06:00:00Z",
+   "by": "Claude"
+  }
+ },
+ "bets": {
+  "title": "My bets",
+  "description": "Bets the owner logs in chat: {id, placed, sp, game, match, pick, market, line, price, stake, book, status (open|won|lost|void)}. Settled by scripts/grade-bets.js from results.",
+  "updated": {
+   "at": "2026-11-04T01:40:00Z",
+   "by": "Claude"
+  }
+ },
+ "props": {
+  "title": "NBA player prop lines (Australian bookmakers)",
+  "description": "Most-used line and best over / under price per player and stat, from The Odds API (region au). From scripts/fetch-odds.js --props.",
+  "updated": {
+   "at": "2026-11-04T01:40:00Z",
+   "by": "Claude"
+  }
+ }
+}

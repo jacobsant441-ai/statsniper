@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StatSniper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Theme tokens the page uses (previously supplied by the dashboard host). */
+:root {
+  color-scheme: light;
+  --font-anthropic-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-anthropic-serif: "Source Serif 4", Georgia, serif;
+  --color-fg: #16181d;
+  --color-fg-muted: #626875;
+  --color-bg: #f7f7f5;
+  --color-panel: #ffffff;
+  --color-border-line: #e2e3e0;
+  --color-ok: #138a4a;
+  --color-warn: #b97800;
+  --color-bad: #c9302c;
+  --cds-surface-popover: #eef1f6;
+  --cds-chart-grid: #e6e7ea;
+  --cds-chart-status-critical: #d9534f;
+  --cds-font-size-title: clamp(1.6rem, 3vw, 2.2rem);
+  --cds-font-size-heading: 1.15rem;
+  --cds-font-size-caption: 0.875rem;
+  --cds-font-weight-medium: 600;
+  --cds-gap-sm: 8px;
+  --cds-gap-md: 16px;
+  --cds-gap-lg: 28px;
+  --cds-pad-sm: 6px;
+  --cds-pad-md: 12px;
+  --cds-pad-lg: 18px;
+  --cds-radius: 10px;
+  --cds-dur-slow: 320ms;
+  --cds-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --dash-c0: #3b82f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-fg: #eceef2;
+    --color-fg-muted: #9aa1ad;
+    --color-bg: #111317;
+    --color-panel: #1a1d23;
+    --color-border-line: #2c3038;
+    --color-ok: #3ccf7f;
+    --color-warn: #f2b93b;
+    --color-bad: #ff6b63;
+    --cds-surface-popover: #232833;
+    --cds-chart-grid: #2c3038;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-fg: #eceef2;
+  --color-fg-muted: #9aa1ad;
+  --color-bg: #111317;
+  --color-panel: #1a1d23;
+  --color-border-line: #2c3038;
+  --color-ok: #3ccf7f;
+  --color-warn: #f2b93b;
+  --color-bad: #ff6b63;
+  --cds-surface-popover: #232833;
+  --cds-chart-grid: #2c3038;
+}
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+#dash-root { padding: 0 var(--dash-gutter, 16px) 48px; box-sizing: border-box; max-width: 100vw; overflow-x: clip; min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="dash-root"><p style="padding:24px;color:var(--color-fg-muted)">Loading StatSniper…</p></div>
+<script src="dash-runtime.js"></script>
+</body>
+</html>

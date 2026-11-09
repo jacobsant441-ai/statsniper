@@ -1,0 +1,31 @@
+{
+  "name": "statsniper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StatSniper: sharp picks, broken down. NBA, football, NFL and UFC picks with stats, props, slips and a daily review.",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/build-single.js",
+    "fetch:gamelogs": "NODE_USE_ENV_PROXY=1 node scripts/fetch-gamelogs.js",
+    "fetch:ufc": "NODE_USE_ENV_PROXY=1 node scripts/fetch-ufc.js",
+    "fetch:logos": "python3 scripts/fetch_logos.py",
+    "fetch:athletes": "NODE_USE_ENV_PROXY=1 node scripts/fetch-athletes.js",
+    "fetch:headshots": "python3 scripts/fetch_headshots.py",
+    "build:index": "node scripts/build-index.js",
+    "fetch:ucl": "NODE_USE_ENV_PROXY=1 node scripts/fetch-ucl.js",
+    "build:web": "node scripts/build-web.js",
+    "preview": "ROOT=dist/web PORT=4173 node server.js",
+    "grade": "NODE_USE_ENV_PROXY=1 node scripts/grade.js",
+    "fetch:football": "NODE_USE_ENV_PROXY=1 node scripts/fetch-football.js",
+    "fetch:teams": "NODE_USE_ENV_PROXY=1 node scripts/fetch-teams.js",
+    "fetch:rosters": "node scripts/fetch-rosters.js",
+    "archive": "node scripts/archive.js",
+    "fetch:h2h": "node scripts/fetch-h2h.js",
+    "fetch:uclx": "node scripts/fetch-ucl-match.js",
+    "fetch:pbp": "node scripts/fetch-pbp.js",
+    "fetch:odds": "node scripts/fetch-odds.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

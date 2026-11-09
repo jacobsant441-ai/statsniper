@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+dist/
+.cache/
+public/data/bets.json
+HANDOFF.md
+RUNBOOK.md
+public/data/odds.json
+public/data/props.json
