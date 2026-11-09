@@ -143,6 +143,7 @@ self.addEventListener('fetch', (e) => {
 });
 `);
 
+fs.writeFileSync(path.join(OUT, 'web.json'), JSON.stringify(web)); // the newest data versions; the page re-reads it to pick up fresh results
 fs.writeFileSync(path.join(OUT, '.nojekyll'), '');      // GitHub Pages: serve files as they are
 fs.writeFileSync(path.join(OUT, '_headers'), `/*\n  X-Content-Type-Options: nosniff\n/index.html\n  Cache-Control: no-cache\n/sw.js\n  Cache-Control: no-cache\n/data/*\n  Cache-Control: public, max-age=31536000, immutable\n/*.js\n  Cache-Control: public, max-age=31536000, immutable\n`); // Netlify / Cloudflare Pages
 

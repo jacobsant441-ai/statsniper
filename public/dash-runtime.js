@@ -12,6 +12,7 @@
   let params = {};
   let booted = false;
   let WEB = null;                 // web build: {id: {v, lazy}} from the page's ss-web tag
+  const loadedV = {};              // web build: the data version each dataset was loaded at
   const inflight = new Map();     // id -> promise, so each file is fetched once
 
   const toRows = (raw) => {
@@ -83,6 +84,22 @@
     calc(id, spec) { calcs.set(id, spec); },
     loader() { /* only used by live connector queries; local data is already rows */ },
     refresh(id) { return loadDataset(id).then(() => runAll()); },
+    // Reload several datasets and redraw once, only if any of them changed. In the web build the newest
+    // data versions come from web.json (tiny, never cached); datasets not opened yet are skipped.
+    async refreshMany(ids) {
+      let list = ids;
+      if (WEB) {
+        try {
+          const r = await fetch('web.json', { cache: 'no-store' });
+          if (r.ok) { const fresh = await r.json(); Object.keys(fresh).forEach((k) => { if (WEB[k]) WEB[k].v = fresh[k].v; }); }
+        } catch (e) { return false; }
+        list = ids.filter((id) => WEB[id] && store.has(id) && loadedV[id] !== WEB[id].v);
+      }
+      if (!list.length) return false;
+      await Promise.all(list.map(loadDataset));
+      runAll();
+      return true;
+    },
     colors: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'],
     params: () => ({ ...params }),
     setParams(p) { for (const k in p) { if (p[k] == null) delete params[k]; else params[k] = p[k]; } runAll(); },
@@ -103,6 +120,7 @@
         raw = readJson('ss-data-' + id);
       } else {
         // Web build: each file's URL carries a content hash, so the browser can cache it for good.
+        if (WEB && WEB[id]) loadedV[id] = WEB[id].v;
         const res = WEB && WEB[id] ? await fetch(`data/${id}.json?v=${WEB[id].v}`) : await fetch(`data/${id}.json`, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         raw = await res.json();

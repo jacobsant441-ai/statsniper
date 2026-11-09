@@ -170,6 +170,7 @@
 
 <section class="card sec" id="rvrec"><h2>Our record</h2><p class="muted">Winner picks right, then side bets (totals, both teams to score, spreads). Pushes and coin tosses are not counted.</p><div class="scroll" data-draw="rvrec" data-source="history"></div></section>
 <section class="sec" id="rvnba"><h2>NBA game cards and box scores</h2><div id="rvall" data-draw="rvall" data-source="history games pred teams final boxes"></div></section>
+<p class="disc">StatSniper is for information and entertainment only. Picks and chances are estimates, not betting advice, and nothing here is guaranteed. Never bet more than you can afford to lose. Need help? Gambling Help Online (Australia): 1800 858 858, 24/7.</p>
 </div>
 </div>
 <script src="logos.js"></script><script src="logos_nba.js"></script><script src="logos_epl.js"></script><script src="logos_laliga.js"></script><script src="logos_nfl.js"></script><script src="logos_ucl.js"></script>
@@ -2108,9 +2109,14 @@ const liveWanted = () => {
   return g.data.some((r) => r.state === 'in' || (r.state === 'pre' && Math.abs(new Date(r.start_time).getTime() - now) < 20 * 60000));
 };
 dash.draw('livetick', {
-  mount: () => setInterval(() => {
-    try { if (document.hidden || !liveWanted()) return; dash.refresh('livegames'); dash.refresh('livebox'); } catch (e) {}
-  }, 30000),
+  mount: () => { let n = 0; return setInterval(() => {
+    try {
+      if (document.hidden) return;
+      // every 3 minutes: pick up newly graded games and box scores (hosted site: only re-downloads what changed)
+      if (++n % 6 === 0 && dash.refreshMany) dash.refreshMany(['history', 'final', 'nflresults', 'ufcfights', 'boxes', 'pact', 'archive', 'results']);
+      if (!liveWanted()) return; dash.refresh('livegames'); dash.refresh('livebox');
+    } catch (e) {}
+  }, 30000); },
   update: () => {},
   unmount: (el, t) => clearInterval(t),
 });

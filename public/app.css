@@ -1621,3 +1621,6 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .dcard .drk{min-width:2em;padding:1px 4px}
 .dcard .dtbl th,.dcard .dtbl td{font-size:.76rem!important;padding:6px 2px!important}
 .dcard .dtbl td:first-child{font-size:.8rem!important}
+
+/* footer note */
+.disc{margin:28px 0 8px;padding:12px 14px;font-size:.78rem;line-height:1.5;color:var(--sb-muted,#8a94a6);text-align:center;border-top:1px solid var(--sb-line,rgba(255,255,255,.08))}
