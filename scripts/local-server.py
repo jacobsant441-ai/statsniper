@@ -101,6 +101,22 @@ class Handler(SimpleHTTPRequestHandler):
             sys.stderr.write("[live] " + fmt % args + "\n")
 
 
+def autopull():
+    """Keep this Mac's copy current: the cloud commits fresh results to GitHub every ~30 min, so pull them
+    (fast-forward only, never overwrites local edits). Set NO_AUTOPULL=1 to turn off."""
+    import time
+    while True:
+        try:
+            r = subprocess.run(["git", "pull", "--ff-only", "-q"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+            if r.returncode:
+                sys.stderr.write("[git] pull skipped: " + (r.stderr.strip() or r.stdout.strip())[:200] + "\n")
+        except Exception as e:
+            sys.stderr.write("[git] pull failed: %s\n" % e)
+        time.sleep(300)
+
+
 if __name__ == "__main__":
+    if not os.environ.get("NO_AUTOPULL"):
+        threading.Thread(target=autopull, daemon=True).start()
     print(f"StatSniper (with live scores) on http://localhost:{PORT}")
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
