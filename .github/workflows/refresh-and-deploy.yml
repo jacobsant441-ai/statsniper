@@ -9,12 +9,13 @@ on:
   schedule:
     - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney: full daily refresh
     - cron: '7,37 * * * *'  # every 30 minutes: grade finished games (results)
+    - cron: '43 8 * * *'    # 8:43 UTC = 7:43 pm Sydney: build tomorrow's picks and stats
   workflow_dispatch:
     inputs:
       job:
         description: 'What to run by hand'
         type: choice
-        options: [full, results]
+        options: [full, results, picks]
         default: full
   push:
     branches: [main]
@@ -31,7 +32,7 @@ concurrency:
 jobs:
   refresh:
     # Full data refresh: the daily schedule, or by hand with job = full. Not on code pushes.
-    if: github.event.schedule == '17 19 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job != 'results')
+    if: github.event.schedule == '17 19 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'full')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -104,10 +105,74 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+  picks:
+    # Builds the picks and stats for the next games, with the same scripts the daily runbook used:
+    #  evening (7:43 pm Sydney, or by hand with job = picks): tomorrow's NBA slate, football fixtures and goals model,
+    #  and on Wednesdays the coming NFL week. Morning (after the 6:17 am refresh): refreshes today's lines and injuries.
+    # Lineups are "Projected" (last game's starters plus ESPN's injury list); no private data, no AI, no paid keys.
+    needs: refresh
+    if: always() && !cancelled() && (github.event.schedule == '17 19 * * *' || github.event.schedule == '43 8 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'picks'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # include whatever the refresh job just committed
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: soc-summary-${{ github.run_id }}
+          restore-keys: soc-summary-
+      - name: Build picks and stats
+        env:
+          MODE: ${{ github.event.schedule == '17 19 * * *' && 'morning' || 'evening' }}
+        run: |
+          retry() { for i in 1 2 3; do "$@" && return 0; echo "attempt $i of $* failed"; sleep 20; done; return 1; }
+          warn() { "$@" || echo "::warning::$* failed"; }
+          if [ "$MODE" = morning ]; then
+            US=$(TZ=Australia/Sydney date -d yesterday +%Y%m%d)      # today's Sydney NBA slate is yesterday's US date
+            DAY=$(TZ=Australia/Sydney date '+%a %-d %b')
+          else
+            US=$(TZ=Australia/Sydney date +%Y%m%d)                   # tomorrow's Sydney slate is today's US date
+            DAY=$(TZ=Australia/Sydney date -d tomorrow '+%a %-d %b')
+          fi
+          echo "mode=$MODE  NBA US date=$US  football day=$DAY"
+          retry node scripts/grade.js            # grade first: the football fetch drops finished fixtures
+          node scripts/archive.js
+          retry node scripts/fetch-gamelogs.js
+          [ "$MODE" = evening ] && warn node scripts/fetch-teams.js
+          retry node scripts/fetch-rosters.js    # rosters and current injuries
+          warn node scripts/nba-slate.js "$US"
+          if [ "$MODE" = evening ] && [ "$(TZ=Australia/Sydney date +%u)" = 3 ]; then warn node scripts/nfl-week.js; fi
+          retry node scripts/fetch-football.js
+          retry node scripts/fetch-ucl.js
+          warn node scripts/fetch-ucl-match.js
+          warn node scripts/fetch-league-match.js "$DAY"
+          warn node scripts/goals-model.js
+          node scripts/build-index.js
+      - name: Commit changed data
+        id: commit
+        run: |
+          git config user.name "StatSniper data bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "No pick changes"; echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Picks and stats update $(date -u +%F\ %H:%M) UTC"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
-    needs: [refresh, results]
+    needs: [refresh, results, picks]
     # Publish on a code push, after a successful full refresh, or when a results run changed data.
-    if: always() && !cancelled() && (github.event_name == 'push' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true')
+    if: always() && !cancelled() && (github.event_name == 'push' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true' || needs.picks.outputs.changed == 'true')
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -136,7 +136,8 @@ async function xiOf(team, events) {
     }
     console.log(`${f.id}: ${h2h.length} meetings, XI ${xi[H.code] ? xi[H.code].formation : '-'} / ${xi[A.code] ? xi[A.code].formation : '-'}, out ${(inj[H.code] || []).length} / ${(inj[A.code] || []).length}, photo ids ${[H, A].map((T) => (xi[T.code] ? xi[T.code].players.filter((p) => p[6]).length : 0)).join('/')}`);
   }
-  fs.writeFileSync(path.join(DATA, 'uclx.json'), JSON.stringify(rows));
+  // No Champions League match close enough to read (a quiet week): keep the saved rows instead of wiping them.
+  if (rows.length || !fs.existsSync(path.join(DATA, 'uclx.json'))) fs.writeFileSync(path.join(DATA, 'uclx.json'), JSON.stringify(rows));
   fs.writeFileSync(path.join(DATA, 'fixtures.json'), JSON.stringify(fixtures));
   console.log(`Wrote ${rows.length} fixtures to data/uclx.json (${(fs.statSync(path.join(DATA, 'uclx.json')).size / 1024).toFixed(0)} KB)`);
 })().catch((e) => { console.error(e); process.exit(1); });
