@@ -108,14 +108,16 @@
   // (Mac only); otherwise the fair price is shown with ≈.
   // Bookmaker prop lines with real AU prices (propbook, Mac only: fetch-props.js then prop-finder.js): our
   // chance for the exact line at 65%+ and paying $1.30+. Bookies set main lines near 50/50, so 75%+ is rare.
-  const BOOK_MIN = 65, BOOK_PRICE = 1.3;
+  // With alternate lines (fetch-props.js --alt) there are plenty at 75%+; one per player and stat (the safest).
+  const BOOK_MIN = 75, BOOK_PRICE = 1.3;
   function bookPlays(nba) {
     const out = [];
     rows('propbook').forEach((r) => {
       const g = nba.find((i) => i.id === r.game && i.day === r.day); if (!g || num(r.chance) < BOOK_MIN || num(r.price) < BOOK_PRICE) return;
       out.push({ ...g, prop: true, m: { market: 'Prop', pick: r.pick, chance: Math.round(num(r.chance)), rank: num(r.chance), price: num(r.price), book: r.book, est: false, hit: r.hit, finder: r } });
     });
-    return out.sort((a, b) => b.m.rank - a.m.rank);
+    const seen = new Set();
+    return out.sort((a, b) => b.m.rank - a.m.rank).filter((i) => { const k = i.m.finder.player + '|' + i.m.finder.stat; if (seen.has(k)) return false; seen.add(k); return true; });
   }
   function propPlays(nba) {
     const out = [], seen = new Set();
@@ -157,7 +159,7 @@
     const groups = bestBets(), g = groups[0];
     if (!g) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
     const out = [el('div', g.key, 'bbday'), ...g.plays.slice(0, 3).map(bbRow)];
-    if (g.bprops && g.bprops.length) out.push(el('div', 'Bookie props · our chance 65%+ at $1.30+', 'bbday bbsub'), ...g.bprops.slice(0, 3).map(bbRow));
+    if (g.bprops && g.bprops.length) out.push(el('div', 'Bookie props · our chance 75%+ at $1.30+', 'bbday bbsub'), ...g.bprops.slice(0, 3).map(bbRow));
     if (g.props.length) out.push(el('div', 'Player props · our chance 75%+', 'bbday bbsub'), ...g.props.slice(0, 3).map(bbRow));
     const n = groups.reduce((t, x) => t + x.plays.length + x.props.length + (x.bprops ? x.bprops.length : 0), 0);
     const more = el('button', 'See all ' + n + ' best bets ›', 'bbmore'); more.type = 'button';
@@ -172,7 +174,7 @@
     const out = [];
     groups.forEach((g) => {
       if (g.plays.length) { out.push(el('div', g.key + ' · ' + g.plays.length + (g.plays.length === 1 ? ' play' : ' plays'), 'bbday')); out.push(...g.plays.map(bbRow)); }
-      if (g.bprops && g.bprops.length) { out.push(el('div', 'Bookie props · ' + g.key + ' · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian prices for each bookmaker line, with our chance for that exact line (65%+ and $1.30+ only). Bookies set these lines near 50/50, so a big gap between our chance and theirs can mean they know something (minutes, late injury news): not yet tested on bookie lines, so treat as a guide.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
+      if (g.bprops && g.bprops.length) { out.push(el('div', 'Bookie props · ' + g.key + ' · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian prices for each bookmaker line, with our chance for that exact line (75%+ and $1.30+ only, one line per player and stat). Bookies set these lines near 50/50, so a big gap between our chance and theirs can mean they know something (minutes, late injury news): not yet tested on bookie lines, so treat as a guide.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
       if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
     box.replaceChildren(...out);
