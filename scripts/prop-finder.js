@@ -200,7 +200,7 @@ function live(day) {
   rows.slice(0, 10).forEach((r) => console.log(`  ${r.chance}%  ${r.pick} (${r.game}) avg ${r.avg}, last 5 ${r.l5}, hit ${r.hit}${r.why.length ? '; ' + r.why.join('; ') : ''}`));
 }
 
-module.exports = { CFG, backtest };
+module.exports = { CFG, backtest, STATS, loadPlayers };
 if (require.main === module) {
   const a = process.argv[2];
   if (a === '--backtest') backtest(); else if (a) live(a); else { console.error('Usage: node scripts/prop-finder.js "<Sydney day>" | --backtest'); process.exit(1); }

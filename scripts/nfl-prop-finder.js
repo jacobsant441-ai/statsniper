@@ -135,4 +135,5 @@ function live() {
   good.slice(0, 30).forEach((r) => console.log(`  ${r.chance}%  ${r.pick} @ $${r.price} ${r.book} (${r.game} ${r.day}) avg ${r.avg}, last 3 ${r.l5}, hit ${r.hit}`));
 }
 
-if (process.argv[2] === '--backtest') backtest(); else live();
+module.exports = { STATS, loadPlayers, valOf };
+if (require.main === module) { if (process.argv[2] === '--backtest') backtest(); else live(); }

@@ -123,6 +123,8 @@ def settle_bets():
     try:
         before = f.read_bytes() if f.exists() else b""
         subprocess.run(["node", "scripts/grade-bets.js"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+        # value track record (valuelog.json, private): settle finished game / alt / prop bets (no credits)
+        subprocess.run(["node", "scripts/value-log.js", "grade"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
         if f.exists() and f.read_bytes() != before and before:
             bk = Path.home() / "Desktop" / "StatSniper" / "backups"
             if bk.is_dir():

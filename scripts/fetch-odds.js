@@ -130,8 +130,8 @@ const FORCE = process.argv.includes('--force');
       const pickName = p.ml_pick === g.home ? hn : an, other = p.ml_pick === g.home ? an : hn;
       out.push(row(base, 'Winner', pickName + ' win', p.ml_final_prob, priceOf(e, 'h2h', (o) => sim(o.name, pickName) >= 1)), row(base, 'Winner', other + ' win', 100 - p.ml_final_prob, priceOf(e, 'h2h', (o) => sim(o.name, other) >= 1)));
       const mh = (p.winner === g.home ? 1 : -1) * Number(p.margin || 0);
-      for (const [nm, mT] of [[hn, mh], [an, -mh]]) { const lp = linePrice(e, 'spreads', (o) => sim(o.name, nm) >= 1); if (lp) out.push(row({ ...base, point: lp.point }, 'Spread', nm + ' ' + fmtPt(lp.point), 100 * phi((mT + lp.point) / 12), lp)); }
-      for (const side of ['Over', 'Under']) { const lp = linePrice(e, 'totals', (o) => o.name === side); if (lp && p.proj_total != null) { const ov = phi((Number(p.proj_total) - lp.point) / 17); out.push(row({ ...base, point: lp.point }, 'Total points', side + ' ' + lp.point, 100 * (side === 'Over' ? ov : 1 - ov), lp)); } }
+      for (const [nm, mT] of [[hn, mh], [an, -mh]]) { const lp = linePrice(e, 'spreads', (o) => sim(o.name, nm) >= 1); if (lp) out.push(row({ ...base, point: lp.point }, 'Spread', nm + ' ' + fmtPt(lp.point), 100 * phi((mT + lp.point) / 14), lp)); }
+      for (const side of ['Over', 'Under']) { const lp = linePrice(e, 'totals', (o) => o.name === side); if (lp && p.proj_total != null) { const ov = phi((Number(p.proj_total) - lp.point) / 19); out.push(row({ ...base, point: lp.point }, 'Total points', side + ' ' + lp.point, 100 * (side === 'Over' ? ov : 1 - ov), lp)); } }
       // Player props: the line most books use and the best over / under price.
       for (const st of PROP_STATS) {
         const k = PROP_KEY[st]; if (!k || new Date(e.commence_time).getTime() - Date.now() > 36 * 3600000) continue;

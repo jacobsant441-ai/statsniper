@@ -422,5 +422,13 @@
    "at": "2026-11-10T04:00:00Z",
    "by": "Claude"
   }
+ },
+ "altlines": {
+  "title": "Alternate lines",
+  "description": "Australian bookmaker alternate spreads and totals (fetch-alt-lines.js) with our chance from the margin / total model, best AU price and edge. Private: Mac only, never published.",
+  "updated": {
+   "at": "2026-11-10T07:30:00Z",
+   "by": "Claude"
+  }
  }
 }

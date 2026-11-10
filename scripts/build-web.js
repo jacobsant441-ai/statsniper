@@ -33,7 +33,7 @@ fs.mkdirSync(path.join(OUT, 'data'), { recursive: true });
 // Data files: hash every one, mark the big ones lazy.
 const manifest = JSON.parse(read('data/manifest.json'));
 // Private datasets stay on the owner's Mac: never copied into the public site or its manifest.
-const PRIVATE = ['bets', 'odds', 'props', 'propbook'];
+const PRIVATE = ['bets', 'odds', 'props', 'propbook', 'altlines', 'valuelog'];
 PRIVATE.forEach((id) => delete manifest[id]);
 const web = {};
 let eagerKB = 0, lazyKB = 0;
