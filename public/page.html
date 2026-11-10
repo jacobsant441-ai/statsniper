@@ -77,7 +77,7 @@
 <div class="view" id="view-player" hidden>
 <div class="topbar"><button type="button" class="backbtn" id="plback">‹ Back</button></div>
 <div class="ppstripw" id="ppstripw" data-draw="ppstrip" data-source="pgl games schedule pstats props75 top props history"></div>
-<section class="ppwrap" id="ppwrap" data-draw="pp" data-source="pgl h2h pbp hs_nba troster games schedule pstats props75 top props history"></section>
+<section class="ppwrap" id="ppwrap" data-draw="pp" data-source="pgl h2h pbp hs_nba troster games schedule pstats props75 top props propbook history"></section>
 <section class="card sec"><h2>Averages</h2><p class="muted">Per game. Regular season and playoffs, from ESPN game logs.</p><div class="scroll" id="plavg" data-draw="plavg" data-source="pgl"></div></section>
 <section class="card sec"><div class="plh"><h2>Best and worst games</h2><div class="chips" id="plstat"><button type="button" data-st="pra" class="on">PRA</button><button type="button" data-st="pts">PTS</button><button type="button" data-st="reb">REB</button><button type="button" data-st="ast">AST</button><button type="button" data-st="tpm">3PM</button></div></div><p class="muted plseason" data-draw="plseason" data-source="pgl"></p><div class="plbw"><div><h3>Top performances</h3><div class="plgl" data-draw="plbest" data-source="pgl"></div></div><div><h3>Worst performances</h3><div class="plgl" data-draw="plworst" data-source="pgl"></div></div></div></section>
 <section class="card sec"><h2>Upcoming games</h2><p class="muted">Open a game to see how he has played against that team over the last three seasons.</p><div id="plnext" data-draw="plnext" data-source="pgl games schedule pred history"></div></section>
@@ -93,7 +93,7 @@
 <div class="view" id="view-athlete" hidden>
 <div class="topbar"><button type="button" class="backbtn" id="atback">‹ Back</button></div>
 <div class="ppstripw" id="atstripw" data-draw="atstrip" data-source="nflp socp tsched props75"></div>
-<section class="ppwrap" id="atppwrap" data-draw="atpp" data-source="nflp socp hs_nfl hs_nfl2 hs_soc troster tsched props75"></section>
+<section class="ppwrap" id="atppwrap" data-draw="atpp" data-source="nflp socp hs_nfl hs_nfl2 hs_soc troster tsched props75 props propbook"></section>
 <section class="card sec"><h2>Season by season</h2><p class="muted">Each cell shows the total, then the per-game average in brackets. Regular season, from ESPN game logs.</p><div class="scroll" data-draw="atavg" data-source="nflp socp"></div></section>
 <section class="card sec"><div class="plh"><h2>Best and worst games</h2><div class="chips" id="atstat" data-draw="atstat" data-source="nflp socp"></div></div><p class="muted" data-draw="atseason" data-source="nflp socp"></p><div class="plbw"><div><h3>Top performances</h3><div class="plgl" data-draw="atbest" data-source="nflp socp"></div></div><div><h3>Worst performances</h3><div class="plgl" data-draw="atworst" data-source="nflp socp"></div></div></div></section>
 <section class="card sec"><h2>Upcoming games</h2><p class="muted">Open a game to see how he has played against that team over the last three seasons.</p><div data-draw="atnext" data-source="nflp socp tsched nfltable table"></div></section>

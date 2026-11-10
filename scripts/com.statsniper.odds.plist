@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Schedule for scripts/odds-daily.sh (Mac time, which is Sydney time on this Mac).
+     Install only once on the paid Odds API plan:
+       cp scripts/com.statsniper.odds.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.statsniper.odds.plist
+     If the Mac is asleep at a run time, it runs when the Mac wakes. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.statsniper.odds</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/zsh</string><string>-c</string><string>h=$(date +%H); cd "$HOME/Downloads/Statsniper Folder/statsniper" &amp;&amp; ./scripts/odds-daily.sh $([ "$h" -ge 12 ] &amp;&amp; echo pm || echo am)</string></array>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>15</integer></dict>
+  </array>
+</dict>
+</plist>

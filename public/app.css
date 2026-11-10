@@ -1635,3 +1635,17 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .slipchip.hit{color:#4be38c;border-color:rgba(31,213,107,.6);background:rgba(31,213,107,.1)}
 .slipchip.miss{color:#ff7d81;border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.1)}
 .slipchip.open{color:#f5c45e;border-color:rgba(245,184,61,.5)}
+/* Bookie lines panel on player profiles */
+.ppbk h3{margin:0;font-size:.95rem}
+.ppbkd{border-top:1px solid var(--sb-line);padding:4px 0}
+.ppbkd:first-of-type{margin-top:8px}
+.ppbkd summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;font-size:.86rem}
+.ppbkd summary .muted{font-size:.76rem;color:var(--sb-muted)}
+.ppbkr{display:grid;grid-template-columns:3.4rem 1fr 5.6rem 3.6rem;gap:6px;align-items:center;width:100%;background:none;border:0;border-radius:8px;color:inherit;font:inherit;font-size:.8rem;padding:6px 4px;text-align:left;font-variant-numeric:tabular-nums;cursor:pointer}
+.ppbkr:hover{background:rgba(127,127,127,.08)}
+.ppbkr.hd{cursor:default;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sb-muted);padding:2px 4px}
+.ppbkr.hd:hover{background:none}
+.ppbkr .muted{color:var(--sb-muted);font-size:.74rem}
+.ppbkr span:nth-child(3),.ppbkr span:nth-child(4){text-align:right}
+.ppbkr .up{color:#3ccf7f;font-weight:700}
+.ppbkr .dn{color:#ff6b63}

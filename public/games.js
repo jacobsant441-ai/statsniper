@@ -84,18 +84,19 @@
     const done = new Set(rows('history').filter((h) => h.status === 'Final' || h.status === 'Live').map((h) => (h.sport || 'nba') + '|' + h.id + '|' + h.date));
     const ahead = items.filter((i) => !done.has(i.sp + '|' + i.id + '|' + i.day) && (() => { const k = kickAt(i); return !k || isNaN(k) || k.getTime() > now.getTime(); })());
     items.length = 0; items.push(...ahead);
+    const aheadIds = new Set(ahead.map((i) => i.sp + '|' + i.id + '|' + i.day));
     // From 4 pm Sydney the card shows the next day's best bets (today's left-overs only if tomorrow has none).
     const hr = Number(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', hour: 'numeric', hourCycle: 'h23' }).format(now)) % 24;
     // One day only: today, or tomorrow from 4 pm (or when today has nothing left). Never further ahead.
     const groups = [];
     for (const k of hr >= 16 ? [1, 0] : [0, 1]) {
       const key = dayKey(new Date(now.getTime() + k * 86400000));
-      const today = items.filter((i) => i.day === key); if (!today.length) continue;
+      const today = items.filter((i) => i.day === key);
       const plays = today.map((i) => { const m = i.sp === 'fb' ? fbMain(i.x) : pickMain(candidates(i.sp, i.id)); return m ? { ...i, m } : null; }).filter((i) => i && i.m.price >= MIN_PRICE);
       // Our own milestone props (propPlays, prop finder) are hidden from Best bets (owner, 10 Nov): only bookie
       // props with real AU prices show. To bring them back: const props = propPlays(today.filter((i) => i.sp === 'nba'));
       const props = [];
-      const bprops = bookPlays(today.filter((i) => i.sp === 'nba'));
+      const bprops = bookPlays(key, aheadIds);
       if (plays.length || props.length || bprops.length) { groups.push({ key, plays: plays.sort((a, b) => b.m.chance - a.m.chance), props, bprops }); break; }
     }
     return groups;
@@ -110,14 +111,17 @@
   // chance for the exact line at 65%+ and paying $1.30+. Bookies set main lines near 50/50, so 75%+ is rare.
   // With alternate lines (fetch-props.js --alt) there are plenty at 75%+; one per player and stat (the safest).
   const BOOK_MIN = 75, BOOK_PRICE = 1.3;
-  function bookPlays(nba) {
-    const out = [];
-    rows('propbook').forEach((r) => {
-      const g = nba.find((i) => i.id === r.game && i.day === r.day); if (!g || num(r.chance) < BOOK_MIN || num(r.price) < BOOK_PRICE) return;
-      out.push({ ...g, prop: true, m: { market: 'Prop', pick: r.pick, chance: Math.round(num(r.chance)), rank: num(r.chance), price: num(r.price), book: r.book, est: false, hit: r.hit, finder: r } });
-    });
-    const seen = new Set();
-    return out.sort((a, b) => b.m.rank - a.m.rank).filter((i) => { const k = i.m.finder.player + '|' + i.m.finder.stat; if (seen.has(k)) return false; seen.add(k); return true; });
+  // NBA and NFL (sp on each row); only games still to start; one line per player and stat (our highest chance).
+  function bookPlays(key, aheadIds) {
+    const now = Date.now(), seen = new Set(), out = [];
+    rows('propbook').filter((r) => r.day === key && num(r.chance) >= BOOK_MIN && num(r.price) >= BOOK_PRICE && (r.kick ? new Date(r.kick).getTime() > now : aheadIds.has((r.sp || 'nba') + '|' + r.game + '|' + r.day)))
+      .sort((a, b) => num(b.chance) - num(a.chance)).forEach((r) => {
+        const k = (r.sp || 'nba') + '|' + r.player + '|' + r.stat; if (seen.has(k)) return; seen.add(k);
+        const g = rows('games').find((x) => x.id === r.game && x.date === r.day);
+        const time = r.kick ? new Date(r.kick).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit' }) : '';
+        out.push({ sp: r.sp || 'nba', id: r.game, day: r.day, match: (r.sp || 'nba') === 'nba' && g ? g.matchup : r.game.replace('-', ' @ '), time, prop: true, m: { market: 'Prop', pick: r.pick, chance: Math.round(num(r.chance)), rank: num(r.chance), price: num(r.price), book: r.book, est: false, hit: r.hit, finder: r } });
+      });
+    return out;
   }
   function propPlays(nba) {
     const out = [], seen = new Set();
@@ -147,10 +151,10 @@
     const b = el('button', null, 'bbr'); b.type = 'button';
     const ic = el('span', null, 'bbic'); const src = window.TAB_ICONS && window.TAB_ICONS[i.sp]; if (src) { const im = document.createElement('img'); im.src = src; im.alt = ''; ic.append(im); }
     const f = i.m.finder;
-    const sub = f ? `Hit ${f.hit} this season · avg ${f.avg}, last 5 ${f.l5}${f.why && f.why.length ? ' · ' + f.why[0] : ''} · ${i.match}` : (i.m.hit ? 'Hit ' + i.m.hit + ' this season · ' : '') + i.match + (i.time ? ' · ' + i.time : '');
+    const sub = f ? `Hit ${f.hit} this season · avg ${f.avg}, last ${f.sp === 'nfl' ? 3 : 5} ${f.l5}${f.why && f.why.length ? ' · ' + f.why[0] : ''} · ${i.match}` : (i.m.hit ? 'Hit ' + i.m.hit + ' this season · ' : '') + i.match + (i.time ? ' · ' + i.time : '');
     const l = el('div', null, 'l'); l.append(el('b', i.m.pick), el('span', sub));
     const r = el('div', null, 'r'); r.append(el('b', i.m.chance + '%', 'c ' + conf(i.m.chance)), el('span', (i.m.est ? '≈$' : '$') + i.m.price.toFixed(2) + (i.m.book && !i.m.est ? ' ' + i.m.book.replace(' (AU)', '') : '')));
-    b.append(ic, l, r); b.addEventListener('click', () => X.openGame(i.sp, i.id, i.day));
+    b.append(ic, l, r); b.addEventListener('click', () => (f && f.side && window.SSPP ? window.SSPP.focus(i.sp, f.stat, f.line, f.player, f.pid) : X.openGame(i.sp, i.id, i.day)));
     return b;
   };
   const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind', 'propbook'].every((d) => dash.data(d).status !== 'loading');
@@ -158,8 +162,9 @@
     if (!bbReady()) { box.replaceChildren(el('p', 'Loading…', 'plnone')); return; }
     const groups = bestBets(), g = groups[0];
     if (!g) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
-    const out = [el('div', g.key, 'bbday'), ...g.plays.slice(0, 3).map(bbRow)];
-    if (g.bprops && g.bprops.length) out.push(el('div', 'Bookie props · our chance 75%+ at $1.30+', 'bbday bbsub'), ...g.bprops.slice(0, 3).map(bbRow));
+    const out = [el('div', g.key, 'bbday')];
+    if (g.plays.length) out.push(el('div', 'Game props', 'bbday bbsub'), ...g.plays.slice(0, 3).map(bbRow));
+    if (g.bprops && g.bprops.length) out.push(el('div', 'Player props · our chance 75%+ at $1.30+', 'bbday bbsub'), ...g.bprops.slice(0, 3).map(bbRow));
     if (g.props.length) out.push(el('div', 'Player props · our chance 75%+', 'bbday bbsub'), ...g.props.slice(0, 3).map(bbRow));
     const n = groups.reduce((t, x) => t + x.plays.length + x.props.length + (x.bprops ? x.bprops.length : 0), 0);
     const more = el('button', 'See all ' + n + ' best bets ›', 'bbmore'); more.type = 'button';
@@ -173,8 +178,9 @@
     if (!groups.length) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
     const out = [];
     groups.forEach((g) => {
-      if (g.plays.length) { out.push(el('div', g.key + ' · ' + g.plays.length + (g.plays.length === 1 ? ' play' : ' plays'), 'bbday')); out.push(...g.plays.map(bbRow)); }
-      if (g.bprops && g.bprops.length) { out.push(el('div', 'Bookie props · ' + g.key + ' · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian prices for each bookmaker line, with our chance for that exact line (75%+ and $1.30+ only, one line per player and stat). Bookies set these lines near 50/50, so a big gap between our chance and theirs can mean they know something (minutes, late injury news): not yet tested on bookie lines, so treat as a guide.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
+      out.push(el('div', g.key, 'bbday'));
+      if (g.plays.length) { out.push(el('div', 'Game props · ' + g.plays.length, 'bbday bbsub'), el('p', 'Winner, line and total for each game: our best play at $1.40 or more.', 'muted bbnote')); out.push(...g.plays.map(bbRow)); }
+      if (g.bprops && g.bprops.length) { out.push(el('div', 'Player props · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian bookie lines (NBA and NFL) where our chance is 75%+ and the price is $1.30+, one line per player and stat. Our chance comes from his game logs; tested on this season, lines we rate 75%+ hit about 80% (NBA) and 77-91% depending on the stat (NFL). A big gap to the bookie can mean they know something (minutes, late injury news). Tap one to open the player.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
       if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
     box.replaceChildren(...out);
