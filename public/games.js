@@ -94,7 +94,8 @@
       const plays = today.map((i) => { const m = i.sp === 'fb' ? fbMain(i.x) : pickMain(candidates(i.sp, i.id)); return m ? { ...i, m } : null; }).filter((i) => i && i.m.price >= MIN_PRICE);
       // props: ranked by hit rate pulled toward 50% for small samples (8/9 ranks above 6/7)
       const props = propPlays(today.filter((i) => i.sp === 'nba')).sort((a, b) => b.m.rank - a.m.rank || b.m.price - a.m.price);
-      if (plays.length || props.length) { groups.push({ key, plays: plays.sort((a, b) => b.m.chance - a.m.chance), props }); break; }
+      const bprops = bookPlays(today.filter((i) => i.sp === 'nba'));
+      if (plays.length || props.length || bprops.length) { groups.push({ key, plays: plays.sort((a, b) => b.m.chance - a.m.chance), props, bprops }); break; }
     }
     return groups;
   }
@@ -104,6 +105,17 @@
   // Prop finder (scripts/prop-finder.js): our own chance from the player's game logs; one row per player and
   // stat at the highest milestone we give 75%+. A bookmaker price is attached when a matching line is saved
   // (Mac only); otherwise the fair price is shown with ≈.
+  // Bookmaker prop lines with real AU prices (propbook, Mac only: fetch-props.js then prop-finder.js): our
+  // chance for the exact line at 65%+ and paying $1.30+. Bookies set main lines near 50/50, so 75%+ is rare.
+  const BOOK_MIN = 65, BOOK_PRICE = 1.3;
+  function bookPlays(nba) {
+    const out = [];
+    rows('propbook').forEach((r) => {
+      const g = nba.find((i) => i.id === r.game && i.day === r.day); if (!g || num(r.chance) < BOOK_MIN || num(r.price) < BOOK_PRICE) return;
+      out.push({ ...g, prop: true, m: { market: 'Prop', pick: r.pick, chance: Math.round(num(r.chance)), rank: num(r.chance), price: num(r.price), book: r.book, est: false, hit: r.hit, finder: r } });
+    });
+    return out.sort((a, b) => b.m.rank - a.m.rank);
+  }
   function propPlays(nba) {
     const out = [], seen = new Set();
     rows('propfind').forEach((r) => {
@@ -138,14 +150,15 @@
     b.append(ic, l, r); b.addEventListener('click', () => X.openGame(i.sp, i.id, i.day));
     return b;
   };
-  const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind'].every((d) => dash.data(d).status !== 'loading');
+  const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind', 'propbook'].every((d) => dash.data(d).status !== 'loading');
   dash.draw('bestbets', (box) => {
     if (!bbReady()) { box.replaceChildren(el('p', 'Loading…', 'plnone')); return; }
     const groups = bestBets(), g = groups[0];
     if (!g) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
     const out = [el('div', g.key, 'bbday'), ...g.plays.slice(0, 3).map(bbRow)];
+    if (g.bprops && g.bprops.length) out.push(el('div', 'Bookie props · our chance 65%+ at $1.30+', 'bbday bbsub'), ...g.bprops.slice(0, 3).map(bbRow));
     if (g.props.length) out.push(el('div', 'Player props · our chance 75%+', 'bbday bbsub'), ...g.props.slice(0, 3).map(bbRow));
-    const n = groups.reduce((t, x) => t + x.plays.length + x.props.length, 0);
+    const n = groups.reduce((t, x) => t + x.plays.length + x.props.length + (x.bprops ? x.bprops.length : 0), 0);
     const more = el('button', 'See all ' + n + ' best bets ›', 'bbmore'); more.type = 'button';
     more.addEventListener('click', () => X.openBets()); out.push(more);
     box.replaceChildren(...out);
@@ -158,6 +171,7 @@
     const out = [];
     groups.forEach((g) => {
       if (g.plays.length) { out.push(el('div', g.key + ' · ' + g.plays.length + (g.plays.length === 1 ? ' play' : ' plays'), 'bbday')); out.push(...g.plays.map(bbRow)); }
+      if (g.bprops && g.bprops.length) { out.push(el('div', 'Bookie props · ' + g.key + ' · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian prices for each bookmaker line, with our chance for that exact line (65%+ and $1.30+ only). Bookies set these lines near 50/50, so a big gap between our chance and theirs can mean they know something (minutes, late injury news): not yet tested on bookie lines, so treat as a guide.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
       if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
     box.replaceChildren(...out);

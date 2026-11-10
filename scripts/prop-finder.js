@@ -58,7 +58,7 @@ function oppTable(players, before) {
 }
 
 // Our chance for one player, stat and milestone in a game against `opp` at home/away `ha`, using only games before `before`.
-function project(p, st, opp, ha, before, opp3) {
+function project(p, st, opp, ha, before, opp3, ks) {
   const gs = p.games.filter((g) => g.date < before);
   const cur = gs.filter((g) => g.season === SEASON), last = gs.filter((g) => g.season === LAST);
   if (cur.length < 3) return null;
@@ -85,7 +85,7 @@ function project(p, st, opp, ha, before, opp3) {
   // what this opponent gives up to his position
   if (opp3) { const o = opp3(opp, p.pos, st); if (CFG.oppPos) mu *= o.f; if (o.raw && Math.abs(o.raw - 1) > 0.08 && o.n >= 4) notes.push(`${opp} allow ${Math.round(Math.abs(o.raw - 1) * 100)}% ${o.raw > 1 ? 'more' : 'less'} ${STATS[st].word} to ${{ G: 'guards', F: 'forwards', C: 'centres' }[p.pos]}`); }
   const spread = Math.max(sd(recent.map(val)), Math.sqrt(Math.max(mu, 0.5)) * 0.9, st === 'PTS' ? 4 : 1);
-  const out = STATS[st].ks.map((k) => {
+  const out = (ks || STATS[st].ks).map((k) => {
     let pr = 1 - ncdf((k - 0.5 - mu) / spread);
     pr = 0.5 + CFG.calib * (pr - 0.5);
     const hit = cur.filter((g) => val(g) >= k).length;
@@ -145,6 +145,33 @@ function live(day) {
     }
   }
   rows.sort((a, b) => b.chance - a.chance);
+  // Bookmaker lines (props.json, private, from fetch-props.js): our chance for the exact line, both sides.
+  const cutN = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, '').replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/\s+/g, ' ').trim();
+  const byName = new Map(players.map((p) => [cutN(p.player), p]));
+  const book = [];
+  for (const q of read('props.json').filter((x) => x.day === day && STATS[x.stat])) {
+    const gm = games.find((g) => g.id === q.game); const p = byName.get(cutN(q.player)); if (!gm || !p || outIds.has(String(p.pid))) continue;
+    const [A, H] = gm.id.split('-'); if (p.team !== A && p.team !== H) continue;
+    const opp = p.team === A ? H : A, ha = p.team === H ? 'H' : 'A';
+    const k = Math.floor(q.line) + 1; // over 24.5 means 25 or more
+    const pr = project(p, q.stat, opp, ha, before, opp3, [k]); if (!pr) continue;
+    const o = pr.out[0];
+    for (const [side, price, bk] of [['over', q.over, q.over_book], ['under', q.under, q.under_book]]) {
+      if (!price) continue;
+      const chance = side === 'over' ? o.chance : Math.round((100 - o.chance) * 10) / 10;
+      const hit = side === 'over' ? o.hit : o.n - o.hit;
+      const implied = Math.round(1000 / price) / 10;
+      book.push({ game: q.game, day, player: p.player, team: p.team, opp, stat: q.stat, line: q.line, side, pick: `${p.player} ${side} ${q.line} ${STATS[q.stat].word}`, chance, price, book: bk, implied, edge: Math.round((chance - implied) * 10) / 10, hit: hit + '/' + o.n, avg: Math.round(pr.seasonAvg * 10) / 10, l5: Math.round(pr.l5 * 10) / 10, proj: Math.round(pr.mu * 10) / 10, why: pr.notes });
+    }
+  }
+  book.sort((a, b) => b.chance - a.chance);
+  if (book.length) {
+    const keepB = read('propbook.json').filter((r) => r.day !== day);
+    fs.writeFileSync(path.join(DATA, 'propbook.json'), JSON.stringify(keepB.concat(book)));
+    const good = book.filter((r) => r.chance >= CFG.pick && r.price >= 1.3);
+    console.log(`Bookmaker lines: ${book.length} sides rated; ${good.length} at ${CFG.pick}%+ paying $1.30+ (propbook.json, private):`);
+    good.forEach((r) => console.log(`  ${r.chance}%  ${r.pick} @ $${r.price} ${r.book} (bookie implies ${r.implied}%, edge ${r.edge >= 0 ? '+' : ''}${r.edge}) avg ${r.avg}, last 5 ${r.l5}, hit ${r.hit}`));
+  }
   const recent = [...new Set(read('games.json').map((g) => g.date))].slice(-3); // keep only the last few slates
   const keep = read('propfind.json').filter((r) => r.day !== day && recent.includes(r.day));
   fs.writeFileSync(path.join(DATA, 'propfind.json'), JSON.stringify(keep.concat(rows)));

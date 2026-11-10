@@ -414,5 +414,13 @@
    "at": "2026-11-10T03:15:00Z",
    "by": "Claude"
   }
+ },
+ "propbook": {
+  "title": "Prop prices",
+  "description": "Australian bookmaker NBA player prop lines (fetch-props.js) rated by the prop finder: our chance for the exact line, best AU price, edge. Private: Mac only, never published.",
+  "updated": {
+   "at": "2026-11-10T04:00:00Z",
+   "by": "Claude"
+  }
  }
 }
