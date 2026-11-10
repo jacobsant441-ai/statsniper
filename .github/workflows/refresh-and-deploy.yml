@@ -148,6 +148,7 @@ jobs:
           [ "$MODE" = evening ] && warn node scripts/fetch-teams.js
           retry node scripts/fetch-rosters.js    # rosters and current injuries
           warn node scripts/nba-slate.js "$US"
+          warn node scripts/prop-finder.js "$DAY"   # our own player prop chances for that slate (Best bets)
           if [ "$MODE" = evening ] && [ "$(TZ=Australia/Sydney date +%u)" = 3 ]; then warn node scripts/nfl-week.js; fi
           retry node scripts/fetch-football.js
           retry node scripts/fetch-ucl.js

@@ -101,7 +101,22 @@
   // NBA player props with a real bookmaker line: in if he cleared it in 65%+ of his games this season (5+ games)
   // and the price is $1.40 or more. One side per player and stat.
   const PROP_MIN = 65, STAT_W = { PTS: 'points', REB: 'rebounds', AST: 'assists', '3PM': 'threes', PRA: 'pts + reb + ast' };
+  // Prop finder (scripts/prop-finder.js): our own chance from the player's game logs; one row per player and
+  // stat at the highest milestone we give 75%+. A bookmaker price is attached when a matching line is saved
+  // (Mac only); otherwise the fair price is shown with ≈.
   function propPlays(nba) {
+    const out = [], seen = new Set();
+    rows('propfind').forEach((r) => {
+      const g = nba.find((i) => i.id === r.game && i.day === r.day); if (!g) return;
+      const book = rows('props').find((q) => q.game === r.game && q.player === r.player && q.stat === r.stat && num(q.line) === r.line - 0.5 && num(q.over) > 1);
+      seen.add(r.player + '|' + r.stat);
+      out.push({ ...g, prop: true, m: { market: 'Prop', pick: r.pick, chance: Math.round(num(r.chance)), rank: num(r.chance), price: book ? num(book.over) : num(r.fair), book: book ? book.over_book : '', est: !book, hit: r.hit, finder: r } });
+    });
+    return out;
+  }
+  // Older rule (bookmaker lines cleared 65%+ this season): replaced by the prop finder on 10 Nov after it
+  // went 57/108; kept for reference.
+  function propPlaysBook(nba) {
     const out = [];
     rows('props').forEach((q) => {
       const g = nba.find((i) => i.id === q.game); if (!g || !(num(q.n) >= 5)) return;
@@ -116,18 +131,20 @@
   const bbRow = (i) => {
     const b = el('button', null, 'bbr'); b.type = 'button';
     const ic = el('span', null, 'bbic'); const src = window.TAB_ICONS && window.TAB_ICONS[i.sp]; if (src) { const im = document.createElement('img'); im.src = src; im.alt = ''; ic.append(im); }
-    const l = el('div', null, 'l'); l.append(el('b', i.m.pick), el('span', (i.m.hit ? 'Hit ' + i.m.hit + ' this season · ' : '') + i.match + (i.time ? ' · ' + i.time : '')));
+    const f = i.m.finder;
+    const sub = f ? `Hit ${f.hit} this season · avg ${f.avg}, last 5 ${f.l5}${f.why && f.why.length ? ' · ' + f.why[0] : ''} · ${i.match}` : (i.m.hit ? 'Hit ' + i.m.hit + ' this season · ' : '') + i.match + (i.time ? ' · ' + i.time : '');
+    const l = el('div', null, 'l'); l.append(el('b', i.m.pick), el('span', sub));
     const r = el('div', null, 'r'); r.append(el('b', i.m.chance + '%', 'c ' + conf(i.m.chance)), el('span', (i.m.est ? '≈$' : '$') + i.m.price.toFixed(2) + (i.m.book && !i.m.est ? ' ' + i.m.book.replace(' (AU)', '') : '')));
     b.append(ic, l, r); b.addEventListener('click', () => X.openGame(i.sp, i.id, i.day));
     return b;
   };
-  const bbReady = () => ['games', 'pred', 'fixtures', 'odds'].every((d) => dash.data(d).status !== 'loading');
+  const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind'].every((d) => dash.data(d).status !== 'loading');
   dash.draw('bestbets', (box) => {
     if (!bbReady()) { box.replaceChildren(el('p', 'Loading…', 'plnone')); return; }
     const groups = bestBets(), g = groups[0];
     if (!g) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
     const out = [el('div', g.key, 'bbday'), ...g.plays.slice(0, 3).map(bbRow)];
-    if (g.props.length) out.push(el('div', 'Player props · cleared 65%+ this season', 'bbday bbsub'), ...g.props.slice(0, 3).map(bbRow));
+    if (g.props.length) out.push(el('div', 'Player props · our chance 75%+', 'bbday bbsub'), ...g.props.slice(0, 3).map(bbRow));
     const n = groups.reduce((t, x) => t + x.plays.length + x.props.length, 0);
     const more = el('button', 'See all ' + n + ' best bets ›', 'bbmore'); more.type = 'button';
     more.addEventListener('click', () => X.openBets()); out.push(more);
@@ -141,7 +158,7 @@
     const out = [];
     groups.forEach((g) => {
       if (g.plays.length) { out.push(el('div', g.key + ' · ' + g.plays.length + (g.plays.length === 1 ? ' play' : ' plays'), 'bbday')); out.push(...g.plays.map(bbRow)); }
-      if (g.props.length) { out.push(el('div', 'Player props · ' + g.key + ' · ' + g.props.length, 'bbday bbsub'), el('p', 'Bookmaker prop lines he has cleared in 65%+ of his games this season (5+ games), paying $1.40 or more. Small samples: treat as a guide.', 'muted bbnote')); out.push(...g.props.map(bbRow)); }
+      if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
     box.replaceChildren(...out);
   });

@@ -406,5 +406,13 @@
    "at": "2026-11-04T01:40:00Z",
    "by": "Claude"
   }
+ },
+ "propfind": {
+  "title": "Prop finder",
+  "description": "Our own chance that NBA players reach points, rebounds, assists and threes milestones in the next slate, from their game logs (scripts/prop-finder.js). One row per player and stat: the highest milestone we give 75%+, with fair price and reasons.",
+  "updated": {
+   "at": "2026-11-10T03:15:00Z",
+   "by": "Claude"
+  }
  }
 }
