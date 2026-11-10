@@ -1624,3 +1624,14 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 
 /* footer note */
 .disc{margin:28px 0 8px;padding:12px 14px;font-size:.78rem;line-height:1.5;color:var(--sb-muted,#8a94a6);text-align:center;border-top:1px solid var(--sb-line,rgba(255,255,255,.08))}
+
+/* result circles: once a game is full time, the team we picked is circled green (we were right) or red (wrong) */
+.rvg.hit .tm.win .bd,.rgres.hit .tm.win .bd{box-shadow:0 0 0 3px #1fd56b,0 0 14px rgba(31,213,107,.45)!important;border-radius:50%!important}
+.rvg.miss .tm.win .bd,.rgres.miss .tm.win .bd{box-shadow:0 0 0 3px #ff5a5f,0 0 14px rgba(255,90,95,.45)!important;border-radius:50%!important}
+.rvg .tm.win .bd.logo,.rgres .tm.win .bd.logo{background:rgba(255,255,255,.06)}
+.rgres.hit{border-color:rgba(31,213,107,.55)!important}.rgres.miss{border-color:rgba(255,90,95,.55)!important}
+/* our slips: the play we put in a slip, ticked once the game is over */
+.slipchip{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.slipchip.hit{color:#4be38c;border-color:rgba(31,213,107,.6);background:rgba(31,213,107,.1)}
+.slipchip.miss{color:#ff7d81;border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.1)}
+.slipchip.open{color:#f5c45e;border-color:rgba(245,184,61,.5)}

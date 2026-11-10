@@ -225,7 +225,7 @@ const rowsCache = new Map(); let dataGen = 0;
 dash.onData(() => { dataGen++; });
 // Review game pages: while one is open, RVO holds that game's saved pre-game rows per dataset.
 let RVO = null, RVH = null, rvKeep = false, rvY = 0, rvCardK = '';
-const rows = (id) => { if (RVO && RVO[id]) return RVO[id]; const hit = rowsCache.get(id); if (hit && hit.gen === dataGen) return hit.c; const g = dash.data(id); if (g.status !== 'ok') return []; const d = g.data; if (!Array.isArray(d)) return d; const c = hit && hit.d === d ? hit.c : d.map(jvRow); rowsCache.set(id, { gen: dataGen, d, c }); return c; };
+const rows = (id) => { if (RVO && RVO[id]) return RVO[id]; const hit = rowsCache.get(id); if (hit && hit.gen === dataGen) return hit.m; const g = dash.data(id); if (g.status !== 'ok') return []; const d = g.data; if (!Array.isArray(d)) return d; const c = hit && hit.d === d ? hit.c : d.map(jvRow); let m = c; if ((id === 'history' || id === 'final') && window.SSG && SSG.merge) { try { m = SSG.merge(id, c); } catch (e) { m = c; } } rowsCache.set(id, { gen: dataGen, d, c, m }); return m; };
 const altTxt = (line, hit, side) => (line == null ? 'none' : side + ' ' + f1(line) + ' (' + hit + ')');
 const finalOf = (id) => rows('final').find((x) => x.id === id);
 const done = (id) => { const f = finalOf(id); return f && f.status === 'Final' ? f : null; };
@@ -306,7 +306,7 @@ let fromRv = false;
 const openFromRv = (id) => { sport = 'nba'; sec = 'home'; applyView(); goDetail(id); fromRv = true; const bb = document.getElementById('backbtn'); if (bb) bb.textContent = '‹ Back to review'; };
 function histCard(h) {
     const b0 = gcardBase(h.id, h.away, h.away_name || h.away, '', h.home, h.home_name || h.home, '', h.date, h.kick || '', (h.pick || '') + (h.pick_pct ? ' · ' + h.pick_pct + '%' : ''), h.pick === h.home ? 'home' : 'away');
-    const b = document.createElement('div'); b.className = 'pick tile gcard'; b.dataset.id = h.id; b.append(...b0.childNodes);
+    const b = document.createElement('div'); b.className = 'pick tile gcard' + (h.status === 'Final' && (h.winner_hit === 'hit' || h.winner_hit === 'miss') ? ' rgres ' + h.winner_hit : ''); b.dataset.id = h.id; b.append(...b0.childNodes);
     if (h.league) b.prepend(lgIcon(h.league, 'lgtag'));
     if (!h.sport || h.sport === 'nba') { const bds = b.querySelectorAll('.bd'); if (bds[0]) bds[0].replaceWith(badge(h.away)); if (bds[1]) bds[1].replaceWith(badge(h.home)); }
     const strong = b.querySelector('.mid strong'), pre = b.querySelector('.mid .pre');
@@ -315,6 +315,7 @@ function histCard(h) {
     const wc = el('span', 'Winner: ' + h.pick, 'chip'); if (h.winner_hit) wc.append(tick(h.winner_hit, h.winner_hit === 'hit' ? 'Right' : 'Wrong'));
     chips.append(el('span', 'Combined: ' + h.conf, 'chip ' + h.conf), wc);
     if (h.total_lean) { const tc = el('span', h.total_lean + (h.proj_total ? ' (proj ' + h.proj_total + ')' : ''), 'chip'); if (h.total_hit) tc.append(tick(h.total_hit, 'Posted total ' + h.posted_total)); chips.append(tc); }
+    if (window.SSG && SSG.slipChips && h.status === 'Final') SSG.slipChips(h).forEach((c) => chips.append(c));
     ft.append(chips); b.append(ft);
     if (h.verdict || fl(h.factors).length) {
       const d = document.createElement('details'); d.className = 'fbmore';
@@ -1395,6 +1396,8 @@ const DRAW_nflgrid = (box) => {
         const wc = el('span', 'Winner: ' + NFLS(x.pick), 'chip'); if (hr.winner_hit) wc.append(tick(hr.winner_hit, hr.winner_hit === 'hit' ? 'Right' : 'Wrong')); chips.prepend(wc);
         if (hr.total_hit === 'hit' || hr.total_hit === 'miss') { const tc = chips.querySelector('.chip:nth-child(3)'); if (tc) tc.append(tick(hr.total_hit, 'Total ' + (hr.away_pts + hr.home_pts) + ' against ' + x.total)); }
         if (hr.spread_hit === 'hit' || hr.spread_hit === 'miss') { const sc = el('span', 'Spread: ' + NFLS(hr.spread_pick), 'chip'); sc.append(tick(hr.spread_hit, 'Against the spread')); chips.append(sc); }
+        if (hr.winner_hit === 'hit' || hr.winner_hit === 'miss') b.classList.add('rgres', hr.winner_hit);
+        if (window.SSG && SSG.slipChips) SSG.slipChips(hr).forEach((c) => chips.append(c));
       }
     }
     b.append(odds, ft);
@@ -2356,6 +2359,7 @@ const rvCard = (h) => {
   const chips = el('div', null, 'chips');
   const wc = el('span', null, 'chip rvw ' + (hit || 'na')); wc.append(document.createTextNode('Pick: '), el('b', rvPickTxt(h) || 'none'), document.createTextNode(h.pick_pct != null ? ' ' + Math.round(h.pick_pct) + '%' : '')); wc.append(tick(hit, hit === 'hit' ? 'Right' : hit === 'miss' ? 'Wrong' : 'Not graded')); chips.append(wc);
   rvSide(h).forEach((x) => { const c = el('span', x.l, 'chip'); c.append(tick(x.v)); chips.append(c); });
+  if (window.SSG && SSG.slipChips && h.status === 'Final') SSG.slipChips(h).forEach((c) => chips.append(c));
   if (h.conf) chips.append(el('span', h.conf === 'Low' ? 'Close call' : h.conf, 'chip ' + h.conf));
   const ft = el('div', null, 'ft'); ft.append(chips, el('span', 'All stats ›', 'go'));
   const card = el('div', null, 'pick tile gcard rvgc'); card.append(mu, ft);

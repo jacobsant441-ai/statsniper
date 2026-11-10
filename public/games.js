@@ -433,5 +433,89 @@
     return card;
   }
 
-  window.SSG = { defCourt, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor };
+
+  // ---- Instant results: a game that is full time in the live feed is graded right away in the browser, with the
+  // same rules as scripts/grade.js. The cloud grades it officially a few minutes later and its row replaces ours.
+  const nday = (d) => String(d || '').replace(/^(\w+) 0(\d) /, '$1 $2 ').trim();
+  const tHit = (lean, total, line) => { if (!Number.isFinite(total) || !Number.isFinite(Number(line)) || !/over|under/i.test(lean || '')) return ''; if (total === Number(line)) return 'push'; return (/over/i.test(lean) ? total > line : total < line) ? 'hit' : 'miss'; };
+  const tkn = (h) => (h === 'hit' ? '✓' : h === 'miss' ? '✗' : '');
+  const NOTE = ' Graded from the live final score; the official grade confirms it shortly.';
+  function provisional(off) {
+    const hist = [], fin = [];
+    const have = new Set(off.filter((h) => h.status === 'Final').map((h) => (h.sport || 'nba') + '|' + h.id + '|' + nday(h.date)));
+    const post = liveRows('livegames').filter((r) => r.state === 'post');
+    post.filter((r) => r.sport === 'nba').forEach((r) => {
+      const day = dayKey(new Date(r.start_time)), id = r.game_id; if (have.has('nba|' + id + '|' + day)) return;
+      const g = rows('games').find((x) => x.id === id && nday(x.date) === day), p = rows('pred').find((x) => x.id === id); if (!g || !p || g.away !== r.away_code || g.home !== r.home_code) return;
+      const ap = sc(r.away_score), hp = sc(r.home_score), [an, hn] = String(p.matchup || g.matchup || '').split(' @ '), win = ap > hp ? g.away : g.home;
+      const row = { sport: 'nba', date: day, id, away: g.away, home: g.home, away_name: an || g.away, home_name: hn || g.home, kick: String(g.time || '').toLowerCase(), status: 'Final', away_pts: ap, home_pts: hp, pick: p.ml_pick || p.winner, pick_pct: p.ml_final_prob, conf: p.combined_conf || p.confidence, total_lean: p.total_lean, posted_total: p.posted_total != null ? p.posted_total : g.total, proj_total: p.proj_total, winner_hit: '', total_hit: '', auto: true, provisional: true };
+      row.winner_hit = win === row.pick ? 'hit' : 'miss'; row.total_hit = tHit(row.total_lean, ap + hp, row.posted_total);
+      row.verdict = tkn(row.winner_hit) + ' Picked ' + row.pick + ' (' + row.pick_pct + '%, ' + row.conf + '): ' + win + ' won ' + Math.max(ap, hp) + '-' + Math.min(ap, hp) + '.' + (row.total_hit ? ' ' + tkn(row.total_hit) + ' ' + row.total_lean + ' ' + row.posted_total + ': total was ' + (ap + hp) + '.' : '') + NOTE;
+      row.factors = p.margin != null ? ['Margin: we projected ' + p.winner + ' by ' + p.margin + '; actual ' + win + ' by ' + Math.abs(ap - hp) + '.'] : [];
+      hist.push(row); fin.push({ id, status: 'Final', away_pts: ap, home_pts: hp, note: '', date: day, provisional: true });
+    });
+    post.filter((r) => r.sport === 'nfl').forEach((r) => {
+      const g = rows('nflgames').find((x) => x.id === r.game_id); if (!g) return;
+      const day = nday(String(g.kick).split(',')[0]); if (have.has('nfl|' + g.id + '|' + day)) return;
+      const ap = sc(r.away_score), hp = sc(r.home_score), win = ap > hp ? g.away : hp > ap ? g.home : 'TIE';
+      const row = { sport: 'nfl', date: day, id: g.id, away: g.away, home: g.home, away_name: g.away_name, home_name: g.home_name, kick: String(g.kick).split(',').slice(1).join(',').trim(), status: 'Final', away_pts: ap, home_pts: hp, pick: g.pick, pick_pct: g.pick_pct, conf: g.conf, total_lean: g.total_lean, posted_total: g.total, proj_total: g.proj_total, spread_pick: g.cover_pick || g.ats_pick || '', spread_home: g.spread_home, winner_hit: win === g.pick ? 'hit' : 'miss', total_hit: tHit(g.total_lean, ap + hp, g.total), spread_hit: '', auto: true, provisional: true };
+      if (row.spread_pick && Number.isFinite(Number(g.spread_home))) { const ats = hp + Number(g.spread_home) - ap; row.spread_hit = ats === 0 ? 'push' : (ats > 0 ? g.home : g.away) === row.spread_pick ? 'hit' : 'miss'; }
+      row.verdict = tkn(row.winner_hit) + ' Picked ' + g.pick + ' (' + g.pick_pct + '%, ' + g.conf + '): ' + (win === 'TIE' ? 'tie' : win + ' won') + ' ' + Math.max(ap, hp) + '-' + Math.min(ap, hp) + '.' + (row.total_hit ? ' ' + tkn(row.total_hit) + ' ' + g.total_lean + ' ' + g.total + ': total ' + (ap + hp) + '.' : '') + (row.spread_hit ? ' ' + tkn(row.spread_hit) + ' Spread pick ' + row.spread_pick + '.' : '') + NOTE;
+      row.factors = g.proj_home != null ? ['Score: we projected ' + g.home + ' ' + g.proj_home + ' - ' + g.away + ' ' + g.proj_away + '; final ' + g.home + ' ' + hp + ' - ' + g.away + ' ' + ap + '.'] : [];
+      hist.push(row);
+    });
+    const table = rows('table');
+    const codeOf = (name, league) => { const t = table.find((q) => q.team === name && q.league === league) || table.find((q) => q.team === name); return t ? t.abbr : String(name).slice(0, 3).toUpperCase(); };
+    rows('fixtures').forEach((x) => {
+      const r = post.find((q) => q.sport === 'fb' && nsim(q.home_name, x.home) && nsim(q.away_name, x.away)); if (!r) return;
+      const day = nday(String(x.time).split(',')[0]); if (have.has('fb|' + x.id + '|' + day)) return;
+      const hc = codeOf(x.home, x.league), ac = codeOf(x.away, x.league), hg = sc(r.home_score), ag = sc(r.away_score), tot = hg + ag, both = hg > 0 && ag > 0;
+      const pickSide = /draw/i.test(x.pick) ? 'Draw' : x.pick.indexOf(x.home) === 0 ? hc : ac, resSide = hg > ag ? hc : ag > hg ? ac : 'Draw';
+      const row = { sport: 'fb', league: x.league, date: day, id: x.id, away: ac, home: hc, away_name: x.away, home_name: x.home, kick: String(x.time).split(',').slice(1).join(',').replace(/\s*AEDT/, '').trim().toLowerCase(), status: 'Final', away_pts: ag, home_pts: hg, pick: pickSide, pick_text: x.pick, pick_pct: x.pick_pct, conf: x.confidence, gp_pick: x.goals_play && x.goals_play.pct ? x.goals_play.pick : '', gp_pct: x.goals_play ? x.goals_play.pct : null, gp_hit: '', btts_pick: x.btts_pick, p_btts: x.p_btts, ou_pick: x.ou_pick, p_o25: x.p_o25, total_lean: /over|under/i.test(x.ou_pick) ? x.ou_pick : 'Coin toss', posted_total: 2.5, proj_total: x.xg_total, proj_score: x.proj_score, winner_hit: resSide === pickSide ? 'hit' : 'miss', total_hit: '', btts_hit: '', auto: true, provisional: true };
+      if (row.gp_pick) { const ok = { 'Over 1.5': tot > 1, 'Under 1.5': tot < 2, 'Over 2.5': tot > 2, 'Under 2.5': tot < 3, 'Over 3.5': tot > 3, 'Under 3.5': tot < 4, 'Both score': both, 'Not both': !both }[row.gp_pick]; row.gp_hit = ok == null ? '' : ok ? 'hit' : 'miss'; }
+      row.btts_hit = /^(Both score|Not both)$/.test(x.btts_pick || '') ? ((x.btts_pick === 'Both score') === both ? 'hit' : 'miss') : '';
+      row.total_hit = tHit(row.total_lean.replace(' 2.5', ''), tot, 2.5);
+      row.verdict = (row.gp_hit ? tkn(row.gp_hit) + ' Main play ' + row.gp_pick + ' (' + row.gp_pct + '%). ' : '') + tkn(row.winner_hit) + ' Picked ' + x.pick + ' (' + x.pick_pct + '%, ' + x.confidence + '): finished ' + x.home + ' ' + hg + '-' + ag + ' ' + x.away + '. ' + (row.btts_hit ? tkn(row.btts_hit) + ' ' + x.btts_pick + '.' : '') + (row.total_hit ? ' ' + tkn(row.total_hit) + ' ' + x.ou_pick + '.' : '') + NOTE;
+      row.factors = ['Score: we projected ' + x.proj_score + ', it finished ' + hg + '-' + ag + '.'];
+      hist.push(row);
+    });
+    return { hist, fin };
+  }
+  // Called by the page's rows() for the `history` and `final` datasets.
+  function merge(id, base) {
+    const raw = dash.data('history'), off = raw.status === 'ok' && Array.isArray(raw.data) ? raw.data : [];
+    const P = provisional(off); if (!P.hist.length) return base;
+    const key = (h) => (h.sport || 'nba') + '|' + h.id + '|' + nday(h.date), keys = new Set(P.hist.map(key));
+    if (id === 'history') return base.filter((h) => !keys.has(key(h))).concat(P.hist);
+    if (id === 'final') { const ids = new Set(P.fin.map((f) => f.id + '|' + f.date)); return base.filter((f) => !(f.status !== 'Final' && ids.has(f.id + '|' + nday(f.date)))).concat(P.fin); }
+    return base;
+  }
+
+  // ---- Slip ticks: the plays from the owner's logged bets that sit on a finished game, green tick if they landed,
+  // red cross if not (bets are private to the owner's Mac, so the public site never has any).
+  function legState(l, h) {
+    if (l.status === 'won') return 'hit'; if (l.status === 'lost') return 'miss'; if (l.status === 'void') return '';
+    if (!h || h.status !== 'Final' || h.home_pts == null) return '';
+    const hp = Number(h.home_pts), ap = Number(h.away_pts), tot = hp + ap, pick = String(l.pick || ''); let m;
+    if ((m = pick.match(/^(Over|Under) ([\d.]+)/i)) && (l.market === 'Total' || l.market === 'Goals')) { const L = Number(m[2]); return tot === L ? '' : (/over/i.test(m[1]) ? tot > L : tot < L) ? 'hit' : 'miss'; }
+    if (l.market === 'Winner') { if (/^draw$/i.test(pick)) return hp === ap ? 'hit' : 'miss'; const team = pick.replace(/ win$/i, ''); const home = nsim(team, h.home_name) || team === h.home; const away = nsim(team, h.away_name) || team === h.away; if (!home && !away) return ''; return hp === ap ? 'miss' : (home ? hp > ap : ap > hp) ? 'hit' : 'miss'; }
+    if (l.market === 'Spread' && (m = pick.match(/^(.*) ([+-][\d.]+)$/))) { const home = nsim(m[1], h.home_name); const mg = (home ? hp - ap : ap - hp) + Number(m[2]); return mg === 0 ? '' : mg > 0 ? 'hit' : 'miss'; }
+    return '';
+  }
+  function slipChips(h) {
+    const out = [];
+    betRows().forEach((b) => {
+      const legs = legsOf(b) || [b];
+      legs.forEach((l) => {
+        if (!(l.sp === (h.sport || 'nba') && l.game === h.id && nday(l.date) === nday(h.date))) return;
+        const st = legState(l, h); const c = el('span', 'Slip: ' + l.pick, 'chip slipchip ' + (st || 'open'));
+        c.append(el('span', st === 'hit' ? '✓' : st === 'miss' ? '✕' : '–', 'mk ' + (st || 'na')));
+        c.title = (legs.length > 1 ? legs.length + ' leg multi' : 'Single') + ' · $' + Number(b.stake || 0).toFixed(2) + ' @ ' + Number(b.price || 0).toFixed(2) + (st ? (st === 'hit' ? ' · landed' : ' · lost') : ' · waiting for the result');
+        out.push(c);
+      });
+    });
+    return out;
+  }
+
+  window.SSG = { defCourt, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();
