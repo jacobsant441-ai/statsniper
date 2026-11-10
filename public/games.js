@@ -92,8 +92,9 @@
       const key = dayKey(new Date(now.getTime() + k * 86400000));
       const today = items.filter((i) => i.day === key); if (!today.length) continue;
       const plays = today.map((i) => { const m = i.sp === 'fb' ? fbMain(i.x) : pickMain(candidates(i.sp, i.id)); return m ? { ...i, m } : null; }).filter((i) => i && i.m.price >= MIN_PRICE);
-      // props: ranked by hit rate pulled toward 50% for small samples (8/9 ranks above 6/7)
-      const props = propPlays(today.filter((i) => i.sp === 'nba')).sort((a, b) => b.m.rank - a.m.rank || b.m.price - a.m.price);
+      // Our own milestone props (propPlays, prop finder) are hidden from Best bets (owner, 10 Nov): only bookie
+      // props with real AU prices show. To bring them back: const props = propPlays(today.filter((i) => i.sp === 'nba'));
+      const props = [];
       const bprops = bookPlays(today.filter((i) => i.sp === 'nba'));
       if (plays.length || props.length || bprops.length) { groups.push({ key, plays: plays.sort((a, b) => b.m.chance - a.m.chance), props, bprops }); break; }
     }
