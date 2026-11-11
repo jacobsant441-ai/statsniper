@@ -1,7 +1,7 @@
 <meta name="dash-one-writer">
 <link rel="stylesheet" href="app.css">
 <div class="nt">
-<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><span>⌂</span>Home</button><button type="button" data-sec="home"><span>◎</span>Games</button><button type="button" data-sec="review"><span>✓</span>Review</button></nav>
+<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><span>⌂</span>Home</button><button type="button" data-sec="home"><span>◎</span>Games</button><button type="button" data-sec="bets"><span>$</span>Bets</button><button type="button" data-sec="review"><span>✓</span>Review</button></nav>
 <span class="livetick" data-draw="livetick" data-source="livegames" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></span>
 <div class="appbar" id="appbar" data-draw="appbar" data-source="games fixtures nflgames history schedule ufcfights bets"></div>
 <div class="ssearch" role="search"><label class="ssbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ssq" type="search" placeholder="Search teams, players, fighters" aria-label="Search teams, players and fighters" autocomplete="off" spellcheck="false"></label><div class="ssres" id="ssres" role="listbox" aria-label="Search results" data-draw="ssearch" data-source="pidx nfltable table"></div></div>
@@ -13,7 +13,6 @@
 <section class="hs" data-sp="nfl"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="nfl"></span><div class="hst"><h2>NFL</h2><span class="hsc" data-draw="hscount" data-sp="nfl" data-source="nflgames schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="nfl" aria-label="Open NFL">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="nfl" data-source="nflgames schedule history livegames"></div></section>
 <section class="hs" data-sp="ufc"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="ufc"></span><div class="hst"><h2>UFC</h2><span class="hsc" data-draw="hscount" data-sp="ufc" data-source="ufcfights schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="ufc" aria-label="Open UFC">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="ufc" data-source="ufcfights ufcevents schedule history"></div></section>
 </div>
-<section class="card bb" id="bestbets"><h2>Best bets</h2><div data-draw="bestbets" data-source="games pred fixtures nflgames odds props propfind propbook altlines"></div></section>
 <section class="card sec mbwrap" id="mybets"><button type="button" class="mbhead" aria-expanded="false"><h2>My bets</h2><span class="mbsum" data-draw="mybetsum" data-source="bets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybets" data-source="bets"></div></div></section>
 </div>
 <div class="view" id="view-nba" hidden>
@@ -71,7 +70,6 @@
 </div>
 </div>
 <div class="view" id="view-bets" hidden>
-<div class="topbar"><button type="button" class="backbtn" id="bbback">‹ Back</button></div>
 <section class="card bb bbpage"><h2>Best bets</h2><div data-draw="bestall" data-source="games pred fixtures nflgames odds history props propfind propbook altlines"></div></section>
 </div>
 <div class="view" id="view-player" hidden>
@@ -227,8 +225,10 @@ dash.onData(() => { dataGen++; });
 let RVO = null, RVH = null, rvKeep = false, rvY = 0, rvCardK = '';
 const rows = (id) => { if (RVO && RVO[id]) return RVO[id]; const hit = rowsCache.get(id); if (hit && hit.gen === dataGen) return hit.m; const g = dash.data(id); if (g.status !== 'ok') return []; const d = g.data; if (!Array.isArray(d)) return d; const c = hit && hit.d === d ? hit.c : d.map(jvRow); let m = c; if ((id === 'history' || id === 'final') && window.SSG && SSG.merge) { try { m = SSG.merge(id, c); } catch (e) { m = c; } } rowsCache.set(id, { gen: dataGen, d, c, m }); return m; };
 const altTxt = (line, hit, side) => (line == null ? 'none' : side + ' ' + f1(line) + ' (' + hit + ')');
-const finalOf = (id) => rows('final').find((x) => x.id === id);
-const done = (id) => { const f = finalOf(id); return f && f.status === 'Final' ? f : null; };
+// Same teams can meet on back-to-back days: a result only counts for the day it was played (default: the day on screen).
+const finalOf = (id, day = selDay) => rows('final').find((x) => x.id === id && (!x.date || normDay(x.date) === day));
+const done = (id, day) => { const f = finalOf(id, day); return f && f.status === 'Final' ? f : null; };
+const curGame = () => { const a = rows('games').filter((x) => x.id === current); return a.find((x) => nbaDay(x) === selDay) || a[a.length - 1]; };
 const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[.']/g, '').replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/\s+/g, ' ').trim();
 const actualOf = (game, player, stat) => { const r = rows('pact').find((q) => q.game === game && norm(q.player) === norm(player)); if (!r) return null; return stat === 'PTS' ? r.pts : stat === 'REB' ? r.reb : stat === 'AST' ? r.ast : stat === '3PM' ? r.tpm : stat === 'PRA' ? r.pts + r.reb + r.ast : null; };
 const tick = (st, tip) => { const s = el('span', st === 'hit' ? '✓' : st === 'miss' ? '✕' : '–', 'mk ' + (st || 'na')); s.title = tip || (st === 'hit' ? 'Hit' : st === 'miss' ? 'Missed' : 'Not graded'); s.setAttribute('aria-label', s.title); return s; };
@@ -385,7 +385,7 @@ function emptyBox(sp) {
   if (nxt) { const b = el('button', 'Jump to ' + nxt.k); b.type = 'button'; b.addEventListener('click', () => { selDay = nxt.k; wkOff = Math.floor(nxt.i / 7); redrawAll(); }); d.append(b); }
   return d;
 }
-function redrawAll() { ['hsicon', 'hscount', 'hstrip', 'rvboard', 'rvlist', 'rvrec', 'rvins', 'rvsum', 'rveye', 'rvhead', 'pgrid', 'fbgrid', 'nflgrid', 'ufcgrid', 'ufcstats', 'appbar', 'rvall', 'rvstats', 'rvsum', 'rveye', 'rvhead', 'rvlive'].forEach((n) => dash.draw(n)); }
+function redrawAll() { ['bestall', 'hsicon', 'hscount', 'hstrip', 'rvboard', 'rvlist', 'rvrec', 'rvins', 'rvsum', 'rveye', 'rvhead', 'pgrid', 'fbgrid', 'nflgrid', 'ufcgrid', 'ufcstats', 'appbar', 'rvall', 'rvstats', 'rvsum', 'rveye', 'rvhead', 'rvlive'].forEach((n) => dash.draw(n)); }
 function syncChrome() {
   const ab = document.getElementById('appbar'); if (!ab) return;
   const sh = (id) => { const e = document.getElementById(id); return e && !e.hidden; };
@@ -442,6 +442,7 @@ const pick = (id) => { current = id; dash.setLink(id); dash.draw('chips'); dash.
 const TC = {WAS:['#002B5C'],CLE:['#860038'],MIA:['#98002E'],ATL:['#E03A3E'],PHI:['#006BB6'],IND:['#002D62'],CHA:['#1D1160'],DET:['#C8102E'],ORL:['#0077C0'],TOR:['#CE1141'],HOU:['#CE1141'],MIL:['#00471B'],NYK:['#006BB6'],CHI:['#CE1141'],GSW:['#1D428A'],MIN:['#236192'],DEN:['#0E2240'],NOP:['#0C2340'],SAS:['#5b6670'],UTA:['#4b2e83'],OKC:['#007AC1'],DAL:['#00538C'],LAL:['#552583'],LAC:['#C8102E']};
 const badge = (code) => { const lg = window.NBA_LOGOS && window.NBA_LOGOS[code]; if (lg) { const b = el('span', null, 'bd logo'); const im = document.createElement('img'); im.src = lg; im.alt = code; b.append(im); return b; } const b = el('span', code, 'bd'); b.style.background = (TC[code] || ['#333'])[0]; return b; };
 let mainY = 0, lastId = '';
+const LOGT = {}; // game logs: which team is showing, per game
 const goDetail = (id) => { fromRv = false; const bb0 = document.getElementById('backbtn'); if (bb0) bb0.textContent = '‹ Back to games'; try { mainY = window.scrollY; lastId = id; } catch (e) {} pick(id); document.getElementById('mainpage').hidden = true; document.getElementById('gamepage').hidden = false; syncChrome(); toView('gamepage'); };
   const restoreY = () => { try { const id = lastId || current; const c = id && document.querySelector('#pgrid [data-id="' + id + '"]'); if (c) { c.style.scrollMarginTop = '70px'; c.scrollIntoView({ block: 'start', behavior: 'instant' }); } else window.scrollTo(0, mainY); } catch (e) { try { window.scrollTo(0, mainY); } catch (e2) {} } };
   let holdT = null;
@@ -544,7 +545,7 @@ dash.draw('chips', (box) => {
   if (!g.length) return;
   box.replaceChildren(...g.map((r) => { const b = el('button', r.away + ' @ ' + r.home, r.id === current ? 'on' : ''); b.type = 'button'; b.addEventListener('click', () => pick(r.id)); return b; }));
 });
-dash.draw('dtitle', (h) => { const r = rows('games').find((x) => x.id === current); if (r) h.textContent = r.matchup + ', ' + r.time + ' AEDT'; });
+dash.draw('dtitle', (h) => { const r = curGame(); if (r) h.textContent = r.matchup + ', ' + r.time + ' AEDT'; });
 
 function teamCard(t, g) {
   const c = el('div', null, 'card');
@@ -572,7 +573,7 @@ function teamCard(t, g) {
 const NB_TEAM = {}; // team picked in the Lineups / Injuries switch, per game
 const NB_TAB = {}, NFL_TAB = {}; // tab picked on each game page, so returning to a game reopens it
 dash.draw('detail', (box) => {
-  const g = rows('games').find((x) => x.id === current);
+  const g = curGame();
   const teams = rows('teams').filter((t) => t.game === current);
   if (!g || teams.length < 2) return;
   const fz = done(current), tot = fz ? fz.home_pts + fz.away_pts : null;
@@ -764,16 +765,15 @@ dash.draw('detail', (box) => {
   const ln = el('div', null, 'card');
   ln.append(el('h2', 'Game logs and common opponents'));
   const lg = rows('log').filter((r) => r.game === current);
+  // one team at a time: a toggle for away / home
   const lt2 = document.createElement('table');
-  lt2.innerHTML = '<thead><tr><th>Team</th><th>Opponent</th><th>Venue</th><th>Score</th><th>Total</th><th>Result</th></tr></thead>';
-  const lb2 = document.createElement('tbody');
-  lg.forEach((r) => {
-    const tr = document.createElement('tr');
-    [r.team, r.opp, r.venue, r.pf + '-' + r.pa, String(r.total), r.result].forEach((v) => tr.append(el('td', v)));
-    lb2.append(tr);
-  });
-  lt2.append(lb2);
-  const sc2 = el('div', null, 'scroll'); sc2.append(lt2); ln.append(sc2);
+  lt2.innerHTML = '<thead><tr><th>Opponent</th><th>Venue</th><th>Score</th><th>Total</th><th>Result</th></tr></thead>';
+  const lb2 = document.createElement('tbody'); lt2.append(lb2);
+  const [anm, hnm] = String(g.matchup || '').split(' @ '), ltog = el('div', null, 'pptabs');
+  const showT = (c) => { LOGT[current] = c; ltog.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === c)); lb2.replaceChildren(...lg.filter((r) => r.team === c).map((r) => { const tr = document.createElement('tr'); [r.opp, r.venue, r.pf + '-' + r.pa, String(r.total), r.result].forEach((v) => tr.append(el('td', v))); return tr; })); };
+  [[g.away, anm], [g.home, hnm]].forEach(([c, n]) => { const b = el('button', n || c); b.type = 'button'; b.dataset.t = c; b.addEventListener('click', () => showT(c)); ltog.append(b); });
+  showT(LOGT[current] === g.home ? g.home : g.away);
+  const sc2 = el('div', null, 'scroll'); sc2.append(lt2); ln.append(ltog, sc2);
   const opp = {}; lg.forEach((r) => { (opp[r.opp] = opp[r.opp] || {})[r.team] = r.pf + '-' + r.pa; });
   const common = Object.keys(opp).filter((o) => opp[o][g.away] && opp[o][g.home]);
   ln.append(el('p', common.length ? 'Common opponents: ' + common.map((o) => o + ' (' + g.away + ' ' + opp[o][g.away] + ', ' + g.home + ' ' + opp[o][g.home] + ')').join('; ') : 'Common opponents: none yet this season.', 'muted keep'));
@@ -1440,7 +1440,7 @@ dash.draw('rvall', (box) => { try {
     const w = el('div', null, 'bxday'); w.append(el('h3', dy));
     const grid = el('div', null, 'pgrid');
     fin.filter((h) => normDay(h.date) === dy).forEach((h) => {
-      const pg = rows('games').find((q) => q.id === h.id && nbaDay(q) === dy && done(q.id) && rows('pred').some((x) => x.id === q.id));
+      const pg = rows('games').find((q) => q.id === h.id && nbaDay(q) === dy && done(q.id, dy) && rows('pred').some((x) => x.id === q.id));
       if (pg) { const it = el('div', null, 'rvitem'); it.append(nbaPickCard(pg, 'Open all stats and box score ›', openFromRv)); grid.append(it); return; }
       const item = el('div', null, 'rvitem'); const card = histCard(h); const g = bs.find((x) => x.id === h.id && normDay(x.date) === dy);
       if (g) {
@@ -2039,13 +2039,13 @@ const hsUp = (sp, day) => hsGames(sp, day).length + schedFor(sp, day).length + (
 const hsTick = (h) => (h.winner_hit === 'hit' ? '✓ ' : h.winner_hit === 'miss' ? '✗ ' : '');
 const hsResCls = (h) => (h && h.winner_hit === 'hit' ? 'won' : h && h.winner_hit === 'miss' ? 'lost' : '');
 const hsDay = () => dayAt(0).key;
-// Days Home shows for a sport: today (with results) until 11 pm Sydney, plus tomorrow from 4 pm or when today
-// has nothing for that sport; from 11 pm only tomorrow.
+// Days Home shows for a sport: today (with results) until 11 pm Sydney and tomorrow, each in its own row;
+// from 11 pm only tomorrow.
 const hsDays = (sp) => {
   const h = sydHour(), t0 = dayAt(0).key, t1 = dayAt(1).key;
   if (h >= 23) return hsUp(sp, t1) ? [t1] : [];
   const out = []; if (hsUp(sp, t0)) out.push(t0);
-  if ((h >= 16 || !out.length) && hsUp(sp, t1)) out.push(t1);
+  if (hsUp(sp, t1)) out.push(t1);
   return out;
 };
 // Show a sport's section only when it has games on those days; the note shows when none do.
@@ -2077,17 +2077,17 @@ const hsTwoL = (ca, a, cb, b) => { const m = el('div', null, 'two lg'); [[ca, a]
 const hsCards = (sp, day) => {
   const out = [], fin = []; // finished games go to the back of the row
   if (sp === 'nba') {
-    hsGames('nba', day).slice().sort((a, b) => (done(a.id) ? 1 : 0) - (done(b.id) ? 1 : 0)).forEach((g) => {
-      const p = rows('pred').find((x) => x.id === g.id); const f = done(g.id); const hr = f && hsRes('nba', g.id, day);
+    hsGames('nba', day).slice().sort((a, b) => (done(a.id, day) ? 1 : 0) - (done(b.id, day) ? 1 : 0)).forEach((g) => {
+      const p = rows('pred').find((x) => x.id === g.id); const f = done(g.id, day); const hr = f && hsRes('nba', g.id, day);
       const tm = f ? 'Final · ' + f.away_pts + '-' + f.home_pts : g.time;
-      { const c = hsCard(hsResCls(hr), tm, hsTeams(g.away, g.home, '@'), p ? (hr ? hsTick(hr) : '') + p.winner + ' by ' + f1(p.margin) + (p.ml_final_prob ? ' · ' + p.ml_final_prob + '%' : '') : 'Open breakdown', () => { ssOpenDay('nba', day); goDetail(g.id); }); if (!f && window.SSG) SSG.liveHome(c, 'nba', g.id); out.push(c); }
+      { const c = hsCard(hsResCls(hr), tm, hsTeams(g.away, g.home, '@'), p ? (hr ? hsTick(hr) : '') + p.winner + ' by ' + f1(p.margin) + (p.ml_final_prob ? ' · ' + p.ml_final_prob + '%' : '') : 'Open breakdown', () => { ssOpenDay('nba', day); goDetail(g.id); }); if (!f && window.SSG) SSG.liveHome(c, 'nba', g.id, day); out.push(c); }
     });
   } else if (sp === 'fb') {
     const fbRes = (h) => hsCard(hsResCls(h), lgLine(h.league, 'FT ' + h.home_pts + '-' + h.away_pts), hsTwoL(h.home, h.home_name, h.away, h.away_name), hsTick(h) + (h.pick_text || h.pick) + (h.pick_pct ? ' · ' + Math.round(h.pick_pct) + '%' : ''), () => { ssOpenDay('fb', day); });
-    hsGames('fb', day).forEach((x) => { const h = hsRes('fb', x.id, day); if (h && h.status === 'Final') fin.push(fbRes(h)); else { const c = hsCard('', lgLine(x.league, tsplit(x.time)[1]), hsTwoL(fbAbbr(x.home), x.home, fbAbbr(x.away), x.away), x.pick ? x.pick + (x.pick_pct ? ' · ' + Math.round(x.pick_pct) + '%' : '') : 'Open breakdown', () => { ssOpenDay('fb', day); fbNav.go(x.id); }); if (window.SSG) SSG.liveHome(c, 'fb', x); out.push(c); } });
+    hsGames('fb', day).forEach((x) => { const h = hsRes('fb', x.id, day); if (h && h.status === 'Final') fin.push(fbRes(h)); else { const c = hsCard('', lgLine(x.league, tsplit(x.time)[1]), hsTwoL(fbAbbr(x.home), x.home, fbAbbr(x.away), x.away), x.pick ? x.pick + (x.pick_pct ? ' · ' + Math.round(x.pick_pct) + '%' : '') : 'Open breakdown', () => { ssOpenDay('fb', day); fbNav.go(x.id); }); if (window.SSG) SSG.liveHome(c, 'fb', x, day); out.push(c); } });
     hsFbDone(day).forEach((h) => fin.push(hsCard(hsResCls(h), lgLine(h.league, 'FT ' + h.home_pts + '-' + h.away_pts), hsTwoL(h.home, h.home_name, h.away, h.away_name), hsTick(h) + (h.pick_text || h.pick) + (h.pick_pct ? ' · ' + Math.round(h.pick_pct) + '%' : ''), () => { ssOpenDay('fb', day); })));
   } else if (sp === 'nfl') {
-    hsGames('nfl', day).forEach((x) => { const hr = hsRes('nfl', x.id, day); const c = (hsCard(hsResCls(hr), hr ? (hr.status === 'Final' ? 'Final · ' : 'Live · ') + hr.away_pts + '-' + hr.home_pts : String(x.kick).split(',').slice(1).join(',').trim() || x.title || '', hsTwoL(x.away, x.away_name, x.home, '@ ' + x.home_name), (hr ? hsTick(hr) : '') + (x.pick ? x.pick + (x.pick_pct ? ' · ' + Math.round(x.pick_pct) + '%' : '') : 'Open breakdown'), () => { ssOpenDay('nfl', day); nflNav.go(x.id); })); if (!(hr && hr.status === 'Final') && window.SSG) SSG.liveHome(c, 'nfl', x.id); out.push(c); });
+    hsGames('nfl', day).forEach((x) => { const hr = hsRes('nfl', x.id, day); const c = (hsCard(hsResCls(hr), hr ? (hr.status === 'Final' ? 'Final · ' : 'Live · ') + hr.away_pts + '-' + hr.home_pts : String(x.kick).split(',').slice(1).join(',').trim() || x.title || '', hsTwoL(x.away, x.away_name, x.home, '@ ' + x.home_name), (hr ? hsTick(hr) : '') + (x.pick ? x.pick + (x.pick_pct ? ' · ' + Math.round(x.pick_pct) + '%' : '') : 'Open breakdown'), () => { ssOpenDay('nfl', day); nflNav.go(x.id); })); if (!(hr && hr.status === 'Final') && window.SSG) SSG.liveHome(c, 'nfl', x.id, day); out.push(c); });
   } else if (sp === 'ufc') {
     hsGames('ufc', day).slice().sort((a, b) => (a.order || 99) - (b.order || 99)).forEach((f) => out.push(hsCard('', (f.card || '') + (f.weight ? ' · ' + f.weight : ''), hsTwo(f.a, 'vs ' + f.b), f.status === 'Final' && f.result ? (f.pick ? (f.result === f.pick ? '✓ ' : '✗ ') : '') + 'Won: ' + f.result : f.pick ? f.pick + (f.pick_pct ? ' · ' + Math.round(f.pick_pct) + '%' : '') : 'Open card', () => { selDay = day; sport = 'ufc'; openFight(f.id); })));
   }
@@ -2098,7 +2098,8 @@ const hsCards = (sp, day) => {
 };
 dash.draw('hstrip', (box) => {
   const sp = box.dataset.sp, t0 = dayAt(0).key, out = [];
-  hsDays(sp).forEach((day) => { const c = hsCards(sp, day); if (!c.length) return; if (day !== t0) out.push(el('div', 'Tomorrow · ' + day, 'hstm')); out.push(...c); });
+  hsDays(sp).forEach((day) => { const c = hsCards(sp, day); if (!c.length) return; const d = el('div', null, 'hsday'), l = el('div', null, 'hsdl'), row = el('div', null, 'hstrip'); l.append(el('b', day === t0 ? 'Today' : 'Tomorrow'), document.createTextNode(' · ' + day)); row.append(...c); d.append(l, row); out.push(d); });
+  box.classList.toggle('hsdays', out.length > 0);
   if (!out.length) {
     const p = el('div', null, 'hsnone'); p.append(el('span', 'No ' + hsWord(sp, 2) + ' scheduled in the next 30 days.'));
     box.replaceChildren(p); return;
@@ -2705,7 +2706,7 @@ const navBack = () => {
   return true;
 };
 const openBetResults = () => { sec = 'review'; applyView(); setTimeout(() => { const c = document.getElementById('mybetsrv'); if (c) { c.classList.add('open'); const hb = c.querySelector('.mbhead'); if (hb) hb.setAttribute('aria-expanded', 'true'); const d = c.querySelector('details'); if (d) d.open = true; c.scrollIntoView({ block: 'start' }); window.scrollBy(0, -120); } }, 60); };
-window.SSX = { navBack, navDepth: () => NAV.length, navList: () => NAV.map(pageKey), openBetResults, openBets, openGame: (sp, id, day) => { ssOpenDay(sp, day); if (sp === 'nba') goDetail(id); else if (sp === 'fb') fbNav.go(id); else nflNav.go(id); }, get current() { return current; }, el, rows, plCur, plNeed, atNeed, plTeamNames, plRow, plGames, h2hGames, plUpcoming, plDate, plDraw, atLabel, atKeys, atGames, atRow, badge, bdX, norm, f1, avatar, openTeam, openPlayer, openAthlete, toView, MON, PL, AT, AT_DS, AT_HS, AT_CUR, get sec() { return sec; }, get dataGen() { return dataGen; } };
+window.SSX = { navBack, navDepth: () => NAV.length, navList: () => NAV.map(pageKey), openBetResults, openBets, openGame: (sp, id, day) => { ssOpenDay(sp, day); if (sp === 'nba') goDetail(id); else if (sp === 'fb') fbNav.go(id); else nflNav.go(id); }, get current() { return current; }, el, rows, plCur, plNeed, atNeed, plTeamNames, plRow, plGames, h2hGames, plUpcoming, plDate, plDraw, atLabel, atKeys, atGames, atRow, badge, bdX, norm, f1, avatar, openTeam, openPlayer, openAthlete, toView, MON, PL, AT, AT_DS, AT_HS, AT_CUR, get sec() { return sec; }, get selDay() { return selDay; }, get dataGen() { return dataGen; } };
 </script>
 <script src="player.js"></script>
 <script src="games.js"></script>

@@ -1635,17 +1635,30 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .slipchip.hit{color:#4be38c;border-color:rgba(31,213,107,.6);background:rgba(31,213,107,.1)}
 .slipchip.miss{color:#ff7d81;border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.1)}
 .slipchip.open{color:#f5c45e;border-color:rgba(245,184,61,.5)}
-/* Bookie lines panel on player profiles */
-.ppbk h3{margin:0;font-size:.95rem}
-.ppbkd{border-top:1px solid var(--sb-line);padding:4px 0}
-.ppbkd:first-of-type{margin-top:8px}
-.ppbkd summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;font-size:.86rem}
-.ppbkd summary .muted{font-size:.76rem;color:var(--sb-muted)}
-.ppbkr{display:grid;grid-template-columns:3.4rem 1fr 5.6rem 3.6rem;gap:6px;align-items:center;width:100%;background:none;border:0;border-radius:8px;color:inherit;font:inherit;font-size:.8rem;padding:6px 4px;text-align:left;font-variant-numeric:tabular-nums;cursor:pointer}
-.ppbkr:hover{background:rgba(127,127,127,.08)}
-.ppbkr.hd{cursor:default;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sb-muted);padding:2px 4px}
-.ppbkr.hd:hover{background:none}
-.ppbkr .muted{color:var(--sb-muted);font-size:.74rem}
-.ppbkr span:nth-child(3),.ppbkr span:nth-child(4){text-align:right}
-.ppbkr .up{color:#3ccf7f;font-weight:700}
-.ppbkr .dn{color:#ff6b63}
+/* Bookie lines on player profiles: one tile per stat (the bookies' main over / under) */
+.ppbk{margin-top:14px;padding-top:12px;border-top:1px solid var(--sb-line)}
+.ppbkh{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sb-muted);margin-bottom:8px}
+.ppbkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.ppbkt{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;background:rgba(127,127,127,.07);border:1px solid transparent;border-radius:10px;padding:7px 9px;color:inherit;font:inherit;cursor:pointer}
+.ppbkt:hover{background:rgba(127,127,127,.13)}
+.ppbkt.on{border-color:var(--sb-acc,#3b82f6)}
+.ppbkt:disabled{cursor:default}
+.ppbkt span{font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sb-muted)}
+.ppbkt b{font-size:1rem;font-variant-numeric:tabular-nums}
+.ppbkt small{font-size:.68rem;color:var(--sb-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Bets tab: player props drop-down */
+.bbdrop{margin-top:14px;border-top:1px solid var(--sb-line);padding-top:4px}
+.bbdrop>summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 2px;font-size:.92rem;list-style:none}
+.bbdrop>summary::-webkit-details-marker{display:none}
+.bbdrop>summary::after{content:'▾';color:var(--sb-muted);margin-left:auto;transition:transform .2s}
+.bbdrop[open]>summary::after{transform:rotate(180deg)}
+.bbdrop>summary .muted{font-size:.8rem;color:var(--sb-muted);background:rgba(127,127,127,.12);border-radius:999px;padding:1px 8px}
+/* Home: today and tomorrow in separate rows */
+.hstrip.hsdays{display:block;overflow:visible;min-height:0;padding:0}
+.hsday+.hsday{margin-top:12px}
+.hsdl{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sb-muted);margin:0 2px 6px}
+.hsdl b{color:var(--sb-acc)}
+/* Four tabs (Home, Games, Bets, Review) on a phone */
+.bnav{max-width:calc(100% - 16px);box-sizing:border-box}
+@media (max-width:560px){.bnav{gap:2px;padding:5px}.bnav button{padding:9px 12px;gap:5px;font-size:.86rem}}
+@media (max-width:360px){.bnav button{padding:8px 9px;font-size:.8rem}.bnav button span{display:none}}

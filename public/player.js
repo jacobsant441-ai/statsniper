@@ -86,36 +86,27 @@ const bkMap = (sp) => (sp === 'nba' ? BK_NBA : sp === 'nfl' ? BK_NFL : {});
 const bkLines = (r) => { const sp = bkSp(), n = norm(r.player), now = Date.now(); return rows('props').filter((x) => (x.sp || 'nba') === sp && norm(x.player) === n && (!x.kick || new Date(x.kick).getTime() > now - 4 * 3600000)); };
 // The graph line: his main bookmaker line for this market (both sides priced, closest to even money).
 const ppBook = (r, k) => { const m = bkMap(bkSp()); const c = bkLines(r).filter((x) => m[x.stat] === k && !BK_YES.has(x.stat) && x.over && x.under); return c.sort((a, b) => (b.main ? 1 : 0) - (a.main ? 1 : 0) || Math.abs(a.over - a.under) - Math.abs(b.over - b.under))[0] || null; };
-// Bookie lines panel: every line posted for his next game, how often he went over it this season, and our chance.
+// Bookie lines: the single main over / under the AU bookies have set on each stat for his next game (the yes
+// price for yes / no markets), as tiles in the profile card. Tap one to graph that stat at that line.
+const BK_SHORT = { FB: '1st basket', DD: 'Dbl-dbl', TD: 'Trpl-dbl', PYD: 'Pass yds', PTD: 'Pass TD', CMP: 'Comp', PATT: 'Pass att', INT: 'INT', PLONG: 'Long pass', PRYD: 'Pass+rush', RYD: 'Rush yds', RATT: 'Carries', RLONG: 'Long rush', RTD: 'Rush TD', RECYD: 'Rec yds', REC: 'Rec', RECLONG: 'Long rec', RRYD: 'Rush+rec', DINT: 'Def INT', ATD: 'Any TD', FTD: '1st TD', LTD: 'Last TD', TDS: 'TDs' };
 function ppBookPanel(r, gs, k) {
   const sp = bkSp(), map = bkMap(sp), lines = bkLines(r); if (!lines.length) return null;
-  const season = gs.filter((g) => !g.old && g.season === ppCur() && !Number(g.po)), n = norm(r.player), mode = PM;
-  const ours = rows('propbook').filter((x) => (x.sp || 'nba') === sp && norm(x.player) === n);
   const by = {}; lines.forEach((x) => (by[x.stat] = by[x.stat] || []).push(x));
-  const order = Object.keys(by).sort((a, b) => (map[b] === k) - (map[a] === k) || by[b].length - by[a].length);
-  const wrap = el('div', null, 'ppcard ppbk');
-  wrap.append(el('h3', 'Bookie lines · ' + lines.length), el('p', 'Every over / under the AU bookies have posted for ' + lines[0].day + ', how often he went over it this season, and our chance. Tap a line to graph it.', 'ppsrc'));
+  const order = [...Object.keys(map), 'FB', 'FTD', 'LTD'].filter((st, i, a) => by[st] && a.indexOf(st) === i);
+  const main = (st) => { const l = by[st]; if (BK_YES.has(st)) return l.find((x) => x.over) || null; const c = l.filter((x) => x.over && x.under); return c.sort((a, b) => (b.main ? 1 : 0) - (a.main ? 1 : 0) || Math.abs(a.over - a.under) - Math.abs(b.over - b.under))[0] || null; };
+  const wrap = el('div', null, 'ppbk'), mode = PM;
+  wrap.append(el('div', 'Bookie lines · ' + lines[0].day, 'ppbkh'));
+  const grid = el('div', null, 'ppbkg');
   order.forEach((st) => {
-    const key = map[st], yes = BK_YES.has(st), list = by[st].sort((a, b) => a.line - b.line);
-    const vals = key ? season.map((g) => ppVal(g, key)).filter((v) => typeof v === 'number') : [];
-    const d = el('details', null, 'ppbkd'); if (key === k) d.open = true;
-    const sm = el('summary'); const main = list.find((x) => x.main && x.over && x.under);
-    sm.append(el('b', BK_NAME[st] || (key ? MK_NAME[key] : st)), el('span', (main ? 'line ' + main.line + ' · ' : '') + list.length + (list.length === 1 ? ' line' : ' lines'), 'muted'));
-    d.append(sm, (() => { const h = el('div', null, 'ppbkr hd'); h.append(el('span', yes ? '' : 'Line'), el('span', yes ? 'Price' : 'Over · Under'), el('span', yes ? 'Season' : 'Went over'), el('span', 'Ours')); return h; })());
-    list.forEach((x) => {
-      const over = vals.filter((v) => v > x.line).length, pc = vals.length ? Math.round((100 * over) / vals.length) : null;
-      const o = ours.find((q) => q.stat === st && q.line === x.line && q.side === 'over'), u = ours.find((q) => q.stat === st && q.line === x.line && q.side === 'under');
-      const row = el('button', null, 'ppbkr'); row.type = 'button';
-      const price = yes ? (x.over ? '$' + x.over.toFixed(2) : '–') : (x.over ? 'O $' + x.over.toFixed(2) : 'O –') + ' · ' + (x.under ? 'U $' + x.under.toFixed(2) : 'U –');
-      const ch = o ? Math.round(o.chance) + '%' + (u && !yes ? ' / ' + Math.round(u.chance) : '') : '–';
-      row.append(el('b', yes ? 'Yes' : String(x.line)), el('span', price, 'muted'), el('span', key && vals.length ? over + '/' + vals.length + ' · ' + pc + '%' : '–', pc == null ? '' : pc >= 60 ? 'up' : pc <= 40 ? 'dn' : ''), el('span', ch, o && o.chance >= 75 ? 'up' : u && u.chance >= 75 ? 'dn' : ''));
-      row.title = o ? 'Our chance over ' + o.chance + '%' + (u ? ', under ' + u.chance + '%' : '') : 'No chance worked out for this line';
-      if (key) row.addEventListener('click', () => { PM = mode; if (mode === 'nba') PP.mk = key; else PP.amk[AT.sp] = key; if (!yes) PP.line[mode + r.pid + '|' + key] = x.line; PP.tab = 'graph'; ppRedraw(); });
-      d.append(row);
-    });
-    wrap.append(d);
+    const x = main(st); if (!x) return; const key = map[st], yes = BK_YES.has(st);
+    const t = el('button', null, 'ppbkt' + (key && key === k && !yes ? ' on' : '')); t.type = 'button';
+    t.append(el('span', BK_SHORT[st] || (key ? MK_SHORT[key] : st)), el('b', yes ? '$' + x.over.toFixed(2) : String(x.line)), el('small', yes ? 'Yes' : 'O ' + x.over.toFixed(2) + ' · U ' + x.under.toFixed(2)));
+    if (key) t.addEventListener('click', () => { PM = mode; if (mode === 'nba') PP.mk = key; else PP.amk[AT.sp] = key; if (!yes) PP.line[mode + r.pid + '|' + key] = x.line; PP.tab = 'graph'; ppRedraw(); });
+    else t.disabled = true;
+    grid.append(t);
   });
-  return wrap;
+  wrap.append(grid);
+  return grid.children.length ? wrap : null;
 }
 // Best bets: open a player's profile on the market and line of a prop.
 window.SSPP = { focus(sp, stat, line, player, pid) {
@@ -198,7 +189,7 @@ function ppBuild(box, r) {
   const cls = (v) => (v == null ? '' : ppBinary(k) ? '' : v > L.v ? 'up' : v < L.v ? 'dn' : '');
   st.append(cell('Season avg', sAvg == null ? '–' : ppBinary(k) ? Math.round(sAvg * 100) + '%' : f1(sAvg), cls(sAvg)), cell('Graph avg', gAvg == null ? '–' : ppBinary(k) ? Math.round(gAvg * 100) + '%' : f1(gAvg), cls(gAvg)), cell('Hit rate', pct + '% (' + over + '/' + vals.length + ')', pct >= 60 ? 'up' : pct <= 40 ? 'dn' : ''));
   card.append(top, st);
-  const bkp = ppBookPanel(r, gs, k);
+  { const bkp = ppBookPanel(r, gs, k); if (bkp) card.append(bkp); }
 
   const body = el('div', null, 'ppbody');
   if (PP.tab === 'graph') body.append(...ppGraph(r, k, fg, L, nx, gs));
@@ -206,7 +197,7 @@ function ppBuild(box, r) {
   else if (PP.tab === 'sim') body.append(...ppSim(r, k, nx, tn));
   else if (PP.tab === 'split') body.append(...ppSplits(r, k, gs, L));
   else body.append(...ppTypes(r, nx));
-  box.replaceChildren(...[mkbar, tabs, card, bkp, body].filter(Boolean));
+  box.replaceChildren(mkbar, tabs, card, body);
 }
 
 // ---- Graph tab
@@ -503,7 +494,7 @@ dash.draw('valboard', (box) => {
 
 // ---- NBA game page header: same layout as football and NFL (logos, names, records, time, pick).
 dash.draw('nbahd', (box) => {
-  const id = SSX.current; const g = id && rows('games').find((x) => x.id === id);
+  const id = SSX.current; const gs = id ? rows('games').filter((x) => x.id === id) : []; const g = gs.find((x) => x.date === SSX.selDay) || gs[gs.length - 1]; // same teams can meet on back-to-back days
   if (!g) { box.replaceChildren(); return; }
   const p = rows('pred').find((x) => x.id === id) || {};
   const recOf = (c) => (rows('teams').find((t) => t.game === id && t.team === c) || {}).record || '';

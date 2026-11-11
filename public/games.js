@@ -17,12 +17,12 @@
   const SIG = { nba: { m: 14, t: 19 }, nfl: { m: 13.5, t: 13 } }; // NBA widened 10 Nov (season misses: margin SD 14.6, total 18.6)
 
   // Every bet we can rate for one NBA or NFL game: [{market, pick, chance, price, book, est}]
-  function candidates(sp, id) {
+  function candidates(sp, id, day) {
     const odds = rows('odds').filter((o) => o.sp === sp && o.game === id);
     const out = [];
     let H, A, mh, proj, winP, posted, total, mlH, mlA;
     if (sp === 'nba') {
-      const p = rows('pred').find((x) => x.id === id), g = rows('games').find((x) => x.id === id); if (!p || !g) return [];
+      const gs = rows('games').filter((x) => x.id === id), p = rows('pred').find((x) => x.id === id), g = gs.find((x) => x.date === day) || gs[gs.length - 1]; if (!p || !g) return []; // same teams can meet on back-to-back days
       [A, H] = String(g.matchup || '').split(' @ ');
       mh = (p.winner === g.home ? 1 : -1) * Number(p.margin || 0); proj = Number(p.proj_total);
       const pickHome = p.ml_pick === g.home; winP = { [H]: pickHome ? p.ml_final_prob : 100 - p.ml_final_prob, [A]: pickHome ? 100 - p.ml_final_prob : p.ml_final_prob };
@@ -92,7 +92,7 @@
     for (const k of hr >= 16 ? [1, 0] : [0, 1]) {
       const key = dayKey(new Date(now.getTime() + k * 86400000));
       const today = items.filter((i) => i.day === key);
-      const plays = today.map((i) => { const m = i.sp === 'fb' ? fbMain(i.x) : pickMain(candidates(i.sp, i.id)); return m ? { ...i, m } : null; }).filter((i) => i && i.m.price >= MIN_PRICE);
+      const plays = today.map((i) => { const m = i.sp === 'fb' ? fbMain(i.x) : pickMain(candidates(i.sp, i.id, i.day)); return m ? { ...i, m } : null; }).filter((i) => i && i.m.price >= MIN_PRICE);
       // Our own milestone props (propPlays, prop finder) are hidden from Best bets (owner, 10 Nov): only bookie
       // props with real AU prices show. To bring them back: const props = propPlays(today.filter((i) => i.sp === 'nba'));
       const props = [];
@@ -194,7 +194,14 @@
       out.push(el('div', g.key, 'bbday'));
       if (g.plays.length) { out.push(el('div', 'Game props · ' + g.plays.length, 'bbday bbsub'), el('p', 'Winner, line and total for each game: our best play at $1.40 or more.', 'muted bbnote')); out.push(...g.plays.map(bbRow)); }
       if (g.alts && g.alts.length) { out.push(el('div', 'Alt lines · ' + g.alts.length, 'bbday bbsub'), el('p', 'Alternate lines and totals from AU bookies (e.g. a bigger start than the main line) where our margin / total model gives 75%+ and the price is $1.30+, one per game and side. Uses the spread of real results this season (margins miss our projection by about 14 points, totals by 19).', 'muted bbnote')); out.push(...g.alts.map(bbRow)); }
-      if (g.bprops && g.bprops.length) { out.push(el('div', 'Player props · ' + g.bprops.length, 'bbday bbsub'), el('p', 'Real Australian bookie lines (NBA and NFL) where our chance is 75%+ and the price is $1.30+, one line per player and stat. Our chance comes from his game logs; tested on this season, lines we rate 75%+ hit about 80% (NBA) and 77-91% depending on the stat (NFL). A big gap to the bookie can mean they know something (minutes, late injury news). Tap one to open the player.', 'muted bbnote')); out.push(...g.bprops.map(bbRow)); }
+      if (g.bprops && g.bprops.length) {
+        // Player props in their own drop-down, best season hit rate first (then our chance).
+        const hr = (i) => { const m = String(i.m.hit || '').match(/(\d+)\/(\d+)/); return m && +m[2] ? +m[1] / +m[2] : 0; };
+        const list = g.bprops.slice().sort((a, b) => hr(b) - hr(a) || b.m.rank - a.m.rank);
+        const d = el('details', null, 'bbdrop'); const sm = el('summary'); sm.append(el('b', 'Player props · best hit rate'), el('span', String(list.length), 'muted'));
+        d.append(sm, el('p', 'Real Australian bookie lines (NBA and NFL) where our chance is 75%+ and the price is $1.30+, one per player and stat, sorted by how often he has cleared it this season. Our chance comes from his game logs; tested on this season, lines we rate 75%+ hit about 80% (NBA) and 77-91% (NFL). A big gap to the bookie can mean they know something (minutes, late injury news). Tap one to open the player.', 'muted bbnote'), ...list.map(bbRow));
+        out.push(d);
+      }
       if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
     box.replaceChildren(...out);
@@ -305,9 +312,11 @@
   const nrm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\b(fc|cf|ac|as|sc|fk|sk|afc|club|de|cp|rc|vfb|vfl|rb|ssc)\b/g, ' ').replace(/\s+/g, ' ').trim();
   const nsim = (a, b) => { a = nrm(a); b = nrm(b); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
   const refreshLive = () => { try { dash.refresh('livegames'); dash.refresh('livebox'); } catch (e) { /* not connected */ } };
-  // The live row for one of our games: NBA / NFL by id, football by team names.
-  function liveOf(sp, ref) {
-    const rs = liveRows('livegames').filter((r) => r.sport === sp);
+  // The live row for one of our games: NBA / NFL by id, football by team names, and only on the day being
+  // viewed (default: the day on screen), since the same teams can meet on back-to-back days.
+  function liveOf(sp, ref, day) {
+    const dd = day || X.selDay;
+    const rs = liveRows('livegames').filter((r) => r.sport === sp && (!dd || !r.start_time || dayKey(new Date(r.start_time)) === dd));
     if (sp === 'fb') return rs.find((r) => nsim(r.home_name, ref.home) && nsim(r.away_name, ref.away)) || null;
     return rs.filter((r) => r.game_id === ref).sort((a, b) => String(b.start_time).localeCompare(String(a.start_time)))[0] || null;
   }
@@ -324,8 +333,8 @@
   }
 
   // Home page cards: the live score and status for a game that is on (or just finished but not graded yet).
-  function liveHome(b, sp, ref) {
-    const r = liveOf(sp, ref); if (!r || r.state === 'pre') return;
+  function liveHome(b, sp, ref, day) {
+    const r = liveOf(sp, ref, day); if (!r || r.state === 'pre') return;
     const tm = b.querySelector('.tm'); if (!tm) return;
     const score = sc(r.away_score) + '-' + sc(r.home_score);
     const txt = (r.state === 'in' ? 'LIVE · ' + r.status_text : 'FT') + ' · ' + (sp === 'fb' ? sc(r.home_score) + '-' + sc(r.away_score) : score);
