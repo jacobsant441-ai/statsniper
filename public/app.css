@@ -1812,5 +1812,5 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 /* sections that have nothing to show (still drawable, unlike [hidden]) */
 .isempty{display:none!important}
 /* Phone (home-screen app): keep the tab bar clear of the clock / battery area, at the top and while scrolling */
-.bnav{top:calc(env(safe-area-inset-top,0px) + 12px)!important;margin-top:calc(env(safe-area-inset-top,0px) + 12px)!important}
-.bbpage .bbday,.bbpage .bbdrop>summary{top:calc(env(safe-area-inset-top,0px) + 63px)}
+.bnav{top:max(6px,env(safe-area-inset-top,0px))!important;margin-top:max(6px,env(safe-area-inset-top,0px))!important}
+.bbpage .bbday,.bbpage .bbdrop>summary{top:calc(max(6px,env(safe-area-inset-top,0px)) + 51px)}
