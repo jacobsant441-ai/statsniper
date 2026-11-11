@@ -9,7 +9,8 @@ on:
   schedule:
     - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney: full daily refresh
     - cron: '7,37 * * * *'  # every 30 minutes: grade finished games (results)
-    - cron: '43 8 * * *'    # 8:43 UTC = 7:43 pm Sydney: build tomorrow's picks and stats
+    - cron: '13 4 * * *'    # 4:13 UTC = 3:13 pm Sydney (AEDT; 2:13 pm in AEST): build tomorrow's picks and stats.
+                            # GitHub usually starts scheduled runs 30-50 min late, so stats land around 4 pm.
   workflow_dispatch:
     inputs:
       job:
@@ -107,11 +108,11 @@ jobs:
 
   picks:
     # Builds the picks and stats for the next games, with the same scripts the daily runbook used:
-    #  evening (7:43 pm Sydney, or by hand with job = picks): tomorrow's NBA slate, football fixtures and goals model,
+    #  evening (3:13 pm Sydney, ready ~4 pm, or by hand with job = picks): tomorrow's NBA slate, football fixtures and goals model,
     #  and on Wednesdays the coming NFL week. Morning (after the 6:17 am refresh): refreshes today's lines and injuries.
     # Lineups are "Projected" (last game's starters plus ESPN's injury list); no private data, no AI, no paid keys.
     needs: refresh
-    if: always() && !cancelled() && (github.event.schedule == '17 19 * * *' || github.event.schedule == '43 8 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'picks'))
+    if: always() && !cancelled() && (github.event.schedule == '17 19 * * *' || github.event.schedule == '13 4 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'picks'))
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
