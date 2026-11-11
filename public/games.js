@@ -52,7 +52,7 @@
     return out.filter((c) => Number.isFinite(c.chance)).map((c) => ({ ...c, chance: Math.round(c.chance) }));
   }
   const pickMain = (list) => { const ok = list.filter((c) => c.price && c.price >= MIN_PRICE).sort((a, b) => b.chance - a.chance); return ok[0] || list.slice().sort((a, b) => (b.price || 0) - (a.price || 0))[0] || null; };
-  const priceTxt = (c) => (!c.price ? 'no price yet' : (c.est ? '≈ $' : '$') + c.price.toFixed(2) + (c.book && !c.est ? ' · ' + c.book : c.est ? ' (estimated)' : ''));
+  const priceTxt = (c) => (PUB ? '' : !c.price ? 'no price yet' : (c.est ? '≈ $' : '$') + c.price.toFixed(2) + (c.book && !c.est ? ' · ' + c.book : c.est ? ' (estimated)' : ''));
 
   // Main play card for an NBA or NFL game page.
   function mainCard(sp, id) {
@@ -63,7 +63,7 @@
     const safest = list.slice().sort((a, b) => b.chance - a.chance)[0];
     if (safest && safest !== m) card.append(el('p', 'Safest bet: ' + safest.pick + ' (' + safest.chance + '%, ' + priceTxt(safest) + ').', 'gpsafe'));
     const tiles = el('div', null, 'gpall');
-    ['Winner', 'Spread', 'Total'].forEach((mk) => { const best = list.filter((c) => c.market === mk).sort((a, b) => b.chance - a.chance)[0]; if (!best) return; const d = el('div'); d.append(el('span', mk), el('b', best.pick), el('small', best.chance + '% · ' + (best.price ? (best.est ? '≈$' : '$') + best.price.toFixed(2) : '–'))); tiles.append(d); });
+    ['Winner', 'Spread', 'Total'].forEach((mk) => { const best = list.filter((c) => c.market === mk).sort((a, b) => b.chance - a.chance)[0]; if (!best) return; const d = el('div'); d.append(el('span', mk), el('b', best.pick), el('small', best.chance + '%' + (PUB ? '' : ' · ' + (best.price ? (best.est ? '≈$' : '$') + best.price.toFixed(2) : '–')))); tiles.append(d); });
     card.append(tiles);
     return card;
   }
@@ -111,11 +111,16 @@
   // chance for the exact line at 65%+ and paying $1.30+. Bookies set main lines near 50/50, so 75%+ is rare.
   // With alternate lines (fetch-props.js --alt) there are plenty at 75%+; one per player and stat (the safest).
   const BOOK_MIN = 75, BOOK_PRICE = 1.3;
+  // Public site (not this Mac): no market prices are shown, and the picks come from the cleaned public copies
+  // (pubprops / pubalts / pubbets from export-public.js) because the private files never leave the Mac.
+  const PUB = !/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+  const propSrc = () => (rows('propbook').length ? rows('propbook') : rows('pubprops').map((r) => ({ ...r, price: 0, pub: true })));
+  const altSrc = () => (rows('altlines').length ? rows('altlines') : rows('pubalts').map((r) => ({ ...r, price: 0, pub: true })));
   // Alternate lines and totals (altlines, Mac only: fetch-alt-lines.js): our chance from the margin / total model
   // at 75%+ paying $1.30+; one per game, market and side (our highest chance).
   function altPlays(key) {
     const now = Date.now(), seen = new Set(), out = [];
-    rows('altlines').filter((r) => r.day === key && num(r.our) >= BOOK_MIN && num(r.price) >= BOOK_PRICE && new Date(r.kick).getTime() > now)
+    altSrc().filter((r) => r.day === key && num(r.our) >= BOOK_MIN && (r.pub || num(r.price) >= BOOK_PRICE) && new Date(r.kick).getTime() > now)
       .sort((a, b) => num(b.our) - num(a.our)).forEach((r) => {
         const k = r.sp + '|' + r.game + '|' + r.market + '|' + r.pick.replace(/ [-+]?[\d.]+$/, ''); if (seen.has(k)) return; seen.add(k);
         const time = new Date(r.kick).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit' }).toUpperCase();
@@ -126,7 +131,7 @@
   // NBA and NFL (sp on each row); only games still to start; one line per player and stat (our highest chance).
   function bookPlays(key, aheadIds) {
     const now = Date.now(), seen = new Set(), out = [];
-    rows('propbook').filter((r) => r.day === key && num(r.chance) >= BOOK_MIN && num(r.price) >= BOOK_PRICE && (r.kick ? new Date(r.kick).getTime() > now : aheadIds.has((r.sp || 'nba') + '|' + r.game + '|' + r.day)))
+    propSrc().filter((r) => r.day === key && num(r.chance) >= BOOK_MIN && (r.pub || num(r.price) >= BOOK_PRICE) && (r.kick ? new Date(r.kick).getTime() > now : aheadIds.has((r.sp || 'nba') + '|' + r.game + '|' + r.day)))
       .sort((a, b) => num(b.chance) - num(a.chance)).forEach((r) => {
         const k = (r.sp || 'nba') + '|' + r.player + '|' + r.stat; if (seen.has(k)) return; seen.add(k);
         const g = rows('games').find((x) => x.id === r.game && x.date === r.day);
@@ -159,19 +164,40 @@
     });
     return out;
   }
+  // Price since we first saw it (valuelog, local only) and injury news on a player prop's player (troster).
+  const vlMap = () => { const g = dash.data('valuelog'), gen = g.data; if (vlMap.gen !== gen) { vlMap.gen = gen; vlMap.m = new Map((Array.isArray(gen) ? gen : []).map((x) => [x.sp + '|' + x.game + '|' + x.day + '|' + x.pick, x])); } return vlMap.m; };
+  const injOf = (sp, f) => { if (!f) return ''; const t = rows('troster').filter((x) => x.sp === sp); for (const tm of t) for (const i of tm.inj || []) if (String(i[0]) === String(f.pid) || (i[1] && i[1] === f.player)) return i[3] || ''; return ''; };
+  const bbIcon = (i) => { const f = i.m.finder, ic = el('span', null, 'bbic');
+    if (f && f.side && f.pid && X.avatar) { ic.classList.add('face'); ic.append(X.avatar(i.sp === 'nba' ? 'nba' : (X.AT_HS && X.AT_HS[i.sp]) || i.sp, f.pid, f.player)); } // player's headshot
+    else if ((i.sp === 'nba' || i.sp === 'nfl') && /^[A-Z]+-[A-Z]+$/.test(i.id) && X.badge) {
+      // the team we're backing (winner / line); a total backs no team, so it shows both
+      const [a, h] = i.id.split('-'), bd = i.sp === 'nba' ? X.badge : X.bdX, [an, hn] = String(i.match || '').split(' @ '), pk = String(i.m.pick || '');
+      const pick = an && pk.startsWith(an + ' ') ? a : hn && pk.startsWith(hn + ' ') ? h : null;
+      if (pick) { ic.classList.add('one'); ic.append(bd(pick)); } else { ic.classList.add('two'); ic.append(bd(a), bd(h)); }
+    }
+    else { const src = window.TAB_ICONS && window.TAB_ICONS[i.sp]; if (src) { const im = document.createElement('img'); im.src = src; im.alt = ''; ic.append(im); } }
+    return ic;
+  };
   const bbRow = (i) => {
     const b = el('button', null, 'bbr'); b.type = 'button';
-    const ic = el('span', null, 'bbic'); const src = window.TAB_ICONS && window.TAB_ICONS[i.sp]; if (src) { const im = document.createElement('img'); im.src = src; im.alt = ''; ic.append(im); }
-    const f = i.m.finder;
+    const f = i.m.finder, ic = bbIcon(i);
     const sub = f ? `Hit ${f.hit} this season · avg ${f.avg}, last ${f.sp === 'nfl' ? 3 : 5} ${f.l5}${f.why && f.why.length ? ' · ' + f.why[0] : ''} · ${i.match}` : (i.m.hit ? 'Hit ' + i.m.hit + ' this season · ' : '') + i.match + (i.time ? ' · ' + i.time : '');
     const l = el('div', null, 'l'); l.append(el('b', i.m.pick), el('span', sub));
-    const r = el('div', null, 'r'); r.append(el('b', i.m.chance + '%', 'c ' + conf(i.m.chance)), el('span', (i.m.est ? '≈$' : '$') + i.m.price.toFixed(2) + (i.m.book && !i.m.est ? ' ' + i.m.book.replace(' (AU)', '') : '')));
+    const r = el('div', null, 'r'); r.append(el('b', i.m.chance + '%', 'c ' + conf(i.m.chance)), el('span', PUB || !i.m.price ? '' : (i.m.est ? '≈$' : '$') + i.m.price.toFixed(2) + (i.m.book && !i.m.est ? ' ' + i.m.book.replace(' (AU)', '') : '')));
+    const v = !i.m.est && vlMap().get(i.sp + '|' + i.id + '|' + i.day + '|' + i.m.pick);
+    if (v && Math.abs(num(v.price0) - i.m.price) >= 0.02) { const up = i.m.price > num(v.price0); r.append(el('small', (up ? '▲' : '▼') + ' from $' + num(v.price0).toFixed(2), 'bbmv ' + (up ? 'up' : 'dn'))); }
+    const nw = f && f.side ? newsOf(f.pid) : [];
+    if (nw.length) { const tg = el('em', 'In the news · ' + ago(nw[0].published), 'bbnews'); tg.title = nw[0].headline; l.append(tg); }
+    const inj = f && f.side ? injOf(i.sp, f) : '';
+    if (inj) { l.append(el('em', /out/i.test(inj) ? 'Now listed OUT: skip this one' : 'Injury news: ' + inj + ' (check before betting)', 'bbinj')); b.classList.add(/out/i.test(inj) ? 'bbout' : 'bbq'); }
     b.append(ic, l, r); b.addEventListener('click', () => (f && f.side && window.SSPP ? window.SSPP.focus(i.sp, f.stat, f.line, f.player, f.pid) : X.openGame(i.sp, i.id, i.day)));
     return b;
   };
+  // Grey placeholder rows while data loads (instead of "Loading…").
+  const skel = (n = 4) => { const w = el('div', null, 'skel'); w.setAttribute('aria-label', 'Loading'); for (let k = 0; k < n; k++) w.append(el('i')); return w; };
   const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind', 'propbook', 'altlines'].every((d) => dash.data(d).status !== 'loading');
   dash.draw('bestbets', (box) => {
-    if (!bbReady()) { box.replaceChildren(el('p', 'Loading…', 'plnone')); return; }
+    if (!bbReady()) { box.replaceChildren(skel()); return; }
     const groups = bestBets(), g = groups[0];
     if (!g) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
     const out = [el('div', g.key, 'bbday')];
@@ -184,12 +210,25 @@
     more.addEventListener('click', () => X.openBets()); out.push(more);
     box.replaceChildren(...out);
   });
+  const BBF = (() => { try { return { sp: 'all', kind: 'all', hi: false, ...JSON.parse(localStorage.getItem('ss_bbf') || '{}') }; } catch (e) { return { sp: 'all', kind: 'all', hi: false }; } })();
   // Best bets page: every play at $1.40 or more, by day, best chance first.
   dash.draw('bestall', (box) => {
-    if (!bbReady()) { box.replaceChildren(el('p', 'Loading…', 'plnone')); return; }
-    const groups = bestBets();
-    if (!groups.length) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
-    const out = [];
+    if (!bbReady()) { box.replaceChildren(skel()); return; }
+    const groups0 = bestBets();
+    if (!groups0.length) { box.replaceChildren(el('p', 'No priced plays for today or tomorrow yet.', 'plnone')); return; }
+    // Filter chips: sport, kind of bet, 80%+ only (remembered in this browser).
+    const sps = [...new Set(groups0.flatMap((g) => [...g.plays, ...(g.alts || []), ...(g.bprops || [])].map((i) => i.sp)))];
+    if (BBF.sp !== 'all' && !sps.includes(BBF.sp)) BBF.sp = 'all';
+    const keep = (i) => (BBF.sp === 'all' || i.sp === BBF.sp) && (!BBF.hi || i.m.chance >= 80);
+    const groups = groups0.map((g) => ({ ...g, plays: BBF.kind === 'player' ? [] : g.plays.filter(keep), alts: BBF.kind === 'player' ? [] : (g.alts || []).filter(keep), bprops: BBF.kind === 'game' ? [] : (g.bprops || []).filter(keep) }));
+    const chips = el('div', null, 'bbchips');
+    const chip = (lab, on, fn) => { const c = el('button', lab, 'bbchip' + (on ? ' on' : '')); c.type = 'button'; c.addEventListener('click', () => { fn(); try { localStorage.setItem('ss_bbf', JSON.stringify(BBF)); } catch (e) { /* not kept */ } dash.draw('bestall'); }); return c; };
+    const SPN = { nba: 'NBA', nfl: 'NFL', fb: 'Football' };
+    if (sps.length > 1) { chips.append(chip('All sports', BBF.sp === 'all', () => { BBF.sp = 'all'; })); sps.forEach((x) => chips.append(chip(SPN[x] || x.toUpperCase(), BBF.sp === x, () => { BBF.sp = x; }))); chips.append(el('i', null, 'bbsep')); }
+    [['all', 'All bets'], ['game', 'Game props'], ['player', 'Player props']].forEach(([k, lab]) => chips.append(chip(lab, BBF.kind === k, () => { BBF.kind = k; })));
+    chips.append(el('i', null, 'bbsep'), chip('80%+ only', BBF.hi, () => { BBF.hi = !BBF.hi; }));
+    const out = [chips];
+    if (!groups.some((g) => g.plays.length || g.alts.length || g.bprops.length)) out.push(el('p', 'Nothing matches these filters.', 'plnone'));
     groups.forEach((g) => {
       out.push(el('div', g.key, 'bbday'));
       if (g.plays.length) { out.push(el('div', 'Game props · ' + g.plays.length, 'bbday bbsub'), el('p', 'Winner, line and total for each game: our best play at $1.40 or more.', 'muted bbnote')); out.push(...g.plays.map(bbRow)); }
@@ -197,13 +236,50 @@
       if (g.bprops && g.bprops.length) {
         // Player props in their own drop-down, best season hit rate first (then our chance).
         const hr = (i) => { const m = String(i.m.hit || '').match(/(\d+)\/(\d+)/); return m && +m[2] ? +m[1] / +m[2] : 0; };
-        const list = g.bprops.slice().sort((a, b) => hr(b) - hr(a) || b.m.rank - a.m.rank);
-        const d = el('details', null, 'bbdrop'); const sm = el('summary'); sm.append(el('b', 'Player props · best hit rate'), el('span', String(list.length), 'muted'));
-        d.append(sm, el('p', 'Real Australian bookie lines (NBA and NFL) where our chance is 75%+ and the price is $1.30+, one per player and stat, sorted by how often he has cleared it this season. Our chance comes from his game logs; tested on this season, lines we rate 75%+ hit about 80% (NBA) and 77-91% (NFL). A big gap to the bookie can mean they know something (minutes, late injury news). Tap one to open the player.', 'muted bbnote'), ...list.map(bbRow));
+        // Game picker: all games, or one game's best props (tap a game).
+        const gms = [...new Map(g.bprops.map((i) => [i.sp + '|' + i.id, i])).values()].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+        if (BBF.game && !gms.some((i) => i.sp + '|' + i.id === BBF.game)) BBF.game = '';
+        const list = g.bprops.filter((i) => !BBF.game || i.sp + '|' + i.id === BBF.game).sort((a, b) => hr(b) - hr(a) || b.m.rank - a.m.rank);
+        const gchips = el('div', null, 'bbchips bbgames');
+        if (gms.length > 1) { gchips.append(chip('All games', !BBF.game, () => { BBF.game = ''; BBF.pOpen = true; }));
+          gms.forEach((i) => { const k = i.sp + '|' + i.id, n = g.bprops.filter((x) => x.sp + '|' + x.id === k).length; gchips.append(chip(i.id.replace('-', ' @ ') + ' · ' + n, BBF.game === k, () => { BBF.game = BBF.game === k ? '' : k; BBF.pOpen = true; })); }); }
+        const d = el('details', null, 'bbdrop'); if (BBF.kind === 'player' || BBF.pOpen) d.open = true; d.addEventListener('toggle', () => { BBF.pOpen = d.open; }); const sm = el('summary'); sm.append(el('b', 'Player props · best hit rate'), el('span', String(list.length), 'muted'));
+        d.append(sm, ...(gms.length > 1 ? [gchips] : []), el('p', 'Real Australian bookie lines (NBA and NFL) where our chance is 75%+ and the price is $1.30+, one per player and stat, sorted by how often he has cleared it this season. Our chance comes from his game logs; tested on this season, lines we rate 75%+ hit about 80% (NBA) and 77-91% (NFL). A big gap to the bookie can mean they know something (minutes, late injury news). Tap one to open the player.', 'muted bbnote'), ...list.map(bbRow));
         out.push(d);
       }
       if (g.props.length) { const top = g.props.slice(0, 30); out.push(el('div', 'Player props · ' + g.key + ' · top ' + top.length + ' of ' + g.props.length, 'bbday bbsub'), el('p', 'Our chance from each player\'s game logs: season average plus recent form, out players removed. Tested on every game day this season using only earlier games: plays at 75%+ hit 81%. ≈ is our fair price (no bookmaker line saved); take it only if the bookie pays more. Reasons like home/away or the opponent are shown but did not improve the chance in testing, so they do not move it.', 'muted bbnote')); out.push(...top.map(bbRow)); }
     });
+    box.replaceChildren(...out);
+  });
+
+  // ---- Track record (Review, local only): every bet we rated (valuelog, value-log.js), settled from results.
+  // Did our 70% / 80% picks really win that often, and would $1 on each have made money?
+  dash.draw('trackrec', (box) => {
+    const sec = box.closest('section'); const g = dash.data('valuelog');
+    const all = g.status === 'ok' && Array.isArray(g.data) ? g.data : [];
+    const done = all.filter((x) => x.status === 'won' || x.status === 'lost');
+    if (sec) sec.classList.toggle('isempty', !all.length); if (!all.length) { box.replaceChildren(); return; }
+    const pct = (a, b) => (b ? Math.round((100 * a) / b) : 0);
+    const sum = (a) => { const w = a.filter((x) => x.status === 'won').length, pnl = a.reduce((t, x) => t + (x.status === 'won' ? num(x.price) - 1 : -1), 0), said = a.length ? a.reduce((t, x) => t + num(x.our), 0) / a.length : 0; return { n: a.length, w, pnl, said }; };
+    const days = new Set(done.map((x) => x.day)).size, open = all.length - done.length - all.filter((x) => x.status === 'void').length;
+    const out = [el('p', done.length ? `${done.length} bets settled over ${days} ${days === 1 ? 'day' : 'days'} (${open} still to play). Each is every line we rated, at the last Australian price before the game, as if $1 went on it.` : `${open} bets saved, none settled yet. Results come in after each game (player props the next day).`, 'muted bbnote')];
+    if (!done.length) { box.replaceChildren(...out); return; }
+    // one row per kind of bet, and the Best bets rule on its own line
+    const T = el('div', null, 'trk');
+    const row = (lab, a, sub) => { const x = sum(a); if (!x.n) return; const r = el('div', null, 'trr' + (sub ? ' sub' : '')); const wp = pct(x.w, x.n), d = wp - Math.round(x.said);
+      r.append(el('b', lab), el('span', x.n + ' bets'), el('span', 'won ' + wp + '%', d >= -3 ? 'up' : d <= -8 ? 'dn' : ''), el('span', 'we said ' + Math.round(x.said) + '%', 'muted'), el('span', money(x.pnl), x.pnl > 0 ? 'up' : x.pnl < 0 ? 'dn' : '')); T.append(r); };
+    const BB = (x) => x.our >= 75 && num(x.price) >= 1.3;
+    [['game', 'Game picks'], ['alt', 'Alt lines'], ['prop', 'Player props']].forEach(([k, lab]) => { const a = done.filter((x) => x.src === k); row(lab, a); row('Best bets only (75%+, $1.30+)', a.filter(BB), true); });
+    out.push(T);
+    // calibration: what we said against what happened, by chance band (all kinds together)
+    out.push(el('div', 'When we said… it won', 'mbsec'));
+    const C = el('div', null, 'trcal');
+    [[50, 60], [60, 70], [70, 80], [80, 90], [90, 101]].forEach(([lo, hi]) => {
+      const a = done.filter((x) => x.our >= lo && x.our < hi); if (!a.length) return; const x = sum(a), wp = pct(x.w, x.n);
+      const r = el('div', null, 'trcr'); const tr = el('div', null, 'trbar'); const f = el('i', null, wp >= Math.round(x.said) - 3 ? 'up' : 'dn'); f.style.width = wp + '%'; const m = el('em'); m.style.left = Math.round(x.said) + '%'; tr.append(f, m);
+      r.append(el('span', lo + '–' + (hi > 100 ? 100 : hi) + '%'), tr, el('b', wp + '%'), el('small', x.n + '')); C.append(r);
+    });
+    out.push(C, el('p', 'Bar = how often it won; the tick = what we said. Bars past the tick mean we were too careful, short of it too confident. A few days of results swing a lot: judge it after a few weeks.', 'muted bbnote'));
     box.replaceChildren(...out);
   });
 
@@ -251,22 +327,82 @@
     }
     return r;
   };
+  // Day-by-day profit / loss: one bar per settle day, up (green) for a winning day, down (red) for a losing one,
+  // from a zero line. Tap or hover a bar for that day's bets, record, result and the running total.
+  const dayTime = (d) => { const m = String(d || '').match(/(\d+) (\w{3})/); if (!m) return 0; const now = new Date(); let t = Date.parse(m[1] + ' ' + m[2] + ' ' + now.getFullYear()); if (t > now.getTime() + 7 * 86400000) t = Date.parse(m[1] + ' ' + m[2] + ' ' + (now.getFullYear() - 1)); return t || 0; };
+  function plDays(settled) {
+    const by = {}; settled.forEach((b) => { const d = String(b.settled || b.placed || '').split(',')[0]; (by[d] = by[d] || []).push(b); });
+    const days = Object.keys(by).filter((d) => dayTime(d)).sort((a, b) => dayTime(a) - dayTime(b)).slice(-14);
+    if (days.length < 2) return null;
+    let run = 0; const rows = days.map((d) => { const bs = by[d], v = bs.reduce((t, b) => t + profitOf(b), 0); run += v; const w = bs.filter((b) => b.status === 'won').length; return { d, v, run, n: bs.length, w }; });
+    const max = Math.max(1, ...rows.map((r) => Math.abs(r.v)));
+    const wrap = el('div', null, 'pld'), plot = el('div', null, 'pldplot'), read = el('p', null, 'pldread');
+    plot.setAttribute('role', 'img'); plot.setAttribute('aria-label', 'Profit and loss by day: ' + rows.map((r) => r.d + ' ' + money(r.v)).join(', '));
+    const show = (r, col) => { read.replaceChildren(el('b', r.d), document.createTextNode(' · ' + r.n + (r.n === 1 ? ' bet' : ' bets') + ' · ' + r.w + '-' + (r.n - r.w) + ' · '), el('b', money(r.v), r.v > 0 ? 'up' : r.v < 0 ? 'dn' : ''), document.createTextNode(' · running ' + money(r.run))); plot.querySelectorAll('.pldc').forEach((c) => c.classList.toggle('on', c === col)); };
+    const hiI = rows.reduce((b, r, i) => (r.v > rows[b].v ? i : b), 0), loI = rows.reduce((b, r, i) => (r.v < rows[b].v ? i : b), 0);
+    rows.forEach((r, i) => {
+      const col = el('button', null, 'pldc'); col.type = 'button'; col.setAttribute('aria-label', r.d + ': ' + money(r.v));
+      const up = el('div', null, 'pldu'), dn = el('div', null, 'pldd'), bar = el('i', null, r.v >= 0 ? 'up' : 'dn');
+      bar.style.height = Math.max(r.v ? 3 : 0, (100 * Math.abs(r.v)) / max) + '%';
+      (r.v >= 0 ? up : dn).append(bar);
+      if ((i === hiI && r.v > 0) || (i === loI && r.v < 0)) bar.append(el('small', money(r.v).replace('.00', ''), 'pldl'));
+      col.append(up, dn, el('span', r.d.split(' ')[0].slice(0, 2) + ' ' + r.d.split(' ')[1], 'pldx'));
+      col.addEventListener('mouseenter', () => show(r, col)); col.addEventListener('focus', () => show(r, col)); col.addEventListener('click', () => show(r, col));
+      plot.append(col);
+    });
+    wrap.append(plot, read); show(rows[rows.length - 1], plot.lastChild);
+    return wrap;
+  }
+  // Public site: Jacob's picks from pubbets (export-public.js): the win-loss record and the open bets, no money.
+  function pubBets(pb) {
+    const rec = pb.find((x) => x.kind === 'record') || { won: 0, lost: 0 }, open = pb.filter((x) => x.kind === 'bet');
+    const st = el('div', null, 'ppst'); const cell = (lab, v) => { const d = el('div'); d.append(el('span', lab), el('b', v)); return d; };
+    st.append(cell('Record', rec.won + '-' + rec.lost), cell('Open bets', String(open.length || 'None')));
+    const out = [st];
+    if (open.length) {
+      out.push(el('div', 'Open', 'mbsec')); const t = el('div', null, 'mbl');
+      open.slice().reverse().forEach((b) => {
+        const legs = Array.isArray(b.legs) ? b.legs : null, r = el('div', null, 'mbr open' + (legs ? ' multi' : '')), top = el('div', null, 'mbt'), l = el('div');
+        l.append(el('b', legs ? legs.length + ' leg ' + (b.sgm ? 'same game multi' : 'multi') : b.pick), el('span', [legs ? null : b.match, b.placed].filter(Boolean).join(' · ')));
+        top.append(l); r.append(top);
+        if (legs) { const ul = el('div', null, 'mblegs'); legs.forEach((x) => { const d = el('div', null, 'mbleg ' + (x.status || 'open')); const tx = el('div'); tx.append(el('b', x.pick), el('span', x.final || x.match)); d.append(legIcon(x.status), tx); ul.append(d); });
+          r.append(el('span', legs.filter((x) => x.status === 'won').length + ' of ' + legs.length + ' legs landed', 'mbcount'), ul); }
+        t.append(r);
+      });
+      out.push(t);
+    }
+    return out;
+  }
+  // Home: all my bets in one place: record, open bets, then the latest results (full list in Review).
   dash.draw('mybets', (box) => {
-    const open = betRows().filter(isOpen).reverse();
-    if (!open.length) { box.replaceChildren(el('p', 'No open bets. Send Claude a screenshot of a bet and it shows here; settled bets move to Review.', 'plnone')); return; }
+    { const st = dash.data('bets').status, sec = box.closest('section'), pb = rows('pubbets');
+      if (st !== 'ok' && st !== 'loading' && pb.length) { if (sec) sec.classList.remove('isempty'); box.replaceChildren(...pubBets(pb)); return; }
+      if (sec) sec.classList.toggle('isempty', st !== 'ok' && st !== 'loading'); if (st !== 'ok') { if (st === 'loading') box.replaceChildren(skel(2)); return; } }
+    const all = betRows(), open = all.filter(isOpen).reverse(), done = all.filter((b) => !isOpen(b)).reverse();
+    if (!all.length) { box.replaceChildren(el('p', 'No bets yet. Send Claude a screenshot of a bet and it shows here.', 'plnone')); return; }
+    const settled = done.filter((b) => b.status === 'won' || b.status === 'lost'), won = settled.filter((b) => b.status === 'won').length, profit = settled.reduce((s, b) => s + profitOf(b), 0);
     const pot = open.reduce((s, b) => s + (isBonus(b) ? num(b.stake) * (num(b.price) - 1) : num(b.stake) * num(b.price)), 0);
     const st = el('div', null, 'ppst');
-    const cell = (lab, v) => { const d = el('div'); d.append(el('span', lab), el('b', v)); return d; };
-    st.append(cell('Open bets', String(open.length)), cell('Staked', '$' + open.reduce((s, b) => s + num(b.stake), 0).toFixed(2)), cell('Could pay', '$' + pot.toFixed(2)));
-    const t = el('div', null, 'mbl'); open.forEach((b) => t.append(betCard(b)));
-    box.replaceChildren(st, t);
+    const cell = (lab, v, c) => { const d = el('div', null, c || ''); d.append(el('span', lab), el('b', v)); return d; };
+    st.append(cell('Record', won + '-' + (settled.length - won)), cell('Profit', money(profit), profit > 0 ? 'up' : profit < 0 ? 'dn' : ''), cell(open.length ? open.length + ' open · could pay' : 'Open bets', open.length ? '$' + pot.toFixed(2) : 'None'));
+    const out = [st];
+    { const ch = plDays(settled); if (ch) out.push(el('div', 'Day by day', 'mbsec'), ch); }
+    if (open.length) { out.push(el('div', 'Open', 'mbsec')); const t = el('div', null, 'mbl'); open.forEach((b) => t.append(betCard(b))); out.push(t); }
+    if (done.length) {
+      // Latest results in a drop-down bar (closed by default)
+      const d = el('details', null, 'bbdrop mbres'), sm = el('summary'); sm.append(el('b', 'Latest results'), el('span', String(Math.min(3, done.length)) + ' of ' + done.length, 'muted'));
+      const t = el('div', null, 'mbl'); done.slice(0, 3).forEach((b) => t.append(betCard(b)));
+      const more = el('button', 'All ' + done.length + ' results and the profit chart ›', 'bbmore'); more.type = 'button'; more.addEventListener('click', () => X.openBetResults());
+      d.append(sm, t, more); out.push(d);
+    }
+    box.replaceChildren(...out);
   });
   // Collapsed My bets header on Home: a one-line summary; tap to slide the bets down.
   dash.draw('mybetsum', (box) => {
-    const open = betRows().filter(isOpen);
-    if (!open.length) { box.textContent = 'No open bets'; return; }
-    const pot = open.reduce((s, b) => s + (isBonus(b) ? num(b.stake) * (num(b.price) - 1) : num(b.stake) * num(b.price)), 0);
-    box.textContent = open.length + ' open · could pay $' + pot.toFixed(2);
+    if (dash.data('bets').status !== 'ok' && rows('pubbets').length) { const pb = rows('pubbets'), rec = pb.find((x) => x.kind === 'record') || { won: 0, lost: 0 }, n = pb.filter((x) => x.kind === 'bet').length; box.textContent = (n ? n + ' open · ' : '') + rec.won + '-' + rec.lost; return; }
+    const all = betRows(), open = all.filter(isOpen), settled = all.filter((b) => b.status === 'won' || b.status === 'lost');
+    const won = settled.filter((b) => b.status === 'won').length, pr = settled.reduce((s, b) => s + profitOf(b), 0);
+    box.textContent = [open.length ? open.length + ' open' : '', settled.length ? won + '-' + (settled.length - won) + ' · ' + money(pr) : ''].filter(Boolean).join(' · ') || 'No bets yet';
   });
   // Review: folded header line for settled bets
   dash.draw('mybetsrvsum', (box) => {
@@ -277,6 +413,7 @@
   });
   // Review: settled bets, newest first, each with a bar out from the middle (green right = profit, red left = loss).
   dash.draw('mybetsrv', (box) => {
+    { const st = dash.data('bets').status, sec = box.closest('section'); if (sec) sec.classList.toggle('isempty', st !== 'ok' && st !== 'loading'); if (st !== 'ok') return; }
     const done = betRows().filter((b) => !isOpen(b)).reverse();
     if (!done.length) { box.replaceChildren(el('p', 'No settled bets yet. Bets move here from Home once every leg is decided.', 'plnone')); return; }
     const settled = done.filter((b) => b.status === 'won' || b.status === 'lost');
@@ -580,5 +717,128 @@
     return out;
   }
 
-  window.SSG = { defCourt, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
+  // ---- Home: live now / next up, pick of the day, game of the night, injury alerts.
+  // They follow the same day as Best bets (today, or tomorrow from 4 pm).
+  const homeGroup = () => { try { return bestBets()[0] || null; } catch (e) { return null; } };
+  const fmtLeft = (ms) => { const m = Math.max(1, Math.round(ms / 60000)), h = Math.floor(m / 60), d = Math.floor(h / 24); return d ? d + 'd ' + (h % 24) + 'h' : h ? h + 'h ' + (m % 60) + 'm' : m + 'm'; };
+  const openPick = (i) => { const f = i.m.finder; if (f && f.side && window.SSPP) window.SSPP.focus(i.sp, f.stat, f.line, f.player, f.pid); else X.openGame(i.sp, i.id, i.day); };
+  dash.draw('hslive', (box) => {
+    clearInterval(box._t);
+    const live = liveRows('livegames').filter((r) => r.state === 'in');
+    if (live.length) {
+      const row = el('div', null, 'hlrow');
+      live.forEach((r) => {
+        const c = el('button', null, 'hlc'); c.type = 'button';
+        const top = el('div', null, 'hlt'); top.append(el('span', 'LIVE', 'hlive'), el('span', r.status_text || '', 'muted'));
+        const side = (code, name, pts) => { const d = el('div', null, 'hls'); d.append(r.sport === 'nba' ? X.badge(code) : X.bdX(code), el('b', code || name), el('span', String(pts == null ? 0 : pts))); return d; };
+        c.append(top, side(r.away_code, r.away_name, r.away_score), side(r.home_code, r.home_name, r.home_score));
+        c.addEventListener('click', () => X.openGame(r.sport, r.game_id, dayKey(new Date(r.start_time)))); row.append(c);
+      });
+      box.replaceChildren(el('div', 'Live now · ' + live.length, 'hhl'), row); return;
+    }
+    const now = Date.now(), nx = rows('schedule').filter((x) => x.iso && new Date(x.iso).getTime() > now).sort((a, b) => (a.iso < b.iso ? -1 : 1))[0];
+    if (!nx) { box.replaceChildren(); return; }
+    const t = new Date(nx.iso).getTime(), c = el('button', null, 'hnext'); c.type = 'button';
+    const lab = el('span', null, 'hnl'); lab.append(el('b', 'Next up'), document.createTextNode(' · ' + (nx.sport === 'fb' ? nx.home_name + ' v ' + nx.away_name : nx.away_name + ' @ ' + nx.home_name) + ' · ' + nx.kick));
+    const cd = el('b', 'in ' + fmtLeft(t - now), 'hncd'); c.append(lab, cd);
+    c.addEventListener('click', () => X.openGame(nx.sport, nx.id, nx.date));
+    box.replaceChildren(c);
+    box._t = setInterval(() => { const left = t - Date.now(); if (left <= 0) { clearInterval(box._t); dash.draw('hslive'); return; } cd.textContent = 'in ' + fmtLeft(left); }, 30000);
+  });
+  // Pick of the day: our strongest priced pick (game or player prop), leaving out anything with injury news or a
+  // big gap to the bookie (those can mean the bookie knows something).
+  dash.draw('hpod', (box) => {
+    const sec = box.closest('section');
+    if (!bbReady()) { if (sec) sec.classList.toggle('isempty', false); box.replaceChildren(skel(1)); return; }
+    const g = homeGroup();
+    const ok = (g ? [...g.plays, ...(g.bprops || [])] : []).filter((i) => PUB || (i.m.price >= 1.3 && !i.m.est)).filter((i) => { const f = i.m.finder; return !(f && f.why && f.why.some((w) => /big gap/.test(w))) && !(f && f.side && injOf(i.sp, f)); });
+    const best = ok.sort((a, b) => b.m.chance - a.m.chance || b.m.price - a.m.price)[0];
+    if (sec) sec.classList.toggle('isempty', !best); if (!best) { box.replaceChildren(); return; }
+    const f = best.m.finder, c = el('button', null, 'hpodc'); c.type = 'button';
+    const ic = bbIcon(best); ic.classList.add('big');
+    const mid = el('div', null, 'hpm'); mid.append(el('span', g.key + (best.time ? ' · ' + best.time : ''), 'hpd'), el('b', best.m.pick, 'hpp'),
+      el('span', f && f.side ? 'Over this line in ' + f.hit + ' games this season · avg ' + f.avg + ', last ' + (f.sp === 'nfl' ? 3 : 5) + ' ' + f.l5 : best.match, 'hpr'));
+    const r = el('div', null, 'hpv'); r.append(el('b', best.m.chance + '%', 'c ' + conf(best.m.chance)), el('span', PUB || !best.m.price ? '' : '$' + best.m.price.toFixed(2) + (best.m.book ? ' ' + best.m.book.replace(' (AU)', '') : '')));
+    c.append(ic, mid, r); c.addEventListener('click', () => openPick(best));
+    box.replaceChildren(c);
+  });
+  // Game of the night: the best matchup on the slate (two strong records, a close projected margin).
+  dash.draw('hgotn', (box) => {
+    const sec = box.closest('section'), g = homeGroup(), day = g && g.key;
+    const games = day ? rows('games').filter((x) => x.date === day && rows('pred').some((p) => p.id === x.id)) : [];
+    const recOf = (id, code) => (rows('teams').find((t) => t.game === id && t.team === code) || {}).record || '';
+    const wp = (rec) => { const m = String(rec).match(/(\d+)-(\d+)/); return m && +m[1] + +m[2] ? +m[1] / (+m[1] + +m[2]) : 0.5; };
+    const top = games.map((x) => { const p = rows('pred').find((q) => q.id === x.id); return { x, p, s: wp(recOf(x.id, x.away)) + wp(recOf(x.id, x.home)) - Math.abs(Number(p.margin) || 0) / 15 }; }).sort((a, b) => b.s - a.s)[0];
+    if (sec) sec.classList.toggle('isempty', !top); if (!top) { box.replaceChildren(); return; }
+    const { x, p } = top, [an, hn] = String(x.matchup).split(' @ '), c = el('button', null, 'hgc'); c.type = 'button';
+    const side = (code, name) => { const d = el('div', null, 'hgs'); d.append(X.badge(code), el('b', name || code), el('span', recOf(x.id, code), 'muted')); return d; };
+    const mid = el('div', null, 'hgm'); mid.append(el('span', day + ' · ' + x.time), el('b', p.winner + ' by ' + Number(p.margin).toFixed(1)), el('span', (p.ml_final_prob ? p.ml_final_prob + '% to win · ' : '') + 'total ' + x.total, 'muted'));
+    c.append(side(x.away, an), mid, side(x.home, hn)); c.addEventListener('click', () => X.openGame('nba', x.id, day));
+    box.replaceChildren(c);
+  });
+  // New injuries: key players (12+ points or 25+ minutes a game this season) with an injury report in the last
+  // 2 days for the coming games, and which of our picks are in their game. Older injuries are on the player pages.
+  dash.draw('hinj', (box) => {
+    const sec = box.closest('section'), g = homeGroup(), day = g && g.key;
+    const games = day ? rows('games').filter((x) => x.date === day) : [];
+    const teams = new Map(games.flatMap((x) => [[x.away, x], [x.home, x]]));
+    const pgl = rows('pgl'); const cur = pgl.slice(0, 50).map((r) => String(r.g || '').split(',')[1] || '').sort().pop();
+    const avgOf = (pid) => { const r = pgl.find((q) => String(q.pid) === String(pid)); if (!r) return null; const gs = String(r.g || '').split(';').map((v) => v.split(',')).filter((v) => v[1] === cur && +v[7] > 0 && v[21] !== '1'); return gs.length < 2 ? null : { pts: gs.reduce((t, v) => t + +v[8], 0) / gs.length, min: gs.reduce((t, v) => t + +v[7], 0) / gs.length }; };
+    const picks = g ? [...g.plays, ...(g.alts || []), ...(g.bprops || [])] : [];
+    const since = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10); // reported in the last 2 days
+    const list = [];
+    rows('troster').filter((t) => t.sp === 'nba' && teams.has(t.code)).forEach((t) => (t.inj || []).forEach((i) => {
+      if (!/out|doubt|day|ques/i.test(i[3] || '') || !(i[6] && i[6] >= since)) return; const a = avgOf(i[0]); if (!a || (a.pts < 12 && a.min < 25)) return;
+      const gm = teams.get(t.code), inGame = picks.filter((it) => it.sp === 'nba' && it.id === gm.id);
+      list.push({ pid: i[0], name: i[1], team: t.code, status: i[3], what: i[4] || '', note: i[7] || '', a, gm, own: inGame.filter((it) => it.m.finder && it.m.finder.player === i[1]).length, game: inGame.filter((it) => !it.m.finder).map((it) => it.m.pick), props: inGame.filter((it) => it.m.finder && it.m.finder.player !== i[1]).length });
+    }));
+    list.sort((x, y) => (y.own + y.game.length + y.props ? 1 : 0) - (x.own + x.game.length + x.props ? 1 : 0) || y.a.pts - x.a.pts);
+    if (sec) sec.classList.toggle('isempty', !list.length); if (!list.length) { box.replaceChildren(); return; }
+    const out = list.slice(0, 6).map((x) => {
+      const r = el('button', null, 'hir'); r.type = 'button';
+      const t = el('div', null, 'hit'); t.append(el('b', x.name), el('span', x.team + ' · ' + x.a.pts.toFixed(1) + ' pts, ' + Math.round(x.a.min) + ' min a game · ' + x.gm.matchup, 'muted'));
+      const aff = [x.own ? 'his prop' : '', ...x.game, x.props ? x.props + (x.props === 1 ? ' prop' : ' props') : ''].filter(Boolean);
+      if (x.note) t.append(el('span', x.note, 'hinote'));
+      if (aff.length) t.append(el('span', 'Affects ' + aff.join(' + '), 'hiaff'));
+      const lab = /out/i.test(x.status) ? 'OUT' : /doubt/i.test(x.status) ? 'DOUBTFUL' : 'DAY-TO-DAY';
+      r.append(X.avatar('nba', x.pid, x.name), t, el('span', lab, 'hist ' + (lab === 'OUT' ? 'out' : 'dbt')));
+      r.addEventListener('click', () => X.openPlayer(x.name)); return r;
+    });
+    box.replaceChildren(...out, ...(list.length > 6 ? [el('p', '+' + (list.length - 6) + ' more on the team pages', 'muted bbnote')] : []));
+  });
+  // keep the countdown and live strip fresh when the live feed updates
+  // ---- News (news.json, ESPN headlines; the local server refreshes it every 30 minutes)
+  const newsRows = () => { const g = dash.data('news'); return g.status === 'ok' && Array.isArray(g.data) ? g.data : []; };
+  const ago = (iso) => { const m = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m < 60 ? m + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago'; };
+  // players in the news in the last 24 hours, by ESPN id (the same ids as our player data)
+  const newsOf = (pid) => { if (pid == null) return []; const cut = Date.now() - 86400000; return newsRows().filter((x) => new Date(x.published).getTime() > cut && (x.athletes || []).some((a) => a[0] === String(pid))); };
+  const newsItem = (x) => {
+    const a = el('a', null, 'nwi'); a.href = x.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    const th = el('span', null, 'nwth' + (x.video ? ' vid' : '')); if (x.img) { const im = document.createElement('img'); im.src = x.img; im.alt = ''; im.loading = 'lazy'; th.append(im); }
+    const t = el('span', null, 'nwt'); t.append(el('b', x.headline), el('small', x.league + ' · ' + ago(x.published) + (x.video ? ' · video' : '')));
+    a.append(th, t); return a;
+  };
+  const NWF = { sp: 'all', more: false };
+  dash.draw('hnews', (box) => {
+    const sec = box.closest('section'), all = newsRows();
+    if (sec) sec.classList.toggle('isempty', !all.length); if (!all.length) { box.replaceChildren(); return; }
+    const SPN = { nba: 'NBA', nfl: 'NFL', fb: 'Football', ufc: 'UFC' }, sps = Object.keys(SPN).filter((k) => all.some((x) => x.sp === k));
+    const chips = el('div', null, 'bbchips');
+    const chip = (lab, k) => { const c = el('button', lab, 'bbchip' + (NWF.sp === k ? ' on' : '')); c.type = 'button'; c.addEventListener('click', () => { NWF.sp = k; NWF.more = false; dash.draw('hnews'); }); return c; };
+    chips.append(chip('All', 'all'), ...sps.map((k) => chip(SPN[k], k)));
+    const list = all.filter((x) => NWF.sp === 'all' || x.sp === NWF.sp), shown = list.slice(0, NWF.more ? 20 : 6);
+    const out = [chips, ...shown.map(newsItem)];
+    if (list.length > shown.length) { const m = el('button', 'More headlines ›', 'bbmore'); m.type = 'button'; m.addEventListener('click', () => { NWF.more = true; dash.draw('hnews'); }); out.push(m); }
+    box.replaceChildren(...out);
+  });
+  // fresh headlines while the page stays open
+  setInterval(() => { try { dash.refresh('news'); } catch (e) { /* not loaded */ } }, 10 * 60000);
+
+  // Confidence colours on game cards everywhere (green 70%+, amber 60-69%, grey below), same as the Bets tab.
+  // Cards already showing a result (won / lost) keep their result colours.
+  const tintAll = () => document.querySelectorAll('.hg .pk:not([data-ct]), .gcard .pk:not([data-ct])').forEach((p) => {
+    p.dataset.ct = '1'; const card = p.closest('.hg, .gcard'); if (card && /\b(won|lost|rgres|lvdone)\b/.test(card.className)) return;
+    const m = p.textContent.match(/(\d+(?:\.\d+)?)%/); if (!m) return; const v = +m[1]; p.classList.add(v >= 70 ? 'cHi' : v >= 60 ? 'cMd' : 'cLo'); });
+  new MutationObserver(() => { clearTimeout(tintAll.t); tintAll.t = setTimeout(tintAll, 60); }).observe(document.body, { childList: true, subtree: true });
+  window.SSG = { newsOf, newsItem, defCourt, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();

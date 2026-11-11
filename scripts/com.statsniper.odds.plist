@@ -8,7 +8,7 @@
 <dict>
   <key>Label</key><string>com.statsniper.odds</string>
   <key>ProgramArguments</key>
-  <array><string>/bin/zsh</string><string>-c</string><string>h=$(date +%H); cd "$HOME/Downloads/Statsniper Folder/statsniper" &amp;&amp; ./scripts/odds-daily.sh $([ "$h" -ge 12 ] &amp;&amp; echo pm || echo am)</string></array>
+  <array><string>/bin/zsh</string><string>-c</string><string>h=$(date +%H); cd "$HOME/Desktop/Statsniper Folder/statsniper" &amp;&amp; ./scripts/odds-daily.sh $([ "$h" -ge 12 ] &amp;&amp; echo pm || echo am)</string></array>
   <key>StartCalendarInterval</key>
   <array>
     <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>

@@ -35,6 +35,10 @@ const manifest = JSON.parse(read('data/manifest.json'));
 // Private datasets stay on the owner's Mac: never copied into the public site or its manifest.
 const PRIVATE = ['bets', 'odds', 'props', 'propbook', 'altlines', 'valuelog'];
 PRIVATE.forEach((id) => delete manifest[id]);
+// News (fetch-news.js) isn't listed in manifest.json (the Mac's local server lists it): include it when the file is there.
+// Cleaned public copies of the owner's picks (export-public.js: no stakes, no prices): include them when present.
+[['pubbets', 'Jacob\'s picks (public)'], ['pubprops', 'Player props we picked (public)'], ['pubalts', 'Alt lines we picked (public)']].forEach(([id, t]) => { if (!manifest[id] && fs.existsSync(path.join(PUB, 'data', id + '.json'))) manifest[id] = { title: t, description: 'Cleaned public copy from export-public.js.', updated: { at: new Date().toISOString(), by: 'build' } }; });
+if (!manifest.news && fs.existsSync(path.join(PUB, 'data', 'news.json'))) manifest.news = { title: 'News', description: 'Latest ESPN headlines for every sport (fetch-news.js).', updated: { at: new Date().toISOString(), by: 'build' } };
 const web = {};
 let eagerKB = 0, lazyKB = 0;
 for (const id of Object.keys(manifest)) {

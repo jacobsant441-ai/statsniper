@@ -30,6 +30,9 @@ BOOL_COLS = {"starter"}
 EXTRA_MANIFEST = {
     "livegames": {"title": "Live games", "description": "Live scores from BigQuery (local feed).", "updated": ""},
     "livebox": {"title": "Live box scores", "description": "Live box scores from BigQuery (local feed).", "updated": ""},
+    # private, Mac only: listed here (not in manifest.json) so the cloud's manifest updates never clash with local edits
+    "valuelog": {"title": "Track record", "description": "Every bet we rated, settled from results (value-log.js).", "updated": ""},
+    "news": {"title": "News", "description": "Latest ESPN headlines for every sport (fetch-news.js, every 30 minutes).", "updated": ""},
 }
 
 _cache, _lock = {}, threading.Lock()
@@ -91,6 +94,11 @@ class Handler(SimpleHTTPRequestHandler):
                     return self._json([])  # page treats no rows as nothing live
         return super().do_GET()
 
+    def list_directory(self, path):
+        """No folder listings: only the app's own pages and data files are served, by exact name."""
+        self.send_error(404, "Not found")
+        return None
+
     def end_headers(self):
         if not self.path.startswith("/data/live"):
             self.send_header("Cache-Control", "no-cache")
@@ -105,7 +113,15 @@ def autopull():
     """Keep this Mac's copy current: the cloud commits fresh results to GitHub every ~30 min, so pull them
     (fast-forward only, never overwrites local edits). Set NO_AUTOPULL=1 to turn off."""
     import time
+    n = 0
     while True:
+        # latest news every 30 minutes (every 6th 5-minute pass), from the first pass on
+        if n % 6 == 0:
+            try:
+                subprocess.run(["node", "scripts/fetch-news.js"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+            except Exception as e:
+                sys.stderr.write("[news] fetch failed: %s\n" % e)
+        n += 1
         try:
             r = subprocess.run(["git", "pull", "--ff-only", "-q"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
             if r.returncode:
@@ -123,6 +139,12 @@ def settle_bets():
     try:
         before = f.read_bytes() if f.exists() else b""
         subprocess.run(["node", "scripts/grade-bets.js"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+        # public site: publish the cleaned copies (open bets + record, our picks, no money or prices) when they
+        # change. Off until ~/Desktop/StatSniper/publish-public.on exists (the owner turns it on).
+        if (Path.home() / "Desktop" / "StatSniper" / "publish-public.on").exists():
+            r = subprocess.run(["node", "scripts/export-public.js", "--upload"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+            if r.returncode:
+                sys.stderr.write("[public] export failed: " + (r.stderr.strip() or r.stdout.strip())[:200] + "\n")
         # value track record (valuelog.json, private): settle finished game / alt / prop bets (no credits)
         subprocess.run(["node", "scripts/value-log.js", "grade"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
         if f.exists() and f.read_bytes() != before and before:

@@ -180,6 +180,10 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.pages.outputs.page_url }}
+    env:
+      # Cloudflare Pages (the site's own address, no username in it). Set these two repository secrets to turn it on.
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -187,7 +191,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Latest news (ESPN headlines, into this build only; never committed)
+        run: node scripts/fetch-news.js || echo "::warning::news fetch failed"
       - run: node scripts/build-web.js
+      - name: Publish to Cloudflare Pages
+        if: env.CF_TOKEN != '' && env.CF_ACCOUNT != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # first run only: create the Pages project (ignored if it already exists)
+          npx --yes wrangler@3.114.0 pages project create statsniper --production-branch=main || true
+          npx --yes wrangler@3.114.0 pages deploy dist/web --project-name=statsniper --branch=main --commit-dirty=true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

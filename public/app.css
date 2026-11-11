@@ -1662,3 +1662,152 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .bnav{max-width:calc(100% - 16px);box-sizing:border-box}
 @media (max-width:560px){.bnav{gap:2px;padding:5px}.bnav button{padding:9px 12px;gap:5px;font-size:.86rem}}
 @media (max-width:360px){.bnav button{padding:8px 9px;font-size:.8rem}.bnav button span{display:none}}
+/* My bets on Home: section labels */
+.mbsec{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sb-muted);margin:14px 2px 6px}
+#view-bets>#mybets{margin-bottom:14px}
+/* Track record (Review) */
+.trk{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.trr{display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:baseline;padding:8px 2px;border-top:1px solid var(--sb-line);font-size:.84rem;font-variant-numeric:tabular-nums}
+.trr b{font-weight:700}
+.trr.sub{border-top:0;padding-top:0;font-size:.76rem}
+.trr.sub b{font-weight:500;color:var(--sb-muted);padding-left:10px}
+.trr .up{color:#3ccf7f;font-weight:700}.trr .dn{color:#ff6b63;font-weight:700}.trr .muted{color:var(--sb-muted)}
+.trcal{display:flex;flex-direction:column;gap:7px}
+.trcr{display:grid;grid-template-columns:4.2rem 1fr 2.6rem 2.2rem;gap:8px;align-items:center;font-size:.8rem;font-variant-numeric:tabular-nums}
+.trcr small{color:var(--sb-muted);text-align:right}
+.trbar{position:relative;height:10px;border-radius:6px;background:rgba(127,127,127,.15)}
+.trbar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.trbar i.up{background:#3ccf7f}.trbar i.dn{background:#ff6b63}
+.trbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--sb-fg,#fff);border-radius:1px}
+@media (max-width:480px){.trr{grid-template-columns:1fr auto auto auto;font-size:.78rem}.trr span.muted{display:none}}
+/* Bets tab: price since first seen, injury news */
+.bbr .r .bbmv{display:block;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px}
+.bbr .r .bbmv.up{color:#3ccf7f}.bbr .r .bbmv.dn{color:#ff6b63}
+.bbr .l .bbinj{display:block;font-style:normal;font-size:.72rem;font-weight:700;color:#f0b429;margin-top:2px}
+.bbr.bbout{opacity:.6}.bbr.bbout .l .bbinj{color:#ff6b63}
+/* ---- Style pass (12 Nov) ---- */
+/* 1 + 2: headshots on player props, both team logos on game picks (Bets tab) */
+.bbr:has(.bbic.face){grid-template-columns:36px minmax(0,1fr) auto}
+.bbr:has(.bbic.two){grid-template-columns:28px minmax(0,1fr) auto}
+.bbic.face{width:36px;height:36px;background:var(--sb-raised)}
+.bbic.face .av{width:100%!important;height:100%!important;border:0!important;padding:0!important;font-size:.7rem}
+.bbic.two{width:28px;height:auto;border-radius:0;background:none;overflow:visible;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bbic.two .bd{width:20px!important;height:20px!important;flex:none;border-radius:50%;font-size:.45rem}
+.bbic.two .bd img{width:100%;height:100%;object-fit:contain}
+/* 3: confidence colours on game cards (green 70%+, amber 60s, grey below) */
+.hg .pk.cHi,.mid .pk.cHi{color:#3ccf7f}
+.hg .pk.cMd,.mid .pk.cMd{color:#f5c45e}
+.hg .pk.cLo,.mid .pk.cLo{color:var(--sb-muted)}
+/* 4: pulsing dot on games in progress */
+@keyframes sspulse{0%{box-shadow:0 0 0 0 rgba(255,77,77,.7)}70%{box-shadow:0 0 0 6px rgba(255,77,77,0)}100%{box-shadow:0 0 0 0 rgba(255,77,77,0)}}
+.hg.lvon .tm::before,.mid .pre.lvon::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4d4d;margin-right:6px;vertical-align:middle;animation:sspulse 1.6s infinite}
+/* 5: filter chips on the Bets tab */
+.bbchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 12px;padding:2px}
+.bbchips::-webkit-scrollbar{display:none}
+.bbchip{flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--sb-line);background:none;color:var(--sb-muted);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.bbchip:hover{color:var(--sb-fg)}
+.bbchip.on{background:var(--sb-acc);border-color:var(--sb-acc);color:var(--sb-acc-ink,#0a0f06)}
+.bbsep{flex:none;width:1px;margin:4px 2px;background:var(--sb-line)}
+/* 6: grey placeholder rows while data loads */
+@keyframes ssshim{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.skel{display:flex;flex-direction:column;gap:10px;padding:6px 0}
+.skel i{display:block;height:46px;border-radius:12px;background:linear-gradient(90deg,rgba(127,127,127,.09) 25%,rgba(127,127,127,.2) 37%,rgba(127,127,127,.09) 63%);background-size:400% 100%;animation:ssshim 1.3s ease infinite}
+.skel i:nth-child(2n){width:86%}
+/* 7: sticky day and section headers on the Bets list */
+.bbpage .bbday{position:sticky;top:59px;z-index:6;background:var(--sb-panel,var(--color-panel,#151a23));padding:6px 0;margin-left:-2px;margin-right:-2px}
+.bbpage .bbday:not(.bbsub){z-index:7}
+.bbpage .bbdrop>summary{position:sticky;top:59px;z-index:6;background:var(--sb-panel,var(--color-panel,#151a23))}
+@media (prefers-reduced-motion:reduce){.hg.lvon .tm::before,.mid .pre.lvon::before,.skel i{animation:none}}
+/* My bets: day-by-day profit / loss bars (zero line in the middle) */
+.pld{margin-top:4px}
+.pldplot{display:flex;gap:2px;height:140px;align-items:stretch;padding:16px 0 4px;max-width:560px}
+.pldc{flex:1;min-width:0;display:grid;grid-template-rows:1fr 1fr auto;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
+.pldc:hover,.pldc.on{background:rgba(127,127,127,.08)}
+.pldu,.pldd{position:relative;display:flex;flex-direction:column;align-items:center}
+.pldu{justify-content:flex-end;border-bottom:1px solid var(--sb-line2,var(--sb-line))}
+.pldd{justify-content:flex-start}
+.pldc i{display:block;width:86%;max-width:46px;position:relative}
+.pldu i{border-radius:4px 4px 0 0}
+.pldd i{border-radius:0 0 4px 4px}
+.pldc i.up{background:#3ccf7f}.pldc i.dn{background:#ff6b63}
+.pldl{position:absolute;left:50%;transform:translateX(-50%);font-size:.62rem;font-weight:700;color:var(--sb-fg);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pldc i.up .pldl{bottom:100%;margin-bottom:2px}
+.pldc i.dn .pldl{top:100%;margin-top:2px}
+.pldx{font-size:.62rem;color:var(--sb-muted);text-align:center;padding-top:4px;white-space:nowrap}
+.pldread{margin:8px 2px 0;font-size:.8rem;color:var(--sb-muted);font-variant-numeric:tabular-nums}
+.pldread b{color:var(--sb-fg)}.pldread b.up{color:#3ccf7f}.pldread b.dn{color:#ff6b63}
+/* Bets: one logo for the team we're backing */
+.bbic.one{background:none;overflow:visible}
+.bbic.one .bd{width:28px!important;height:28px!important;border-radius:50%;font-size:.55rem}
+.bbic.one .bd img{width:100%;height:100%;object-fit:contain}
+.bbgames{margin:4px -2px 8px}
+.mbres{margin-top:14px}
+.mbres>.mbl{margin-top:4px}
+/* ---- Home hero: live / next up, pick of the day, game of the night, injury alerts ---- */
+.hhero{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.hhero .hcard{margin:0}
+.hcard h2{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sb-muted);margin:0 0 10px}
+.hslive:empty{display:none}
+.hnext{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:10px 14px;border-radius:14px;border:1px solid var(--sb-line);background:var(--sb-panel);color:var(--sb-fg);font:inherit;font-size:.84rem;cursor:pointer;text-align:left}
+.hnl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sb-muted)}
+.hnl b{color:var(--sb-fg)}
+.hncd{margin-left:auto;flex:none;color:var(--sb-acc);font-variant-numeric:tabular-nums}
+.hhl{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#ff4d4d;margin:0 2px 6px}
+.hhl::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4d4d;margin-right:6px;vertical-align:middle;animation:sspulse 1.6s infinite}
+.hlrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.hlrow::-webkit-scrollbar{display:none}
+.hlc{flex:0 0 auto;width:9.5rem;display:flex;flex-direction:column;gap:5px;padding:9px 11px;border-radius:14px;border:1px solid rgba(255,77,77,.45);background:var(--sb-panel);color:var(--sb-fg);font:inherit;text-align:left;cursor:pointer}
+.hlt{display:flex;justify-content:space-between;font-size:.66rem;font-weight:700}
+.hlive{color:#ff4d4d;letter-spacing:.06em}
+.hls{display:grid;grid-template-columns:20px 1fr auto;gap:6px;align-items:center;font-size:.84rem;font-variant-numeric:tabular-nums}
+.hls .bd{width:20px!important;height:20px!important}
+.hls span{font-weight:800}
+.hpodc{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;background:none;border:0;padding:0;color:var(--sb-fg);font:inherit;text-align:left;cursor:pointer}
+.hpodc .bbic.big{width:52px;height:52px}
+.hpodc .bbic.big .bd{width:46px!important;height:46px!important}
+.hpodc .bbic.big.two .bd{width:24px!important;height:24px!important}
+.hpm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hpd{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sb-acc)}
+.hpp{font-size:1.12rem;line-height:1.25}
+.hpr{font-size:.76rem;color:var(--sb-muted)}
+.hpv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums}
+.hpv b{font-size:1.5rem;line-height:1}
+.hpv .c.High{color:#3ccf7f}.hpv .c.Medium{color:#f5c45e}.hpv .c.Low{color:var(--sb-muted)}
+.hpv span{font-size:.74rem;color:var(--sb-muted);white-space:nowrap}
+.hgc{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;width:100%;background:none;border:0;padding:0;color:var(--sb-fg);font:inherit;cursor:pointer}
+.hgs{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.hgs .bd{width:44px!important;height:44px!important}
+.hgs b{font-size:.9rem}
+.hgs .muted,.hgm .muted{font-size:.72rem;color:var(--sb-muted)}
+.hgm{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;font-variant-numeric:tabular-nums}
+.hgm span:first-child{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sb-acc)}
+.hgm b{font-size:1rem}
+.hir{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;background:none;border:0;border-top:1px solid var(--sb-line);padding:9px 0;color:var(--sb-fg);font:inherit;text-align:left;cursor:pointer}
+.hir:first-child{border-top:0;padding-top:0}
+.hir .av{width:36px!important;height:36px!important;border-width:1px}
+.hit{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hit b{font-size:.9rem}
+.hit .muted{font-size:.72rem;color:var(--sb-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hiaff{font-size:.72rem;font-weight:700;color:#f0b429}
+.hist{font-size:.66rem;font-weight:800;letter-spacing:.05em;padding:3px 7px;border-radius:999px}
+.hist.out{background:rgba(255,77,77,.16);color:#ff6b63}.hist.dbt{background:rgba(240,180,41,.16);color:#f0b429}
+@media (prefers-reduced-motion:reduce){.hhl::before{animation:none}}
+.hiaff{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* News: Home card, profile section, "In the news" tag on picks */
+.nwi{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--sb-line);color:var(--sb-fg);text-decoration:none}
+.bbchips+.nwi{border-top:0;padding-top:2px}
+.nwi:hover b{text-decoration:underline}
+.nwth{position:relative;width:76px;height:50px;border-radius:9px;overflow:hidden;background:var(--sb-raised)}
+.nwth img{width:100%;height:100%;object-fit:cover;display:block}
+.nwth.vid::after{content:'▶';position:absolute;right:4px;bottom:3px;font-size:.6rem;color:#fff;background:rgba(0,0,0,.6);border-radius:4px;padding:1px 4px}
+.nwt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nwt b{font-size:.86rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nwt small{font-size:.7rem;color:var(--sb-muted)}
+.ppnews .nwi:first-of-type{border-top:0}
+.bbr .l .bbnews{display:block;font-style:normal;font-size:.7rem;font-weight:700;color:#5aa9ff;margin-top:2px}
+/* Home order: injuries under the games list; pick of the day on the Bets tab */
+#view-start>#hinj{margin-top:14px}
+#view-bets>#hpod{margin-bottom:14px}
+.hinote{font-size:.72rem;color:var(--sb-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* sections that have nothing to show (still drawable, unlike [hidden]) */
+.isempty{display:none!important}

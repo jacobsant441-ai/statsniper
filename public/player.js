@@ -190,6 +190,9 @@ function ppBuild(box, r) {
   st.append(cell('Season avg', sAvg == null ? '–' : ppBinary(k) ? Math.round(sAvg * 100) + '%' : f1(sAvg), cls(sAvg)), cell('Graph avg', gAvg == null ? '–' : ppBinary(k) ? Math.round(gAvg * 100) + '%' : f1(gAvg), cls(gAvg)), cell('Hit rate', pct + '% (' + over + '/' + vals.length + ')', pct >= 60 ? 'up' : pct <= 40 ? 'dn' : ''));
   card.append(top, st);
   { const bkp = ppBookPanel(r, gs, k); if (bkp) card.append(bkp); }
+  // In the news: recent ESPN articles tagged with this player (news.json, refreshed every 30 minutes)
+  { const nw = rows('news').filter((x) => (x.athletes || []).some((a) => a[0] === String(r.pid))).slice(0, 3);
+    if (nw.length && window.SSG && SSG.newsItem) { const w = el('div', null, 'ppbk ppnews'); w.append(el('div', 'In the news', 'ppbkh'), ...nw.map(SSG.newsItem)); card.append(w); } }
 
   const body = el('div', null, 'ppbody');
   if (PP.tab === 'graph') body.append(...ppGraph(r, k, fg, L, nx, gs));

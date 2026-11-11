@@ -7,13 +7,18 @@
 <div class="ssearch" role="search"><label class="ssbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ssq" type="search" placeholder="Search teams, players, fighters" aria-label="Search teams, players and fighters" autocomplete="off" spellcheck="false"></label><div class="ssres" id="ssres" role="listbox" aria-label="Search results" data-draw="ssearch" data-source="pidx nfltable table"></div></div>
 <div class="view" id="view-start">
 <div class="hsnone-all" id="hsempty" hidden><b>No games today.</b><span>Picks has the next games for every sport.</span><button type="button" class="hsgo2" id="hsemptygo">Go to Picks ›</button></div>
+<div class="hhero">
+<div class="hslive" data-draw="hslive" data-source="livegames schedule"></div>
+<section class="card hcard" id="hgotn"><h2>Game of the night</h2><div data-draw="hgotn" data-source="games pred teams fixtures nflgames odds propbook altlines history"></div></section>
+<section class="card hcard" id="hnews"><h2>Latest news</h2><div data-draw="hnews" data-source="news"></div></section>
+</div>
 <div class="hsgrid">
 <section class="hs" data-sp="nba"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="nba"></span><div class="hst"><h2>NBA</h2><span class="hsc" data-draw="hscount" data-sp="nba" data-source="games schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="nba" aria-label="Open NBA">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="nba" data-source="games schedule pred history final livegames"></div></section>
 <section class="hs" data-sp="fb"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="fb"></span><div class="hst"><h2>Football</h2><span class="hsc" data-draw="hscount" data-sp="fb" data-source="fixtures schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="fb" aria-label="Open Football">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="fb" data-source="fixtures schedule history livegames"></div></section>
 <section class="hs" data-sp="nfl"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="nfl"></span><div class="hst"><h2>NFL</h2><span class="hsc" data-draw="hscount" data-sp="nfl" data-source="nflgames schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="nfl" aria-label="Open NFL">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="nfl" data-source="nflgames schedule history livegames"></div></section>
 <section class="hs" data-sp="ufc"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="ufc"></span><div class="hst"><h2>UFC</h2><span class="hsc" data-draw="hscount" data-sp="ufc" data-source="ufcfights schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="ufc" aria-label="Open UFC">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="ufc" data-source="ufcfights ufcevents schedule history"></div></section>
 </div>
-<section class="card sec mbwrap" id="mybets"><button type="button" class="mbhead" aria-expanded="false"><h2>My bets</h2><span class="mbsum" data-draw="mybetsum" data-source="bets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybets" data-source="bets"></div></div></section>
+<section class="card hcard" id="hinj"><h2>New injuries · last 2 days</h2><div data-draw="hinj" data-source="troster pgl games pred fixtures nflgames odds propbook altlines history hs_nba"></div></section>
 </div>
 <div class="view" id="view-nba" hidden>
 <div class="view" id="mainpage">
@@ -70,12 +75,14 @@
 </div>
 </div>
 <div class="view" id="view-bets" hidden>
-<section class="card bb bbpage"><h2>Best bets</h2><div data-draw="bestall" data-source="games pred fixtures nflgames odds history props propfind propbook altlines"></div></section>
+<section class="card hcard" id="hpod"><h2>Pick of the day</h2><div data-draw="hpod" data-source="games pred fixtures nflgames odds props propfind propbook altlines troster history hs_nba hs_nfl hs_nfl2 pubprops pubalts"></div></section>
+<section class="card sec mbwrap open" id="mybets"><button type="button" class="mbhead" aria-expanded="true"><h2>Jacob's picks</h2><span class="mbsum" data-draw="mybetsum" data-source="bets pubbets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybets" data-source="bets pubbets"></div></div></section>
+<section class="card bb bbpage"><h2>Best bets</h2><div data-draw="bestall" data-source="games pred fixtures nflgames odds history props propfind propbook altlines valuelog troster hs_nba hs_nfl hs_nfl2 news pubprops pubalts"></div></section>
 </div>
 <div class="view" id="view-player" hidden>
 <div class="topbar"><button type="button" class="backbtn" id="plback">‹ Back</button></div>
 <div class="ppstripw" id="ppstripw" data-draw="ppstrip" data-source="pgl games schedule pstats props75 top props history"></div>
-<section class="ppwrap" id="ppwrap" data-draw="pp" data-source="pgl h2h pbp hs_nba troster games schedule pstats props75 top props propbook history"></section>
+<section class="ppwrap" id="ppwrap" data-draw="pp" data-source="pgl h2h pbp hs_nba troster games schedule pstats props75 top props propbook history news"></section>
 <section class="card sec"><h2>Averages</h2><p class="muted">Per game. Regular season and playoffs, from ESPN game logs.</p><div class="scroll" id="plavg" data-draw="plavg" data-source="pgl"></div></section>
 <section class="card sec"><div class="plh"><h2>Best and worst games</h2><div class="chips" id="plstat"><button type="button" data-st="pra" class="on">PRA</button><button type="button" data-st="pts">PTS</button><button type="button" data-st="reb">REB</button><button type="button" data-st="ast">AST</button><button type="button" data-st="tpm">3PM</button></div></div><p class="muted plseason" data-draw="plseason" data-source="pgl"></p><div class="plbw"><div><h3>Top performances</h3><div class="plgl" data-draw="plbest" data-source="pgl"></div></div><div><h3>Worst performances</h3><div class="plgl" data-draw="plworst" data-source="pgl"></div></div></div></section>
 <section class="card sec"><h2>Upcoming games</h2><p class="muted">Open a game to see how he has played against that team over the last three seasons.</p><div id="plnext" data-draw="plnext" data-source="pgl games schedule pred history"></div></section>
@@ -91,7 +98,7 @@
 <div class="view" id="view-athlete" hidden>
 <div class="topbar"><button type="button" class="backbtn" id="atback">‹ Back</button></div>
 <div class="ppstripw" id="atstripw" data-draw="atstrip" data-source="nflp socp tsched props75"></div>
-<section class="ppwrap" id="atppwrap" data-draw="atpp" data-source="nflp socp hs_nfl hs_nfl2 hs_soc troster tsched props75 props propbook"></section>
+<section class="ppwrap" id="atppwrap" data-draw="atpp" data-source="nflp socp hs_nfl hs_nfl2 hs_soc troster tsched props75 props propbook news"></section>
 <section class="card sec"><h2>Season by season</h2><p class="muted">Each cell shows the total, then the per-game average in brackets. Regular season, from ESPN game logs.</p><div class="scroll" data-draw="atavg" data-source="nflp socp"></div></section>
 <section class="card sec"><div class="plh"><h2>Best and worst games</h2><div class="chips" id="atstat" data-draw="atstat" data-source="nflp socp"></div></div><p class="muted" data-draw="atseason" data-source="nflp socp"></p><div class="plbw"><div><h3>Top performances</h3><div class="plgl" data-draw="atbest" data-source="nflp socp"></div></div><div><h3>Worst performances</h3><div class="plgl" data-draw="atworst" data-source="nflp socp"></div></div></div></section>
 <section class="card sec"><h2>Upcoming games</h2><p class="muted">Open a game to see how he has played against that team over the last three seasons.</p><div data-draw="atnext" data-source="nflp socp tsched nfltable table"></div></section>
@@ -164,6 +171,7 @@
 </header>
 <div class="lgbar" id="rvsp" role="group" aria-label="Sport"><button type="button" data-rs="all" class="on" aria-pressed="true">All sports</button><button type="button" data-rs="nba" style="--lg:#1d6fe0" aria-pressed="false"><i></i>NBA</button><button type="button" data-rs="fb" style="--lg:#8b3fd9" aria-pressed="false"><i></i>Football</button><button type="button" data-rs="nfl" style="--lg:#2c7be5" aria-pressed="false"><i></i>NFL</button><button type="button" data-rs="ufc" style="--lg:#d20a0a" aria-pressed="false"><i></i>UFC</button></div>
 <section class="card sec mbwrap" id="mybetsrv"><button type="button" class="mbhead" aria-expanded="false"><h2>My bet results</h2><span class="mbsum" data-draw="mybetsrvsum" data-source="bets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybetsrv" data-source="bets"></div></div></section>
+<section class="card sec" id="trackrec"><h2>Our track record</h2><div data-draw="trackrec" data-source="valuelog"></div></section>
 <section class="sec" id="rvlist"><h2>Every pick, graded</h2><p class="muted">✓ right, ✗ wrong. Tap a pick for why it went that way.</p><div data-draw="rvlist" data-source="history pidx hs_ufc archive"></div></section>
 
 <section class="card sec" id="rvrec"><h2>Our record</h2><p class="muted">Winner picks right, then side bets (totals, both teams to score, spreads). Pushes and coin tosses are not counted.</p><div class="scroll" data-draw="rvrec" data-source="history"></div></section>
@@ -385,7 +393,7 @@ function emptyBox(sp) {
   if (nxt) { const b = el('button', 'Jump to ' + nxt.k); b.type = 'button'; b.addEventListener('click', () => { selDay = nxt.k; wkOff = Math.floor(nxt.i / 7); redrawAll(); }); d.append(b); }
   return d;
 }
-function redrawAll() { ['bestall', 'hsicon', 'hscount', 'hstrip', 'rvboard', 'rvlist', 'rvrec', 'rvins', 'rvsum', 'rveye', 'rvhead', 'pgrid', 'fbgrid', 'nflgrid', 'ufcgrid', 'ufcstats', 'appbar', 'rvall', 'rvstats', 'rvsum', 'rveye', 'rvhead', 'rvlive'].forEach((n) => dash.draw(n)); }
+function redrawAll() { ['bestall', 'hslive', 'hpod', 'hgotn', 'hinj', 'hnews', 'hsicon', 'hscount', 'hstrip', 'rvboard', 'rvlist', 'rvrec', 'rvins', 'rvsum', 'rveye', 'rvhead', 'pgrid', 'fbgrid', 'nflgrid', 'ufcgrid', 'ufcstats', 'appbar', 'rvall', 'rvstats', 'rvsum', 'rveye', 'rvhead', 'rvlive'].forEach((n) => dash.draw(n)); }
 function syncChrome() {
   const ab = document.getElementById('appbar'); if (!ab) return;
   const sh = (id) => { const e = document.getElementById(id); return e && !e.hidden; };
@@ -1741,7 +1749,7 @@ const plStatus = (name) => { const p = rows('plog').find((q) => norm(q.player) =
 const plFocus = (gs) => { const cur = plCur(); const c = gs.filter((g) => g.season === cur); if (c.length >= 3) return { season: cur, games: c }; const s = plSeasons(gs).find((x) => x !== cur); return { season: s || cur, games: s ? gs.filter((g) => g.season === s) : c, fallback: true, curN: c.length }; };
 const plNeed = (box) => {
   const g = dash.data('pgl');
-  if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading game logs…' : 'Game logs are not available right now.', 'plnone')); return null; }
+  if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Game logs are not available right now.', 'plnone')); return null; }
   const r = plRow(PL.name);
   if (!r) { box.replaceChildren(el('p', 'No game log found for ' + (PL.name || 'this player') + '.', 'plnone')); return null; }
   return r;
@@ -1901,7 +1909,7 @@ const ftMMSS = (s) => { if (s == null) return '–'; const m = Math.floor(s / 60
 const ftHours = (s) => { const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? h + 'h ' + m + 'm' : m + 'm'; };
 const ftNeed = (box) => {
   const g = dash.data('ufcp');
-  if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading fighter profiles…' : 'Fighter profiles are not available right now.', 'plnone')); return null; }
+  if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Fighter profiles are not available right now.', 'plnone')); return null; }
   const r = ftRow(FT.id); if (!r) { box.replaceChildren(el('p', 'No profile found for this fighter.', 'plnone')); return null; }
   return r;
 };
@@ -2140,6 +2148,7 @@ const photo = (sp, id) => {
   }
   return m.map.get(String(id)) || null;
 };
+const skel = (n = 4) => { const w = el('div', null, 'skel'); w.setAttribute('aria-label', 'Loading'); for (let k = 0; k < n; k++) w.append(el('i')); return w; };
 const avatar = (sp, id, name, cls) => {
   const src = photo(sp, id);
   const a = el('span', src ? null : ufcInit(name || ''), 'av' + (cls ? ' ' + cls : ''));
@@ -2207,7 +2216,7 @@ const atCell = (gs, k) => { if (!gs.length) return '–'; const s = atSum(gs, k)
 const atTeamName = (sp, code) => { if (sp === 'nfl') return NFLN(code); const t = rows('table').find((q) => q.abbr === code); return t ? t.team : code; };
 const atNeed = (box) => {
   const g = dash.data(AT_DS[AT.sp]);
-  if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading player stats…' : 'Player stats are not available right now.', 'plnone')); return null; }
+  if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Player stats are not available right now.', 'plnone')); return null; }
   const r = atRow(); if (!r) { box.replaceChildren(el('p', 'No game log found for this player.', 'plnone')); return null; }
   const ks = atKeys(r, atGames(r)).filter((k) => !atAvgK.has(k) || k.startsWith('long')); if (!ks.includes(AT.stat)) AT.stat = ks[0] || '';
   return r;
@@ -2498,7 +2507,7 @@ const tmLum = (hex) => { const h = String(hex || '#000').replace('#', ''); const
 const tmOrd = (n) => n + (['th', 'st', 'nd', 'rd'][n % 10 < 4 && Math.floor((n % 100) / 10) !== 1 ? n % 10 : 0]);
 const tmNeed = (box) => {
   const g = dash.data('tprof');
-  if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading team…' : 'Team stats are not available right now.', 'plnone')); return null; }
+  if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Team stats are not available right now.', 'plnone')); return null; }
   const t = tmCur(); if (!t) { box.replaceChildren(el('p', 'No stats on file for this team yet.', 'plnone')); return null; }
   return t;
 };
@@ -2605,7 +2614,7 @@ dash.draw('tminj', (box) => {
     if (f.checked) d.append(el('small', 'Checked ' + f.checked));
     box.replaceChildren(d); return;
   }
-  const g = dash.data('troster'); if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading injuries…' : 'Injury list is not available right now.', 'plnone')); return; }
+  const g = dash.data('troster'); if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Injury list is not available right now.', 'plnone')); return; }
   const r = tmRos(); const list = (r && r.inj) || [];
   if (!list.length) { box.replaceChildren(el('p', 'No injuries reported. Everyone is available.', 'plnone')); return; }
   box.replaceChildren(...list.map(([id, name, pos, status, what, ret, date, note]) => {
@@ -2624,7 +2633,7 @@ dash.draw('tmrosnote', (p) => {
 });
 dash.draw('tmroster', (box) => {
   const t = tmNeed(box); if (!t) return;
-  const g = dash.data('troster'); if (g.status !== 'ok') { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading roster…' : 'Roster is not available right now.', 'plnone')); return; }
+  const g = dash.data('troster'); if (g.status !== 'ok') { box.replaceChildren(g.status === 'loading' ? skel() : el('p', 'Roster is not available right now.', 'plnone')); return; }
   const r = tmRos(); if (!r || !r.roster.length) { box.replaceChildren(el('p', 'No roster on file for this team yet.', 'plnone')); return; }
   const hurt = new Map(r.inj.map((x) => [x[0], x[3]]));
   const groups = []; r.roster.forEach((p) => { let gr = groups.find((x) => x.k === p[6]); if (!gr) groups.push(gr = { k: p[6], ps: [] }); gr.ps.push(p); });
