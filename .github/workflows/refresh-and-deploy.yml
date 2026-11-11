@@ -9,6 +9,7 @@ on:
   schedule:
     - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney: full daily refresh
     - cron: '7,37 * * * *'  # every 30 minutes: grade finished games (results)
+    - cron: '27 * * * *'    # every hour: republish the site (fresh news, even when no results changed)
     - cron: '13 4 * * *'    # 4:13 UTC = 3:13 pm Sydney (AEDT; 2:13 pm in AEST): build tomorrow's picks and stats.
                             # GitHub usually starts scheduled runs 30-50 min late, so stats land around 4 pm.
   workflow_dispatch:
@@ -175,7 +176,7 @@ jobs:
   deploy:
     needs: [refresh, results, picks]
     # Publish on a code push, after a successful full refresh, or when a results run changed data.
-    if: always() && !cancelled() && (github.event_name == 'push' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true' || needs.picks.outputs.changed == 'true')
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event.schedule == '27 * * * *' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true' || needs.picks.outputs.changed == 'true')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
