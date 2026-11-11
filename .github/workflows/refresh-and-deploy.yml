@@ -91,6 +91,8 @@ jobs:
           # NBA slate dates: a Sydney day D is the US evening of D-1. Do the older day first.
           retry node scripts/fetch-boxes.js "$(TZ=Australia/Sydney date -d '2 days ago' +%Y%m%d)"
           retry node scripts/fetch-boxes.js "$(TZ=Australia/Sydney date -d yesterday +%Y%m%d)"
+          # starting lineups: ESPN depth charts before tip, actual starters once the game is on
+          node scripts/fetch-lineups.js || echo "::warning::lineups failed"
       - name: Commit changed data
         id: commit
         run: |
@@ -148,6 +150,7 @@ jobs:
           [ "$MODE" = evening ] && warn node scripts/fetch-teams.js
           retry node scripts/fetch-rosters.js    # rosters and current injuries
           warn node scripts/nba-slate.js "$US"
+          warn node scripts/fetch-lineups.js      # starting fives from ESPN depth charts (nba-slate's are last game's five)
           warn node scripts/prop-finder.js "$DAY"   # our own player prop chances for that slate (Best bets)
           if [ "$MODE" = evening ] && [ "$(TZ=Australia/Sydney date +%u)" = 3 ]; then warn node scripts/nfl-week.js; fi
           retry node scripts/fetch-football.js

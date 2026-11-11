@@ -1811,3 +1811,6 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .hinote{font-size:.72rem;color:var(--sb-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* sections that have nothing to show (still drawable, unlike [hidden]) */
 .isempty{display:none!important}
+/* Phone (home-screen app): keep the tab bar clear of the clock / battery area, at the top and while scrolling */
+.bnav{top:calc(env(safe-area-inset-top,0px) + 24px)!important;margin-top:calc(env(safe-area-inset-top,0px) + 24px)!important}
+.bbpage .bbday,.bbpage .bbdrop>summary{top:calc(env(safe-area-inset-top,0px) + 75px)}
