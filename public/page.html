@@ -268,7 +268,7 @@ const fbDay = (x) => normDay(String(x.time).split(',')[0]);
 const nflDay = (x) => normDay(String(x.kick).split(',')[0]);
 const gamesFor = (sp, day) => sp === 'nba' ? rows('games').filter((r) => nbaDay(r) === day) : sp === 'ufc' ? rows('ufcfights').filter((x) => normDay(x.date) === day) : sp === 'fb' ? rows('fixtures').filter((x) => fbDay(x) === day) : rows('nflgames').filter((x) => nflDay(x) === day);
 const SPN = { nba: 'NBA', fb: 'Football', nfl: 'NFL', ufc: 'UFC' };
-const schedFor = (sp, day) => rows('schedule').filter((h) => (h.sport || 'nba') === sp && normDay(h.date) === day && !gamesFor(sp, day).some((g) => g.id === h.id));
+const schedFor = (sp, day) => rows('schedule').filter((h) => (h.sport || 'nba') === sp && normDay(h.date) === day && !gamesFor(sp, day).some((g) => g.id === h.id || (sp === 'fb' && norm(g.home).slice(0, 5) === norm(h.home_name).slice(0, 5))));
 const histFor = (sp, day) => rows('history').filter((h) => h.sport === sp && normDay(h.date) === day);
 const fl = (f) => (Array.isArray(f) ? f : typeof f === 'string' && f ? f.split(/\n|\s*\|\s*|(?<=\.)\s+(?=[A-Z])/).filter(Boolean) : []);
 // ---- box score helpers (shared by Review list and game page)

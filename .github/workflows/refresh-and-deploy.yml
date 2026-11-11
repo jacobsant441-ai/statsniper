@@ -155,6 +155,7 @@ jobs:
           warn node scripts/fetch-ucl-match.js
           warn node scripts/fetch-league-match.js "$DAY"
           warn node scripts/goals-model.js
+          warn node scripts/fetch-schedule.js   # every game in the next 30 days (listed until its stats are built)
           node scripts/build-index.js
       - name: Commit changed data
         id: commit
