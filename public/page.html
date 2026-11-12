@@ -257,16 +257,8 @@ const normDay = (s) => String(s || '').replace(/^(\w+) 0(\d) /, '$1 $2 ');
 const sydHour = () => Number(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', hour: 'numeric', hourCycle: 'h23' }).format(new Date())) % 24;
 const homeDay = () => dayAt(sydHour() >= 23 ? 1 : 0).key;
 // From 4 pm to 11 pm Sydney (or all day when today has no games for that sport), while today is showing, the home grid also lists tomorrow's games below today's results.
-const withTomorrow = (box, fn, sp) => {
-  const h = sydHour(), t = dayAt(1).key;
-  if (!((h >= 16 || !gamesFor(sp, selDay).length) && h < 23) || selDay !== dayAt(0).key || !gamesFor(sp, t).length) { fn(box); return; }
-  const save = selDay, tmp = document.createElement('div');
-  selDay = t; try { fn(tmp); } finally { selDay = save; }
-  fn(box);
-  const n = gamesFor(sp, t).length, sec = el('div', null, 'tmrw');
-  sec.append(el('h2', 'Tomorrow · ' + t + ' · ' + n + (sp === 'ufc' ? (n === 1 ? ' fight' : ' fights') : n === 1 ? ' game' : ' games'), 'tmrwh'), ...tmp.childNodes);
-  box.append(sec);
-};
+// Sport tabs show only the day picked in the day bar (tomorrow is one tap away there); Home keeps its Today / Tomorrow rows.
+const withTomorrow = (box, fn) => fn(box);
 let selDay = homeDay(), autoDay = selDay;
 let hrBand = sydHour() >= 16;
 setInterval(() => { const b = sydHour() >= 16; if (b !== hrBand) { hrBand = b; redrawAll(); if (typeof hsVis === 'function') hsVis(); } const d = homeDay(); if (d === autoDay) return; if (selDay === autoDay) { selDay = d; wkOff = 0; redrawAll(); } autoDay = d; }, 60000);
