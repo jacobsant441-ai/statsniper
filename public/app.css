@@ -1819,3 +1819,5 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .lvtab{flex:1;background:none;border:0;border-radius:7px;padding:7px 10px;font:inherit;font-size:.85rem;font-weight:700;color:inherit;opacity:.6;cursor:pointer}
 .lvtab.on{background:var(--color-border-line);opacity:1}
 .lvpane[hidden]{display:none}
+.ufcc .mid{min-width:0}
+.ufcc .mid strong{font-size:1.05rem;line-height:1.15;white-space:normal;overflow-wrap:anywhere;letter-spacing:.01em}

@@ -826,7 +826,7 @@ dash.draw('detail', (box) => {
   const ORD = ['Live', 'Main play', 'Most likely outcome', 'Lineups', 'Injuries', 'Final result', 'Why it went this way', 'Box score', 'Starting lineups', 'Injuries, lineups, props', '', 'Lines', '#grid', 'Totals ladder: both teams\' games', 'Every tracked player, this season', 'Game logs and common opponents', 'Highest-confidence props', 'Player props (most confident first)', 'How this prediction works', 'Same-game slips'];
   const rank = (c) => { if (c.classList.contains('grid')) return ORD.indexOf('#grid'); const h = c.querySelector('h2'); const t = h ? h.textContent : (c.classList.contains('warn') ? '' : null); const i = t == null ? -1 : ORD.indexOf(t); return i < 0 ? 40 : i; };
   const f0 = finalOf(current);
-  if (f0) {
+  if (f0 && f0.status === 'Final') { // a game still in progress shows the Live card instead
     const hits = out.reduce((n, c) => n + c.querySelectorAll('.mk.hit').length, 0), miss = out.reduce((n, c) => n + c.querySelectorAll('.mk.miss').length, 0), na = out.reduce((n, c) => n + c.querySelectorAll('.mk.na').length, 0);
     const rb = el('div', null, 'card result'); rb.append(el('h2', 'Final result'), el('div', g.away + ' ' + f0.away_pts + ' – ' + f0.home_pts + ' ' + g.home, 'big'));
     if (f0.status === 'Final') { const sm = el('p'); sm.append(tick('hit'), document.createTextNode(' ' + hits + ' hit   '), tick('miss'), document.createTextNode(' ' + miss + ' missed' + (na ? '   ' : '')), na ? tick(null) : document.createTextNode(''), document.createTextNode(na ? ' ' + na + ' not in the box-score feed' : '')); rb.append(sm); }
@@ -1504,23 +1504,31 @@ const ufcDots = (name) => {
   fs.forEach((f) => { const i = el('i', f.res === 'NC' ? '–' : f.res, f.res); i.title = ufcFightTxt(f); d.append(i); });
   d.setAttribute('aria-label', 'Last ' + fs.length + ' fights: ' + fs.map((f) => f.res).join(' ')); return d;
 };
+const UFCTAB = {}; // fight record: which fighter's tab is open, per fight
 function ufcLast5Box(r) {
-  const w = el('div', null, 'l5box'); w.append(el('h4', 'Last 5 fights (newest first)'));
-  const g = el('div', null, 'l5cols');
-  [r.a, r.b].forEach((nm) => {
-    const c = el('div', null, 'l5col'); c.append(el('b', nm.replace(/\s*\(c\)/, '')));
-    const fs = ufcLast(nm);
+  const w = el('div', null, 'l5box'); w.append(el('h4', 'Fight record (newest first)'));
+  const names = [r.a, r.b], key = r.id || r.a + '|' + r.b, pick = UFCTAB[key] === 1 ? 1 : 0, panes = [];
+  const bar = el('div', null, 'lvtabs'); bar.setAttribute('role', 'tablist');
+  names.forEach((nm, k) => { const b = el('button', nm.replace(/\s*\(c\)/, '').split(' ').slice(-1)[0], 'lvtab' + (k === pick ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k === pick));
+    b.addEventListener('click', (e) => { e.stopPropagation(); UFCTAB[key] = k; bar.querySelectorAll('.lvtab').forEach((x, q) => { x.classList.toggle('on', q === k); x.setAttribute('aria-selected', String(q === k)); }); panes.forEach((p, q) => { p.hidden = q !== k; }); });
+    bar.append(b); });
+  w.append(bar);
+  names.forEach((nm, k) => {
+    const c = el('div', null, 'l5col lvpane'); c.hidden = k !== pick;
+    const rec = k ? r.b_rec : r.a_rec;
+    c.append(el('b', nm.replace(/\s*\(c\)/, '') + (rec ? ' · ' + rec : '')));
+    const fs = ufcLast(nm, 999);
     if (!fs) c.append(el('p', rows('ufcp').length ? 'No fight history on file.' : 'Loading fight history…', 'muted'));
     else fs.forEach((f) => { const row = el('div', null, 'l5r'); row.append(el('i', f.res === 'NC' ? '–' : f.res, f.res)); const t = el('div'); t.append(el('span', 'vs ' + f.opp), el('small', [(f.detail || f.method || ''), f.round ? 'R' + f.round + ' ' + f.clock : '', plDate(f.date), f.ufc ? 'UFC' : ''].filter(Boolean).join(' · '))); row.append(t); c.append(row); });
-    g.append(c);
+    panes.push(c); w.append(c);
   });
-  w.append(g); return w;
+  return w;
 }
 function ufcCard(r) {
   const b = el('div', null, 'pick tile gcard ufcc');
   const side = (nm, rec, col, win) => { const d = el('div', null, 'tm' + (win ? ' win' : '')); const fid = ufcIdOf(nm), src = photo('ufc', fid); let bd; if (src) { bd = el('span', null, 'bd photo'); bd.style.borderColor = col; const im = document.createElement('img'); im.src = src; im.alt = ''; bd.append(im); } else { bd = el('span', ufcInit(nm), 'bd'); bd.style.background = col; } d.append(bd, el('b', nm), el('span', rec || 'record n/a', 'rec'), ufcDots(nm)); if (fid) { d.classList.add('go'); d.title = 'Open ' + nm + "'s profile"; d.addEventListener('click', (e) => { e.stopPropagation(); openFighter(fid); }); } return d; };
   const mid = el('div', null, 'mid');
-  mid.append(el('span', r.date, 'dt'), el('strong', r.kick || 'TBC'), el('span', r.card + ' · ' + r.weight + (r.rounds ? ' · ' + r.rounds + ' rds' : ''), 'pre'));
+  mid.append(el('span', r.date, 'dt'), el('strong', r.card || 'TBC'), el('span', [/\d/.test(r.kick || '') ? r.kick : '', r.weight, r.rounds ? r.rounds + ' rds' : ''].filter(Boolean).join(' · '), 'pre'));
   mid.append(el('span', r.a_odds != null ? ufcOdds(r.a_odds) + ' / ' + ufcOdds(r.b_odds) : 'odds not posted', 'fsc'));
   mid.append(el('span', r.pick ? r.pick + ' · ' + r.pick_pct + '%' : 'no pick yet', 'pk'));
   const mu = el('div', null, 'mu'); mu.append(side(r.a, r.a_rec, '#c8102e', r.pick === r.a), mid, side(r.b, r.b_rec, '#1d428a', r.pick === r.b));
@@ -1565,11 +1573,7 @@ function ufcTape(r) {
   row('Market win % (vig removed)', r.a_mkt != null ? r.a_mkt + '%' : null, r.b_mkt != null ? r.b_mkt + '%' : null);
   row('Record model %', r.a_model != null ? r.a_model + '%' : null, r.a_model != null ? Math.round((100 - r.a_model) * 10) / 10 + '%' : null);
   const tw = el('div', null, 'scr'); tw.style.overflowX = 'auto'; tw.append(t);
-  const mn = el('div', null, 'note');
   d.append(tw, ufcLast5Box(r));
-  if (Array.isArray(r.matchup_notes) && r.matchup_notes.length) { mn.append(el('b', 'Matchup: striking vs wrestling')); r.matchup_notes.forEach((s) => mn.append(el('span', s))); d.append(mn); }
-  d.append(ufcHist(r), el('p', 'How the pick is built: ' + r.pick_basis + '. Record model = smoothed win rate, plus half a point per inch of reach and a point per year over 35. The pick has not yet been reweighted for the striking and grappling numbers above: those are career UFC averages (takedown defence = share of opponents’ takedowns stopped), style tags are my own rule from takedown and submission rates, and control time was not available. Blank means not found.', 'muted'));
-  if (r.note) d.append(el('p', r.note, 'muted'));
   return d;
 }
 const DRAW_ufcgrid = (box) => {
