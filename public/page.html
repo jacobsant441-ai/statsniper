@@ -39,10 +39,9 @@
 <div class="gdetail nbahdw" data-draw="nbahd" data-source="games pred teams"></div>
 <div class="chips" id="chips" data-draw="chips" data-source="games"></div>
 <div class="rvres" data-draw="rvres" data-source="history archive"></div>
- <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp"></div>
+ <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp gzones"></div>
 </section>
 
-<footer class="muted">Slips and player lines use only this season box scores (52 games, 20 to 27 October). The lines in the notes come from several sources and move; check the book before using them. Own-points lines are implied from each game's total and spread (favourite = (total + spread) / 2, underdog = (total − spread) / 2), not posted team totals. Head-to-head history and per-stadium player splits are not in the data feed, so they are not on this page.</footer>
 </div>
 </div>
 <div class="view" id="view-fb" hidden>
@@ -306,7 +305,9 @@ const boxPanel = (g) => {
   const t = document.createElement('table'); const hr = document.createElement('tr'); [' ', g.away, g.home].forEach((c) => hr.append(thc(c))); t.append(hr);
   TR.forEach(([lab, fn]) => { const tr = document.createElement('tr'); tr.append(tdc(lab), tdc(fn(g.away_team)), tdc(fn(g.home_team))); t.append(tr); });
   const sc = el('div', null, 'scr'); sc.append(t);
-  body.append(sc, boxTabs(g));
+  // the player box score shows in the Game tab's live card while the live feed still has the game; here only after that
+  const inGame = window.SSG && SSG.liveCard && SSG.liveCard('nba', g.id);
+  body.append(sc); if (!inGame) body.append(boxTabs(g));
   return body;
 };
 
@@ -356,11 +357,6 @@ function histCard(h) {
     if (h.total_lean) { const tc = el('span', h.total_lean + (h.proj_total ? ' (proj ' + h.proj_total + ')' : ''), 'chip'); if (h.total_hit) tc.append(tick(h.total_hit, 'Posted total ' + h.posted_total)); chips.append(tc); }
     if (window.SSG && SSG.slipChips && h.status === 'Final') SSG.slipChips(h).forEach((c) => chips.append(c));
     ft.append(chips); b.append(ft);
-    if (h.verdict || fl(h.factors).length) {
-      const d = document.createElement('details'); d.className = 'fbmore';
-      d.append(el('summary', 'Why it went this way')); if (h.verdict) d.append(el('p', h.verdict));
-      fl(h.factors).forEach((t) => d.append(el('p', t, 'muted'))); b.append(d);
-    }
     return b;
 }
 function histBox(sp, keep) {
@@ -382,11 +378,6 @@ function histBox(sp, keep) {
     chips.append(el('span', 'Combined: ' + h.conf, 'chip ' + h.conf), wc);
     if (h.total_lean) { const tc = el('span', h.total_lean + (h.proj_total ? ' (proj ' + h.proj_total + ')' : ''), 'chip'); if (h.total_hit) tc.append(tick(h.total_hit, 'Posted total ' + h.posted_total)); chips.append(tc); }
     ft.append(chips); b.append(ft);
-    if (h.verdict || fl(h.factors).length) {
-      const d = document.createElement('details'); d.className = 'fbmore';
-      d.append(el('summary', 'Why it went this way')); if (h.verdict) d.append(el('p', h.verdict));
-      fl(h.factors).forEach((t) => d.append(el('p', t, 'muted'))); b.append(d);
-    }
     return b;
   }));
   w.append(sum, g); return w;
@@ -639,9 +630,9 @@ dash.draw('detail', (box) => {
       el('dt', 'Stats model alone'), el('dd', 'home margin ' + f1(p.model_margin) + ', total ' + f1(p.model_total)),
       el('dt', 'Market (spread)'), el('dd', 'home margin ' + f1(p.posted_margin)));
     body.append(pk);
-    { const md = document.createElement('details'); md.className = 'moredet'; md.append(el('summary', 'More detail'), ...[...body.childNodes].slice(1)); body.append(md); }
+    { const md = document.createElement('details'); md.className = 'moredet'; md.append(el('summary', 'More detail'), ...[...body.childNodes].slice(1)); body.append(md); if (finalOf(current) || (window.SSG && SSG.liveCard('nba', current))) md.hidden = true; } // hidden (kept for the result tally) once the game has started
     pc.classList.add('noring'); pc.append(body);
-    { const lv = window.SSG && SSG.liveCard('nba', current); if (lv) out.push(lv); const mpc = window.SSG && SSG.mainCard('nba', current); if (mpc) out.push(mpc); }
+    { const lv = window.SSG && SSG.liveCard('nba', current); if (lv) out.push(lv); const mpc = !lv && !finalOf(current) && window.SSG && SSG.mainCard('nba', current); if (mpc) out.push(mpc); } // Main play only before tip-off
     out.push(pc);
   }
   {
@@ -755,7 +746,7 @@ dash.draw('detail', (box) => {
   const tg = el('div', null, 'grid');
   teams.forEach((t) => tg.append(teamCard(t, g)));
   out.push(tg);
-  { const dc = window.SSG && SSG.defCourt && SSG.defCourt(current); if (dc) out.push(dc); }
+  { const dc = window.SSG && SSG.defCourt && SSG.defCourt(current, nbaDay(g)); if (dc) out.push(dc); }
 
   const lad = el('div', null, 'card');
   lad.append(el('h2', 'Totals ladder: both teams\' games'));
@@ -851,7 +842,6 @@ dash.draw('detail', (box) => {
   }
   if (fz) {
     const hr = rows('history').find((q) => q.id === current && (q.sport || 'nba') === 'nba' && normDay(q.date) === nbaDay(g));
-    if (hr && (hr.verdict || fl(hr.factors).length)) { const wc2 = el('div', null, 'card'); wc2.append(el('h2', 'Why it went this way')); if (hr.verdict) wc2.append(el('p', hr.verdict)); fl(hr.factors).forEach((t) => wc2.append(el('p', t, 'muted'))); out.push(wc2); }
     const bxg = rows('boxes').find((x) => x.id === current && normDay(x.date) === nbaDay(g)); if (bxg) { const bc = el('div', null, 'card'); bc.append(el('h2', 'Box score')); const bw = el('div', null, 'bx'); bw.append(boxPanel(bxg)); bc.append(bw); out.push(bc); }
   }
   const ORD = ['Live', 'Main play', 'Most likely outcome', 'Lineups', 'Injuries', 'Final result', 'Why it went this way', 'Box score', 'Starting lineups', 'Injuries, lineups, props', '', 'Lines', '#grid', 'Totals ladder: both teams\' games', 'Every tracked player, this season', 'Game logs and common opponents', 'Highest-confidence props', 'Player props (most confident first)', 'How this prediction works', 'Same-game slips'];
@@ -860,15 +850,18 @@ dash.draw('detail', (box) => {
   if (f0 && f0.status === 'Final') { // a game still in progress shows the Live card instead
     const hits = out.reduce((n, c) => n + c.querySelectorAll('.mk.hit').length, 0), miss = out.reduce((n, c) => n + c.querySelectorAll('.mk.miss').length, 0), na = out.reduce((n, c) => n + c.querySelectorAll('.mk.na').length, 0);
     const rb = el('div', null, 'card result'); rb.append(el('h2', 'Final result'), el('div', g.away + ' ' + f0.away_pts + ' – ' + f0.home_pts + ' ' + g.home, 'big'));
-    if (f0.status === 'Final') { const sm = el('p'); sm.append(tick('hit'), document.createTextNode(' ' + hits + ' hit   '), tick('miss'), document.createTextNode(' ' + miss + ' missed' + (na ? '   ' : '')), na ? tick(null) : document.createTextNode(''), document.createTextNode(na ? ' ' + na + ' not in the box-score feed' : '')); rb.append(sm); }
+    if (f0.status === 'Final') { const sm = el('p', null, 'rtally'); const part = (n, word, st) => { const sp = el('span', null, 'rt'); sp.append(document.createTextNode(n + ' ' + word), tick(st)); return sp; }; sm.append(part(hits, 'hit', 'hit'), part(miss, 'missed', 'miss')); if (na) sm.append(part(na, 'not in the box-score feed', null)); rb.append(sm); }
     else rb.append(el('p', 'Not final yet (' + (f0.note || 'live') + '). Ticks and crosses appear once the game ends.', 'muted'));
     out.push(rb);
+  }
+  if ((finalOf(current) || (window.SSG && SSG.liveCard('nba', current)))) { // started: the box score shows who started, so no lineup cards
+    for (let i = out.length - 1; i >= 0; i--) { const h = out[i].querySelector && out[i].querySelector('h2'); if (h && ['Lineups', 'Starting lineups', 'Game logs and common opponents'].includes(h.textContent)) out.splice(i, 1); }
   }
   if (fz) {
     const gone = [];
     out.forEach((c) => {
       const h = c.querySelector && c.querySelector('h2'); const t = h ? h.textContent : '';
-      if (t === 'Starting lineups') gone.push(c);
+      if (t === 'Starting lineups' || t === 'Lineups') gone.push(c);
       if (t === 'Injuries, lineups, props') {
         [...c.querySelectorAll('.note')].forEach((n) => { const k = n.querySelector('b'); if (!k || !/in-game|during the game/i.test(k.textContent)) n.remove(); });
         if (!c.querySelector('.note')) gone.push(c);
@@ -1077,7 +1070,7 @@ function nflMore(x) {
     sec('Lineups', el('p', 'Projected means the starters come from depth charts and injury reports; nothing is Confirmed until the team or NFL.com states the starters or inactives (about 90 minutes before kickoff).', 'muted'), lu(a), lu(h));
   } else d.append(el('p', 'Detailed breakdown not available for this game yet.', 'muted'));
   if (rvInTabs()) { const rb = el('div', null, 'rvres'); rb.append(...rvBanner(), el('p', 'The other tabs show the full pre-game breakdown exactly as it was when we made the pick.', 'muted rvrnote')); panels.rv = rb; }
-  { const pk = panels.pick || (panels.pick = el('div', null, 'nflpanel')); const mp = window.SSG && SSG.mainCard('nfl', x.id); if (mp) pk.prepend(mp); const lv = window.SSG && SSG.liveCard('nfl', x.id); if (lv) pk.prepend(lv); }
+  { const pk = panels.pick || (panels.pick = el('div', null, 'nflpanel')); const nhr = rows('history').find((h) => h.sport === 'nfl' && h.id === x.id && normDay(h.date) === nflDay(x)); const mp = !(nhr && (nhr.status === 'Final' || nhr.status === 'Live')) && !(window.SSG && SSG.liveCard('nfl', x.id)) && window.SSG && SSG.mainCard('nfl', x.id); if (mp) pk.prepend(mp); const lv = window.SSG && SSG.liveCard('nfl', x.id); if (lv) pk.prepend(lv); }
   const bar = el('div', null, 'nfltabs');
   const show = (k) => { NFL_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
   TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); }); bar.append(b); });
@@ -2411,9 +2404,7 @@ const rvCard = (h) => {
   const card = el('div', null, 'pick tile gcard rvgc'); card.append(mu, ft);
   sm.append(card); d.append(sm); d.dataset.k = rvKey(h);
   sm.addEventListener('click', (e) => { e.preventDefault(); openRvGame(h); });
-  const why = el('div', null, 'why'); why.append(el('p', h.verdict || (fin ? 'Graded from the final result.' : 'Graded once the game is final.')));
-  const fs = fl(h.factors); if (fs.length) { const u = document.createElement('ul'); fs.forEach((t) => u.append(el('li', t))); why.append(u); }
-  d.append(why); return d;
+  return d;
 };
 
 // ---- review game page: the Picks game page for a finished game, from its saved pre-game rows,
@@ -2471,9 +2462,7 @@ const rvBanner = () => {
   if (sp === 'nfl' && (h.spread_pick || h.spread_hit)) line('Spread', (h.spread_pick || '–') + (h.spread_home != null ? ' (home ' + (h.spread_home > 0 ? '+' : '') + h.spread_home + ')' : ''), 'Home margin ' + (hp - ap > 0 ? '+' : '') + (hp - ap), h.spread_hit);
   if (fb && h.proj_score) line('Projected score', h.proj_score, 'Final ' + hp + '–' + ap, null);
   const list = el('div', null, 'rvrrows'); list.append(...rowsOut);
-  const why = el('div', null, 'rvrwhy'); why.append(el('h3', 'Why it went that way'), el('p', h.verdict || (fin ? 'Graded from the final result. A written breakdown is added for misses in the afternoon run.' : 'Graded once the game is final.')));
-  const fs = fl(h.factors); if (fs.length) { const u = document.createElement('ul'); fs.forEach((t) => u.append(el('li', t))); why.append(u); }
-  return [head, list, RVO && sp === 'nba' ? null : why].filter(Boolean); // the NBA page has its own 'why' section
+  return [head, list];
 };
 dash.draw('rvgteams', (box) => {
   const h = RVH; if (!h || (h.sport || 'nba') === 'ufc') { box.replaceChildren(); return; }

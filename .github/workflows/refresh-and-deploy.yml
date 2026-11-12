@@ -93,6 +93,7 @@ jobs:
           retry node scripts/fetch-boxes.js "$(TZ=Australia/Sydney date -d yesterday +%Y%m%d)"
           # starting lineups: ESPN depth charts before tip, actual starters once the game is on
           node scripts/fetch-lineups.js || echo "::warning::lineups failed"
+          node scripts/fetch-game-zones.js || echo "::warning::per-game defence zones failed"
       - name: Commit changed data
         id: commit
         run: |

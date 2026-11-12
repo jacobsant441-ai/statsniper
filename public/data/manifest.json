@@ -430,5 +430,13 @@
    "at": "2026-11-10T07:30:00Z",
    "by": "Claude"
   }
+ },
+ "gzones": {
+  "title": "NBA defence by zone, per game",
+  "description": "What each defence allowed from every court zone in each finished game this season (ESPN play-by-play). From scripts/fetch-game-zones.js.",
+  "updated": {
+   "at": "2026-11-12T05:40:00Z",
+   "by": "Claude"
+  }
  }
 }

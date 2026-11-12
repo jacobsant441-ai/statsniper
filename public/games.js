@@ -509,7 +509,6 @@
     top.append(side(...L), el('span', stateTxt(r), 'lvst ' + (r.state === 'in' ? 'on' : 'done')), side(...R));
     card.append(top);
     const rb = el('button', 'Refresh', 'lvref'); rb.type = 'button'; rb.addEventListener('click', (e) => { e.stopPropagation(); refreshLive(); }); card.append(rb);
-    const m = sp === 'fb' ? fbMain(ref) : pickMain(candidates(sp, ref)); const ps = playStatus(sp, m, r); if (ps) card.append(ps);
     // quarter / half scores
     let ls = []; try { ls = JSON.parse(r.linescore || '[]'); } catch (e) { ls = []; }
     if (ls.length && !fbn) {
@@ -625,7 +624,32 @@
       lab('ra', 250, 80, 18) + lab('paint', 250, 150) + lab('mid', 250, 262, 18) + lab('lc', 16, 70, 12) + lab('rc', 484, 70, 12) + lab('atb', 250, 410) +
       '</svg>';
   }
-  function defCourt(id) {
+  // This game against the season: what the defence allowed in one finished game (gzones, fetch-game-zones.js) next to
+  // its average over its other games this season. Lower FG% allowed is better, so green = tighter than usual.
+  function zoneGame(team, id, day) {
+    const all = rows('gzones').filter((r) => r.team === team); if (!all.length) return null;
+    const g = all.find((r) => r.game === id && (!day || r.day === day)); if (!g) return null;
+    const rest = all.filter((r) => r.ev !== g.ev); if (!rest.length) return null;
+    const pc = (z) => (z && z[0] ? z[1] / z[0] : null);
+    const sum = (k) => rest.reduce((a, r) => [a[0] + ((r.z[k] || [])[0] || 0), a[1] + ((r.z[k] || [])[1] || 0)], [0, 0]);
+    const tot = (zs) => ZONES.reduce((a, [k]) => [a[0] + ((zs[k] || [])[0] || 0), a[1] + ((zs[k] || [])[1] || 0)], [0, 0]);
+    const box = el('div', null, 'dgame'); box.append(el('h3', 'This game vs their average', 'dgh'));
+    const gT = tot(g.z), sT = ZONES.reduce((a, [k]) => { const x = sum(k); return [a[0] + x[0], a[1] + x[1]]; }, [0, 0]);
+    const gp = pc(gT), sp = pc(sT), d = gp != null && sp != null ? Math.round((gp - sp) * 100) : null;
+    box.append(el('p', 'Allowed ' + g.opp + ' ' + gT[1] + ' of ' + gT[0] + ' (' + Math.round(gp * 100) + '%) against ' + Math.round(sp * 100) + '% on average over ' + rest.length + ' other games' + (d == null ? '.' : d === 0 ? ': about the same.' : d < 0 ? ': ' + -d + ' points tighter than usual.' : ': ' + d + ' points looser than usual.'), 'muted'));
+    const tb = el('table', null, 'dtbl'); const hr = el('tr'); ['Zone', 'This game', 'Average', 'Diff'].forEach((h, j) => hr.append(el('th', h, j ? 'n' : ''))); tb.append(hr);
+    ZONES.forEach(([k, l]) => {
+      const z = g.z[k] || [0, 0], p = pc(z), a = sum(k), ap = pc(a), avgA = a[0] / rest.length;
+      const tr = el('tr'); const dc = el('td', null, 'n');
+      if (p != null && ap != null) { const dd = Math.round((p - ap) * 100); dc.append(el('span', (dd > 0 ? '+' : '') + dd, 'drk ' + (dd <= -5 ? 'g' : dd >= 5 ? 'r' : 'a'))); } else dc.textContent = '–';
+      tr.append(el('td', l), el('td', z[0] ? z[1] + '/' + z[0] + ' · ' + Math.round(p * 100) + '%' : '0 shots', 'n'), el('td', ap == null ? '–' : Math.round(ap * 100) + '% · ' + avgA.toFixed(1) + ' shots', 'n'), dc);
+      tb.append(tr);
+    });
+    const w = el('div', null, 'scroll'); w.append(tb); box.append(w);
+    box.append(el('p', 'Diff is percentage points of field goal % allowed: green means they held this opponent below their usual, red means they allowed more. Averages come from every other game they have played this season.', 'muted'));
+    return box;
+  }
+  function defCourt(id, day) {
     const Z = zoneTable(); if (!Z) return null;
     const teams = String(id).split('-').filter((c) => Z.T.some((t) => t.team === c)); if (!teams.length) return null;
     const card = el('div', null, 'card dcard'); card.append(el('h2', 'Defence by court zone'));
@@ -642,6 +666,7 @@
       order.forEach((z) => { const tr = el('tr'); const rkc = el('td', null, 'n'); rkc.append(el('span', '#' + z.r, 'drk ' + tier(z.r, Z.n))); tr.append(el('td', z.l), el('td', Math.round(z.p * 100) + '%', 'n'), el('td', Z.lg[z.k] != null ? Math.round(Z.lg[z.k] * 100) + '%' : '–', 'n'), el('td', (z.a / (t.n || 1)).toFixed(1), 'n'), rkc); tb.append(tr); });
       const w = el('div', null, 'scroll'); w.append(tb); pane.append(w);
       pane.append(el('p', 'From every shot in ESPN play-by-play this season (' + t.n + ' games). Small samples early in the season.', 'muted'));
+      { const zg = zoneGame(team, id, day); if (zg) pane.append(zg); }
       const b = el('button', null); b.type = 'button'; b.append(X.badge(team), document.createTextNode(team)); b.addEventListener('click', (e) => { e.stopPropagation(); show(i); }); tog.append(b);
       panes.push(pane); card.append(pane);
     });

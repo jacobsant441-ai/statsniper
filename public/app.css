@@ -1825,3 +1825,10 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 #gamepage .nfltabs.stuck,#nflgame .nfltabs.stuck,#fbgame .nfltabs.stuck{z-index:28!important;pointer-events:none!important}
 #gamepage .nfltabs.stuck button,#nflgame .nfltabs.stuck button,#fbgame .nfltabs.stuck button{pointer-events:auto!important}
 #gamepage .topbar,#nflback,#fbback{z-index:31!important}
+.rtally{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.rtally .rt{display:inline-flex;align-items:center;gap:6px}
+.rtally .mk{display:inline-flex!important;margin:0!important}
+.mk.hit{display:inline-flex;flex-direction:row;gap:0}
+.rvx .mk.hit{display:grid}
+.dgame{margin-top:14px;padding-top:12px;border-top:1px solid var(--sb-line)}
+.dgame .dgh{font-size:.95rem;margin:0 0 4px}
