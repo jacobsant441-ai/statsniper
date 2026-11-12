@@ -1822,3 +1822,6 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .ufcc .mid{min-width:0}
 .ufcc .mid strong{font-size:1.05rem;line-height:1.15;white-space:normal;overflow-wrap:anywhere;letter-spacing:.01em}
 .lvbox tr.lvgrp td{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;opacity:.65;padding-top:10px}
+#gamepage .nfltabs.stuck,#nflgame .nfltabs.stuck,#fbgame .nfltabs.stuck{z-index:28!important;pointer-events:none!important}
+#gamepage .nfltabs.stuck button,#nflgame .nfltabs.stuck button,#fbgame .nfltabs.stuck button{pointer-events:auto!important}
+#gamepage .topbar,#nflback,#fbback{z-index:31!important}
