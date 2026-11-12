@@ -497,6 +497,7 @@
   }
 
   // Live card at the top of a game page.
+  const LVTAB = {}; // live box score: which team's tab is open, per game
   function liveCard(sp, ref) {
     const r = liveOf(sp, ref); if (!r || r.state === 'pre') return null;
     const card = el('div', null, 'card lvcard'); const h = el('h2', 'Live'); card.append(h);
@@ -523,18 +524,28 @@
       if (H && A) { const t = el('table', null, 'lvls lvst2'); [['Possession %', 'possessionPct'], ['Shots', 'totalShots'], ['On target', 'shotsOnTarget'], ['Corners', 'wonCorners'], ['Yellow cards', 'yellowCards'], ['Red cards', 'redCards']].forEach(([l, k]) => { const tr = el('tr'); tr.append(el('td', H.st[k] ?? '–', 'n'), el('td', l), el('td', A.st[k] ?? '–', 'n')); t.append(tr); }); card.append(t); }
     } else { // player box score
       const box = liveRows('livebox').filter((b) => b.espn_id === r.espn_id);
-      const props = sp === 'nba' ? rows('props').filter((p) => p.game === ref) : [];
-      [r.away_code, r.home_code].forEach((team) => {
+      // one team at a time: a tab for each side (the choice is kept while the score refreshes)
+      const sides = [[r.away_code, r.away_name], [r.home_code, r.home_name]].filter(([c]) => box.some((b) => b.team === c));
+      const pick = LVTAB[r.espn_id] && sides.some(([c]) => c === LVTAB[r.espn_id]) ? LVTAB[r.espn_id] : (sides[0] || [])[0];
+      const panes = {};
+      if (sides.length > 1) {
+        const bar = el('div', null, 'lvtabs'); bar.setAttribute('role', 'tablist');
+        sides.forEach(([c, nm]) => { const b = el('button', String(nm || c).split(' ').slice(-1)[0] || c, 'lvtab' + (c === pick ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(c === pick));
+          b.addEventListener('click', (e) => { e.stopPropagation(); LVTAB[r.espn_id] = c; bar.querySelectorAll('.lvtab').forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); }); Object.entries(panes).forEach(([k, d]) => { d.hidden = k !== c; }); });
+          bar.append(b); });
+        card.append(bar);
+      }
+      sides.map(([c]) => c).forEach((team) => {
         const pl = box.filter((b) => b.team === team).map((b) => { let s = {}; try { s = JSON.parse(b.stats || '{}'); } catch (e) { s = {}; } return { ...b, s }; });
         if (!pl.length) return;
-        card.append(el('h3', team, 'lvteam'));
+        const pane = el('div', null, 'lvpane'); pane.hidden = team !== pick; panes[team] = pane; card.append(pane);
+        if (sides.length < 2) pane.append(el('h3', team, 'lvteam'));
         const t = el('table', null, 'lvbox');
         if (sp === 'nba') {
           const hr = el('tr'); ['Player', 'MIN', 'PTS', 'REB', 'AST', '3PM'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
           pl.filter((p) => !p.s.dnp).sort((a, b) => (String(b.starter) === 'true' ? 1 : 0) - (String(a.starter) === 'true' ? 1 : 0) || Number(b.s.points || 0) - Number(a.s.points || 0)).forEach((p) => {
             const tr = el('tr'); const nm = el('td'); nm.append(el('b', p.player));
-            const pts = Number(p.s.points || 0), cur = { PTS: pts, REB: Number(p.s.rebounds || 0), AST: Number(p.s.assists || 0), '3PM': Number(String(p.s['threePointFieldGoalsMade-threePointFieldGoalsAttempted'] || '0-0').split('-')[0]) };
-            props.filter((q) => nrm(q.player) === nrm(p.player) && cur[q.stat] != null).forEach((q) => nm.append(el('small', cur[q.stat] + '/' + q.line + ' ' + q.stat, 'lvprop ' + (cur[q.stat] > q.line ? 'hit' : 'pend'))));
+            const pts = Number(p.s.points || 0);
             tr.append(nm, el('td', String(p.s.minutes ?? '–'), 'n'), el('td', String(pts), 'n'), el('td', String(p.s.rebounds ?? '–'), 'n'), el('td', String(p.s.assists ?? '–'), 'n'), el('td', String(String(p.s['threePointFieldGoalsMade-threePointFieldGoalsAttempted'] || '0-0').split('-')[0]), 'n'));
             t.append(tr);
           });
@@ -546,7 +557,7 @@
           lead('rushing.rushingYards', 2).forEach((p) => add(p, p.s['rushing.rushingAttempts'] + ' car · ' + p.s['rushing.rushingYards'] + ' yds' + (Number(p.s['rushing.rushingTouchdowns']) ? ' · ' + p.s['rushing.rushingTouchdowns'] + ' TD' : '')));
           lead('receiving.receivingYards', 3).forEach((p) => add(p, p.s['receiving.receptions'] + ' rec · ' + p.s['receiving.receivingYards'] + ' yds' + (Number(p.s['receiving.receivingTouchdowns']) ? ' · ' + p.s['receiving.receivingTouchdowns'] + ' TD' : '')));
         }
-        const w = el('div', null, 'scroll'); w.append(t); card.append(w);
+        const w = el('div', null, 'scroll'); w.append(t); pane.append(w);
       });
     }
     card.append(el('p', 'Updated ' + new Date(r.updated_at).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone: 'Australia/Sydney' }), 'lvupd'));
