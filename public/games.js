@@ -543,7 +543,12 @@
         const t = el('table', null, 'lvbox');
         if (sp === 'nba') {
           const hr = el('tr'); ['Player', 'MIN', 'PTS', 'REB', 'AST', '3PM'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
-          pl.filter((p) => !p.s.dnp).sort((a, b) => (String(b.starter) === 'true' ? 1 : 0) - (String(a.starter) === 'true' ? 1 : 0) || Number(b.s.points || 0) - Number(a.s.points || 0)).forEach((p) => {
+          // starting five first, then the bench, each in ESPN's order (not sorted by points)
+          const isSt = (p) => String(p.starter) === 'true';
+          const ordered = pl.filter((p) => !p.s.dnp).map((p, i) => [p, i]).sort((a, b) => (isSt(b[0]) ? 1 : 0) - (isSt(a[0]) ? 1 : 0) || a[1] - b[1]).map((x) => x[0]);
+          let lastSt = null;
+          ordered.forEach((p) => {
+            if (isSt(p) !== lastSt) { lastSt = isSt(p); const sr = el('tr', null, 'lvgrp'); const td = el('td', lastSt ? 'Starters' : 'Bench'); td.colSpan = 6; sr.append(td); t.append(sr); }
             const tr = el('tr'); const nm = el('td'); nm.append(el('b', p.player));
             const pts = Number(p.s.points || 0);
             tr.append(nm, el('td', String(p.s.minutes ?? '–'), 'n'), el('td', String(pts), 'n'), el('td', String(p.s.rebounds ?? '–'), 'n'), el('td', String(p.s.assists ?? '–'), 'n'), el('td', String(String(p.s['threePointFieldGoalsMade-threePointFieldGoalsAttempted'] || '0-0').split('-')[0]), 'n'));

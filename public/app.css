@@ -1821,3 +1821,4 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .lvpane[hidden]{display:none}
 .ufcc .mid{min-width:0}
 .ufcc .mid strong{font-size:1.05rem;line-height:1.15;white-space:normal;overflow-wrap:anywhere;letter-spacing:.01em}
+.lvbox tr.lvgrp td{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;opacity:.65;padding-top:10px}
