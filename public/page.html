@@ -3,7 +3,7 @@
 <div class="nt">
 <nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><span>⌂</span>Home</button><button type="button" data-sec="home"><span>◎</span>Games</button><button type="button" data-sec="bets"><span>$</span>Bets</button><button type="button" data-sec="review"><span>✓</span>Review</button></nav>
 <span class="livetick" data-draw="livetick" data-source="livegames" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></span>
-<div class="appbar" id="appbar" data-draw="appbar" data-source="games fixtures nflgames history schedule ufcfights bets"></div>
+<div class="appbar" id="appbar" data-draw="appbar" data-source="games fixtures nflgames history schedule ufcfights bets pubbets"></div>
 <div class="ssearch" role="search"><label class="ssbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ssq" type="search" placeholder="Search teams, players, fighters" aria-label="Search teams, players and fighters" autocomplete="off" spellcheck="false"></label><div class="ssres" id="ssres" role="listbox" aria-label="Search results" data-draw="ssearch" data-source="pidx nfltable table"></div></div>
 <div class="view" id="view-start">
 <div class="hsnone-all" id="hsempty" hidden><b>No games today.</b><span>Picks has the next games for every sport.</span><button type="button" class="hsgo2" id="hsemptygo">Go to Picks ›</button></div>
@@ -171,12 +171,11 @@
 <div class="lgbar" id="rvsp" role="group" aria-label="Sport"><button type="button" data-rs="all" class="on" aria-pressed="true">All sports</button><button type="button" data-rs="nba" style="--lg:#1d6fe0" aria-pressed="false"><i></i>NBA</button><button type="button" data-rs="fb" style="--lg:#8b3fd9" aria-pressed="false"><i></i>Football</button><button type="button" data-rs="nfl" style="--lg:#2c7be5" aria-pressed="false"><i></i>NFL</button><button type="button" data-rs="ufc" style="--lg:#d20a0a" aria-pressed="false"><i></i>UFC</button></div>
 <section class="card sec mbwrap" id="mybetsrv"><button type="button" class="mbhead" aria-expanded="false"><h2>My bet results</h2><span class="mbsum" data-draw="mybetsrvsum" data-source="bets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybetsrv" data-source="bets"></div></div></section>
 <section class="card sec" id="trackrec"><h2>Our track record</h2><div data-draw="trackrec" data-source="valuelog"></div></section>
-<section class="sec" id="rvlist"><h2>Every pick, graded</h2><p class="muted">✓ right, ✗ wrong. Tap a pick for why it went that way.</p><div data-draw="rvlist" data-source="history pidx hs_ufc archive"></div></section>
+<section class="sec" id="rvlist"><h2>Every pick, graded</h2><p class="muted">✓ right, ✗ wrong. Tap a pick for the full game.</p><div data-draw="rvlist" data-source="history pidx hs_ufc archive"></div></section>
 
 <section class="card sec" id="rvrec"><h2>Our record</h2><p class="muted">Winner picks right, then side bets (totals, both teams to score, spreads). Pushes and coin tosses are not counted.</p><div class="scroll" data-draw="rvrec" data-source="history"></div></section>
-<section class="sec" id="rvnba"><h2>NBA game cards and box scores</h2><div id="rvall" data-draw="rvall" data-source="history games pred teams final boxes"></div></section>
-<p class="disc">StatSniper is for information and entertainment only. Picks and chances are estimates, not betting advice, and nothing here is guaranteed. Never bet more than you can afford to lose. Need help? Gambling Help Online (Australia): 1800 858 858, 24/7.</p>
 </div>
+<p class="disc">StatSniper is for information and entertainment only. Picks and chances are estimates, not betting advice, and nothing here is guaranteed. Never bet more than you can afford to lose. Need help? Gambling Help Online (Australia): 1800 858 858, 24/7.</p>
 </div>
 <script src="logos.js"></script><script src="logos_nba.js"></script><script src="logos_epl.js"></script><script src="logos_laliga.js"></script><script src="logos_nfl.js"></script><script src="logos_ucl.js"></script>
 <script>
@@ -347,7 +346,6 @@ function histCard(h) {
     const wc = el('span', 'Winner: ' + h.pick, 'chip'); if (h.winner_hit) wc.append(tick(h.winner_hit, h.winner_hit === 'hit' ? 'Right' : 'Wrong'));
     chips.append(el('span', 'Combined: ' + h.conf, 'chip ' + h.conf), wc);
     if (h.total_lean) { const tc = el('span', h.total_lean + (h.proj_total ? ' (proj ' + h.proj_total + ')' : ''), 'chip'); if (h.total_hit) tc.append(tick(h.total_hit, 'Posted total ' + h.posted_total)); chips.append(tc); }
-    if (window.SSG && SSG.slipChips && h.status === 'Final') SSG.slipChips(h).forEach((c) => chips.append(c));
     ft.append(chips); b.append(ft);
     return b;
 }
@@ -1421,7 +1419,6 @@ const DRAW_nflgrid = (box) => {
         if (hr.total_hit === 'hit' || hr.total_hit === 'miss') { const tc = chips.querySelector('.chip:nth-child(3)'); if (tc) tc.append(tick(hr.total_hit, 'Total ' + (hr.away_pts + hr.home_pts) + ' against ' + x.total)); }
         if (hr.spread_hit === 'hit' || hr.spread_hit === 'miss') { const sc = el('span', 'Spread: ' + NFLS(hr.spread_pick), 'chip'); sc.append(tick(hr.spread_hit, 'Against the spread')); chips.append(sc); }
         if (hr.winner_hit === 'hit' || hr.winner_hit === 'miss') b.classList.add('rgres', hr.winner_hit);
-        if (window.SSG && SSG.slipChips) SSG.slipChips(hr).forEach((c) => chips.append(c));
       }
     }
     b.append(odds, ft);
@@ -2390,7 +2387,6 @@ const rvCard = (h) => {
   const chips = el('div', null, 'chips');
   const wc = el('span', null, 'chip rvw ' + (hit || 'na')); wc.append(document.createTextNode('Pick: '), el('b', rvPickTxt(h) || 'none'), document.createTextNode(h.pick_pct != null ? ' ' + Math.round(h.pick_pct) + '%' : '')); wc.append(tick(hit, hit === 'hit' ? 'Right' : hit === 'miss' ? 'Wrong' : 'Not graded')); chips.append(wc);
   rvSide(h).forEach((x) => { const c = el('span', x.l, 'chip'); c.append(tick(x.v)); chips.append(c); });
-  if (window.SSG && SSG.slipChips && h.status === 'Final') SSG.slipChips(h).forEach((c) => chips.append(c));
   if (h.conf) chips.append(el('span', h.conf === 'Low' ? 'Close call' : h.conf, 'chip ' + h.conf));
   const ft = el('div', null, 'ft'); ft.append(chips, el('span', 'All stats ›', 'go'));
   const card = el('div', null, 'pick tile gcard rvgc'); card.append(mu, ft);

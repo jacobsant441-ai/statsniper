@@ -301,7 +301,14 @@
     return { n: all.length, won, lost: settled.length - won, profit: settled.reduce((s, b) => s + profitOf(b), 0), running: all.filter((b) => isOpen(b) && !isBonus(b)).reduce((s, b) => s + num(b.stake), 0) };
   };
   const betPill = () => {
-    const st = betStats(); if (!st.n) return null;
+    const st = betStats();
+    if (!st.n) { // public site: only the cleaned copy is there, so the record and open bets, never money
+      const pb = rows('pubbets'), rec = pb.find((r) => r.kind === 'record'); if (!rec) return null;
+      const open = pb.filter((r) => r.kind === 'bet').length;
+      const b = el('button', null, 'betpill ' + (rec.won > rec.lost ? 'up' : rec.won < rec.lost ? 'dn' : '')); b.type = 'button'; b.title = "Jacob's picks";
+      b.append(el('span', "Jacob's picks", 'bpr'), el('b', rec.won + '-' + rec.lost, 'bpp'), el('span', open ? open + ' open' : 'all settled', 'bprun'));
+      b.addEventListener('click', () => { const t = document.querySelector('#bnav [data-sec=bets]'); if (t) t.click(); }); return b;
+    }
     // Main figure: cash back minus cash in, counting stakes on open bets as spent until they win.
     const net = st.profit - st.running;
     const b = el('button', null, 'betpill ' + (net > 0 ? 'up' : net < 0 ? 'dn' : '')); b.type = 'button'; b.title = 'My bet results';
