@@ -595,7 +595,7 @@
     document.addEventListener('touchend', (e) => {
       const was = ok; ok = false; hint.style.opacity = 0; hint.style.transform = '';
       if (!was) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = Math.abs(t.clientY - y0);
-      if (dx > 90 && dy < 60 && dx > 2 * dy && Date.now() - t0 < 900) { if (!(X.navBack && X.navBack())) { const b = backBtn(); if (b) b.click(); } }
+      if (dx > 90 && dy < 60 && dx > 2 * dy && Date.now() - t0 < 900) { const b = backBtn(); if (b) b.click(); else if (X.navBack) X.navBack(); } // same as tapping Back
     }, { passive: true });
   })();
 

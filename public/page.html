@@ -463,7 +463,7 @@ const TC = {WAS:['#002B5C'],CLE:['#860038'],MIA:['#98002E'],ATL:['#E03A3E'],PHI:
 const badge = (code) => { const lg = window.NBA_LOGOS && window.NBA_LOGOS[code]; if (lg) { const b = el('span', null, 'bd logo'); const im = document.createElement('img'); im.src = lg; im.alt = code; b.append(im); return b; } const b = el('span', code, 'bd'); b.style.background = (TC[code] || ['#333'])[0]; return b; };
 let mainY = 0, lastId = '';
 const LOGT = {}; // game logs: which team is showing, per game
-const goDetail = (id) => { fromRv = false; const bb0 = document.getElementById('backbtn'); if (bb0) bb0.textContent = '‹ Back to games'; try { mainY = window.scrollY; lastId = id; } catch (e) {} pick(id); document.getElementById('mainpage').hidden = true; document.getElementById('gamepage').hidden = false; syncChrome(); toView('gamepage'); };
+const goDetail = (id) => { delete NB_TAB[id]; fromRv = false; const bb0 = document.getElementById('backbtn'); if (bb0) bb0.textContent = '‹ Back to games'; try { mainY = window.scrollY; lastId = id; } catch (e) {} pick(id); document.getElementById('mainpage').hidden = true; document.getElementById('gamepage').hidden = false; syncChrome(); toView('gamepage'); };
   const restoreY = () => { try { const id = lastId || current; const c = id && document.querySelector('#pgrid [data-id="' + id + '"]'); if (c) { c.style.scrollMarginTop = '70px'; c.scrollIntoView({ block: 'start', behavior: 'instant' }); } else window.scrollTo(0, mainY); } catch (e) { try { window.scrollTo(0, mainY); } catch (e2) {} } };
   let holdT = null;
   const stopHold = () => { if (holdT) { clearInterval(holdT); holdT = null; } };
@@ -868,9 +868,9 @@ dash.draw('detail', (box) => {
   if (rvInTabs()) { const rb = el('div', null, 'rvres'); rb.append(...rvBanner(), el('p', 'The other tabs show the full pre-game breakdown exactly as it was when we made the pick.', 'muted rvrnote')); if (npan.res) npan.res.prepend(rb); else npan.res = rb; }
   const nbar = el('div', null, 'nfltabs');
   const nshow = (k) => { NB_TAB[current] = k; Object.entries(npan).forEach(([q, p]) => { p.hidden = q !== k; }); nbar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
-  NT.forEach(([k, l]) => { if (!npan[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', () => nshow(k)); nbar.append(b); });
+  NT.forEach(([k, l]) => { if (!npan[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', () => { nshow(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); nbar.append(b); });
   box.replaceChildren(nbar, ...NT.map(([k]) => npan[k]).filter(Boolean));
-  nshow(NB_TAB[current] && npan[NB_TAB[current]] ? NB_TAB[current] : npan.res ? 'res' : 'pick');
+  nshow(NB_TAB[current] && npan[NB_TAB[current]] ? NB_TAB[current] : npan.pick ? 'pick' : Object.keys(npan)[0]); // a game opened from a card starts on Game
 });
 if (current) setTimeout(() => dash.setLink(current), 0);
 
@@ -1063,8 +1063,8 @@ function nflMore(x) {
   { const pk = panels.pick || (panels.pick = el('div', null, 'nflpanel')); const nhr = rows('history').find((h) => h.sport === 'nfl' && h.id === x.id && normDay(h.date) === nflDay(x)); const mp = !(nhr && (nhr.status === 'Final' || nhr.status === 'Live')) && !(window.SSG && SSG.liveCard('nfl', x.id)) && window.SSG && SSG.mainCard('nfl', x.id); if (mp) pk.prepend(mp); const lv = window.SSG && SSG.liveCard('nfl', x.id); if (lv) pk.prepend(lv); }
   const bar = el('div', null, 'nfltabs');
   const show = (k) => { NFL_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
-  TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); }); bar.append(b); });
-  d.append(bar, ...TABS.map(([k]) => panels[k]).filter(Boolean)); show(NFL_TAB[x.id] && panels[NFL_TAB[x.id]] ? NFL_TAB[x.id] : panels.rv ? 'rv' : 'pick');
+  TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); bar.append(b); });
+  d.append(bar, ...TABS.map(([k]) => panels[k]).filter(Boolean)); show(NFL_TAB[x.id] && panels[NFL_TAB[x.id]] ? NFL_TAB[x.id] : panels.pick ? 'pick' : Object.keys(panels)[0]);
   return d;
 }
 dash.draw('nfltabbox', (box) => {
@@ -1106,7 +1106,7 @@ const holdTo = (gridSel, idRef) => {
 };
 const mkNavTo = (mainId, gameId, backId, gridSel, drawNames) => {
   const ref = { v: '' };
-  const go = (id) => { ref.v = id; drawNames.forEach((n) => dash.draw(n)); document.getElementById(mainId).hidden = true; document.getElementById(gameId).hidden = false; syncChrome(); toView(gameId); };
+  const go = (id) => { delete NFL_TAB[id]; if (typeof FB_TAB !== 'undefined') delete FB_TAB[id]; ref.v = id; drawNames.forEach((n) => dash.draw(n)); document.getElementById(mainId).hidden = true; document.getElementById(gameId).hidden = false; syncChrome(); toView(gameId); };
   const back = () => { document.getElementById(gameId).hidden = true; document.getElementById(mainId).hidden = false; syncChrome(); document.documentElement.style.overflowAnchor = 'none'; holdTo(gridSel, ref); };
   document.getElementById(backId).addEventListener('click', back);
   return { ref, go, back };
@@ -1391,9 +1391,9 @@ dash.draw('fbdetail', (box) => {
   const TABS = [['rv', 'Result'], ['pick', 'Game'], ['rec', 'Records'], ['ha', 'Home & away'], ['goals', 'Goals'], ['h2h', 'Head-to-head']];
   const nbar = el('div', null, 'nfltabs');
   const nshow = (k) => { FB_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); nbar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
-  TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); nshow(k); }); nbar.append(b); });
+  TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); nshow(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); nbar.append(b); });
   box.replaceChildren(hd, nbar, ...TABS.map(([k]) => panels[k]).filter(Boolean));
-  nshow(FB_TAB[x.id] && panels[FB_TAB[x.id]] ? FB_TAB[x.id] : panels.rv ? 'rv' : 'pick');
+  nshow(FB_TAB[x.id] && panels[FB_TAB[x.id]] ? FB_TAB[x.id] : panels.pick ? 'pick' : Object.keys(panels)[0]);
 });
 const DRAW_nflgrid = (box) => {
   const g = rows('nflgames').filter((x) => nflDay(x) === selDay); if (!rows('nflgames').length) return;
@@ -2715,17 +2715,18 @@ const pageKey = (s) => JSON.stringify([s.sec, s.sport, s.game && s.game.id, s.pl
 const NAV = []; let navHold = 0;
 document.addEventListener('click', (e) => {
   if (Date.now() - navHold < 800) return; // the tap a swipe can leave behind
-  if (e.target.closest && e.target.closest('.backbtn')) { NAV.pop(); return; }
+  // Back buttons go back to the page you came from (Home, Review, Bets, another game...), not a fixed page:
+  // the button's own handler closes the page first, then the remembered page and scroll position come back.
+  if (e.target.closest && e.target.closest('.backbtn')) { const p = NAV.pop(); if (p) { navHold = Date.now(); setTimeout(() => { try { stopHold(); } catch (err) {} navTo(p); }, 0); } return; }
   let before; try { before = pageSnap(); } catch (err) { return; }
   setTimeout(() => { try { if (Date.now() - navHold < 800) return; const after = pageSnap(); if (pageKey(after) !== pageKey(before)) { NAV.push(before); if (NAV.length > 40) NAV.shift(); } } catch (err) { /* ignore */ } }, 0);
 }, true);
-const navBack = () => {
-  const p = NAV.pop(); if (!p) return false; navHold = Date.now();
+const navBack = () => { const p = NAV.pop(); if (!p) return false; navHold = Date.now(); navTo(p); return true; };
+const navTo = (p) => {
   if (p.pl) openPlayer(p.pl); else if (p.at) openAthlete(p.at.sp, p.at.id); else if (p.tm) openTeam(p.tm.sp, p.tm.code);
   else if (p.ft) openFighter(p.ft); else if (p.fg) openFight(p.fg); else if (p.sec === 'bets') openBets();
-  else { restoreView(p, p); return true; }
+  else { restoreView(p, p); return; }
   setTimeout(() => window.scrollTo(0, p.y || 0), 80);
-  return true;
 };
 const openBetResults = () => { sec = 'review'; applyView(); setTimeout(() => { const c = document.getElementById('mybetsrv'); if (c) { c.classList.add('open'); const hb = c.querySelector('.mbhead'); if (hb) hb.setAttribute('aria-expanded', 'true'); const d = c.querySelector('details'); if (d) d.open = true; c.scrollIntoView({ block: 'start' }); window.scrollBy(0, -120); } }, 60); };
 window.SSX = { navBack, navDepth: () => NAV.length, navList: () => NAV.map(pageKey), openBetResults, openBets, openGame: (sp, id, day) => { ssOpenDay(sp, day); if (sp === 'nba') goDetail(id); else if (sp === 'fb') fbNav.go(id); else nflNav.go(id); }, get current() { return current; }, el, rows, plCur, plNeed, atNeed, plTeamNames, plRow, plGames, h2hGames, plUpcoming, plDate, plDraw, atLabel, atKeys, atGames, atRow, badge, bdX, norm, f1, avatar, openTeam, openPlayer, openAthlete, toView, MON, PL, AT, AT_DS, AT_HS, AT_CUR, get sec() { return sec; }, get selDay() { return selDay; }, get dataGen() { return dataGen; } };
