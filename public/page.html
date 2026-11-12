@@ -2114,7 +2114,7 @@ dash.draw('hstrip', (box) => {
   }
   box.replaceChildren(...out);
 });
-// ---- live auto-refresh: every 30 s while a game is live (or due to start), pull the latest scores and box scores
+// ---- live auto-refresh: every 15 s while a game is live, and right away when the app is reopened (or due to start), pull the latest scores and box scores
 const liveWanted = () => {
   const g = dash.data('livegames'); if (g.status !== 'ok' || !Array.isArray(g.data)) return false;
   const now = Date.now();
@@ -2125,14 +2125,15 @@ dash.draw('livetick', {
     try {
       if (document.hidden) return;
       // every 3 minutes: pick up newly graded games and box scores (hosted site: only re-downloads what changed)
-      if (++n % 6 === 0 && dash.refreshMany) dash.refreshMany(['history', 'final', 'nflresults', 'ufcfights', 'boxes', 'pact', 'archive', 'results', 'bets']);
-      if (!liveWanted()) { if (n % 2 === 0) { dash.refresh('livegames'); dash.refresh('livebox'); } return; } // idle: look once a minute for a game starting
+      if (++n % 12 === 0 && dash.refreshMany) dash.refreshMany(['history', 'final', 'nflresults', 'ufcfights', 'boxes', 'pact', 'archive', 'results', 'bets']);
+      if (!liveWanted()) { if (n % 4 === 0) { dash.refresh('livegames'); dash.refresh('livebox'); } return; } // idle: look once a minute for a game starting
       dash.refresh('livegames'); dash.refresh('livebox');
     } catch (e) {}
-  }, 30000); },
+  }, 15000); },
   update: () => {},
   unmount: (el, t) => clearInterval(t),
 });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) try { dash.refresh('livegames'); dash.refresh('livebox'); } catch (e) {} });
 document.querySelectorAll('.hsgo').forEach((b) => b.addEventListener('click', () => hsOpen(b.dataset.goSp)));
 document.querySelectorAll('#hsemptygo').forEach((b) => b.addEventListener('click', () => { sec = 'home'; applyView(); }));
 // ---- photos
