@@ -306,10 +306,41 @@ const boxPanel = (g) => {
   const t = document.createElement('table'); const hr = document.createElement('tr'); [' ', g.away, g.home].forEach((c) => hr.append(thc(c))); t.append(hr);
   TR.forEach(([lab, fn]) => { const tr = document.createElement('tr'); tr.append(tdc(lab), tdc(fn(g.away_team)), tdc(fn(g.home_team))); t.append(tr); });
   const sc = el('div', null, 'scr'); sc.append(t);
-  body.append(sc, playerTable(g.away, g.away_players), playerTable(g.home, g.home_players), el('p', 'The feed lists only some players per team, so player points can add to less than the team total.', 'muted'));
+  body.append(sc, boxTabs(g));
   return body;
 };
 
+// Finished game: one team at a time (a tab each), starters then bench in ESPN's order, like the live box score.
+// Older rows have no starter flag: ESPN lists the starting five first, so those are the first five.
+const BXTAB = {};
+const boxTabs = (g) => {
+  const key = g.id + '|' + g.date, sides = [[g.away, g.away_name, g.away_players], [g.home, g.home_name, g.home_players]].filter((x) => Array.isArray(x[2]) && x[2].length);
+  const w = el('div', null, 'bxtabs'); if (!sides.length) return w;
+  const pick = sides.some((x) => x[0] === BXTAB[key]) ? BXTAB[key] : sides[0][0], panes = {};
+  if (sides.length > 1) {
+    const bar = el('div', null, 'lvtabs'); bar.setAttribute('role', 'tablist');
+    sides.forEach(([c, nm]) => { const b = el('button', String(nm || c).split(' ').slice(-1)[0] || c, 'lvtab' + (c === pick ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(c === pick));
+      b.addEventListener('click', (e) => { e.stopPropagation(); BXTAB[key] = c; bar.querySelectorAll('.lvtab').forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); }); Object.entries(panes).forEach(([k, d]) => { d.hidden = k !== c; }); });
+      bar.append(b); });
+    w.append(bar);
+  }
+  sides.forEach(([c, nm, ps]) => {
+    const pane = el('div', null, 'lvpane'); pane.hidden = c !== pick; panes[c] = pane;
+    if (sides.length < 2) pane.append(el('h3', nm || c, 'lvteam'));
+    const flagged = ps.some((p) => p.starter != null), isSt = (p, i) => (flagged ? !!p.starter : i < 5);
+    const list = ps.map((p, i) => [p, isSt(p, i), i]).sort((a, b) => (b[1] ? 1 : 0) - (a[1] ? 1 : 0) || a[2] - b[2]);
+    const t = el('table', null, 'lvbox'); const hr = el('tr'); ['Player', 'MIN', 'PTS', 'REB', 'AST', '3PM'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
+    let last = null;
+    list.forEach(([p, st]) => {
+      if (st !== last) { last = st; const sr = el('tr', null, 'lvgrp'); const td = el('td', st ? 'Starters' : 'Bench'); td.colSpan = 6; sr.append(td); t.append(sr); }
+      const tr = el('tr'); const nmc = el('td'); nmc.append(el('b', p.name));
+      tr.append(nmc, el('td', String(p.min ?? '–'), 'n'), el('td', String(p.pts ?? 0), 'n'), el('td', String(p.reb ?? 0), 'n'), el('td', String(p.ast ?? 0), 'n'), el('td', String(p.tpm ?? 0), 'n'));
+      t.append(tr);
+    });
+    const sw = el('div', null, 'scroll'); sw.append(t); pane.append(sw); w.append(pane);
+  });
+  return w;
+};
 let fromRv = false;
 const openFromRv = (id) => { sport = 'nba'; sec = 'home'; applyView(); goDetail(id); fromRv = true; const bb = document.getElementById('backbtn'); if (bb) bb.textContent = '‹ Back to review'; };
 function histCard(h) {

@@ -56,7 +56,7 @@ const pair = (s) => String(s || '0-0').split('-').map(Number);
     const at = teamTot(A.team.abbreviation), ht = teamTot(H.team.abbreviation);
     at.bench = ap.filter((p) => !p.starter).reduce((t, p) => t + p.pts, 0); ht.bench = hp.filter((p) => !p.starter).reduce((t, p) => t + p.pts, 0);
     const row = { id, date, status: 'Final', away: ac, home: hc, away_name: A.team.name, home_name: H.team.name, away_pts: Number(A.score), home_pts: Number(H.score), away_team: at, home_team: ht,
-      away_players: ap.map(({ starter, ...p }) => p), home_players: hp.map(({ starter, ...p }) => p), note: 'ESPN box score (final). Second-chance points are not in the feed; bench points are the non-starters; possessions are estimated.', sport: 'nba' };
+      away_players: ap, home_players: hp, note: 'ESPN box score (final). Second-chance points are not in the feed; bench points are the non-starters; possessions are estimated.', sport: 'nba' };
     const i = boxes.findIndex((b) => b.id === id && b.date === date); if (i >= 0) boxes[i] = row; else boxes.push(row);
     added++;
   }
