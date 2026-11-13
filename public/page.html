@@ -39,7 +39,7 @@
 <div class="gdetail nbahdw" data-draw="nbahd" data-source="games pred teams"></div>
 <div class="chips" id="chips" data-draw="chips" data-source="games"></div>
 <div class="rvres" data-draw="rvres" data-source="history archive"></div>
- <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp gzones schedule"></div>
+ <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp gzones schedule odds propbook altlines propfind valuelog news"></div>
 </section>
 
 </div>
@@ -156,7 +156,7 @@
 <button type="button" class="backbtn" id="nflback">‹ Back to games</button>
 <h2 id="nfldtitle" data-draw="nfldtitle" data-source="nflgames">—</h2>
 <div class="rvres" data-draw="rvres" data-source="history archive"></div>
-<div id="nfldetail" class="gdetail" data-draw="nfldetail" data-source="nflgames nfltable nflinfo props75 livegames livebox"></div>
+<div id="nfldetail" class="gdetail" data-draw="nfldetail" data-source="nflgames nfltable nflinfo props75 livegames livebox odds propbook altlines valuelog history troster"></div>
 </section>
 </div>
 </div>
@@ -737,6 +737,7 @@ dash.draw('detail', (box) => {
   teams.forEach((t) => tg.append(teamCard(t, g)));
   out.push(tg);
   { const dc = window.SSG && SSG.defCourt && SSG.defCourt(current, nbaDay(g)); if (dc) out.push(dc); }
+  { const gb = window.SSG && SSG.gameBets && SSG.gameBets('nba', current, nbaDay(g)); if (gb) out.push(gb); } // last tab: Best bets
 
   const lad = el('div', null, 'card');
   lad.append(el('h2', 'Totals ladder: both teams\' games'));
@@ -861,8 +862,8 @@ dash.draw('detail', (box) => {
   }
   const keyed = out.map((c, i) => [rank(c), i, c]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   out.length = 0; keyed.forEach((x) => out.push(x[2]));
-  const NT = [['res', 'Result'], ['pick', 'Game'], ['lines', 'Lines'], ['teams', 'Teams'], ['inj', 'Injuries & lineups']]; // Props tab removed at the owner's request
-  const NM = { 'Final result': 'res', 'Why it went this way': 'res', 'Box score': 'res', 'Most likely outcome': 'pick', 'How this prediction works': 'pick', 'Lines': 'lines', 'Totals ladder: both teams\' games': 'lines', 'Game logs and common opponents': 'teams', 'Defence by court zone': 'teams', 'Injuries, lineups, props': 'inj', 'Starting lineups': 'inj', 'Same-game slips': 'props', 'Every tracked player, this season': 'props', 'Highest-confidence props': 'props' };
+  const NT = [['res', 'Result'], ['pick', 'Game'], ['lines', 'Lines'], ['teams', 'Teams'], ['inj', 'Injuries & lineups'], ['bets', 'Best bets']]; // Props tab removed at the owner's request
+  const NM = { 'Best bets': 'bets', 'Final result': 'res', 'Why it went this way': 'res', 'Box score': 'res', 'Most likely outcome': 'pick', 'How this prediction works': 'pick', 'Lines': 'lines', 'Totals ladder: both teams\' games': 'lines', 'Game logs and common opponents': 'teams', 'Defence by court zone': 'teams', 'Injuries, lineups, props': 'inj', 'Starting lineups': 'inj', 'Same-game slips': 'props', 'Every tracked player, this season': 'props', 'Highest-confidence props': 'props' };
   const npan = {};
   out.forEach((c) => { const h = c.querySelector && c.querySelector('h2'); const t = h ? h.textContent : ''; const k = c.classList && c.classList.contains('grid') ? 'teams' : (NM[t] || (/^Player props/.test(t) ? 'props' : 'pick')); (npan[k] = npan[k] || el('div', null, 'nbapanel')).append(c); });
   if (rvInTabs()) { const rb = el('div', null, 'rvres'); rb.append(...rvBanner(), el('p', 'The other tabs show the full pre-game breakdown exactly as it was when we made the pick.', 'muted rvrnote')); if (npan.res) npan.res.prepend(rb); else npan.res = rb; }
@@ -985,7 +986,7 @@ function nflMore(x) {
   const T = rows('nfltable'), A = T.find((t) => t.team === x.away) || {}, H = T.find((t) => t.team === x.home) || {};
   const tbl = (head, data) => { const t = document.createElement('table'); const hr = document.createElement('tr'); head.forEach((c, i) => hr.append(el('th', c, i ? 'n' : ''))); t.append(hr);
     data.forEach((r) => { const tr = document.createElement('tr'); r.forEach((c, i) => { const td = document.createElement('td'); if (i) td.className = 'n'; if (c instanceof Node) td.append(c); else td.textContent = String(c); tr.append(td); }); t.append(tr); }); return t; };
-  const TABS = [...(rvInTabs() ? [['rv', 'Result']] : []), ['pick', 'Game'], ['rate', 'Ratings'], ['ha', 'Home & away'], ['style', 'Style'], ['def', 'Defence'], ['tot', 'Totals'], ['inj', 'Injuries'], ['lu', 'Lineups']];
+  const TABS = [...(rvInTabs() ? [['rv', 'Result']] : []), ['pick', 'Game'], ['rate', 'Ratings'], ['ha', 'Home & away'], ['style', 'Style'], ['def', 'Defence'], ['tot', 'Totals'], ['inj', 'Injuries'], ['lu', 'Lineups'], ['bets', 'Best bets']];
   const MAP = { 'Projection': 'pick', 'Recent games': 'pick', 'Offence and defence ratings': 'rate', 'Season stats': 'rate', 'Home and away': 'ha', 'How they play and how it affects this matchup': 'style', 'Defence: what they allow and how they pressure': 'def', 'Totals and scoring': 'tot', 'Over and under': 'tot', 'Injuries': 'inj', 'Lineups': 'lu' };
   const panels = {};
   const sec = (h, ...n) => { const k = MAP[h] || 'pick'; const p = panels[k] || (panels[k] = el('div', null, 'nflpanel')); p.append(el('h4', h), ...n); };
@@ -1061,6 +1062,7 @@ function nflMore(x) {
   } else d.append(el('p', 'Detailed breakdown not available for this game yet.', 'muted'));
   if (rvInTabs()) { const rb = el('div', null, 'rvres'); rb.append(...rvBanner(), el('p', 'The other tabs show the full pre-game breakdown exactly as it was when we made the pick.', 'muted rvrnote')); panels.rv = rb; }
   { const pk = panels.pick || (panels.pick = el('div', null, 'nflpanel')); const nhr = rows('history').find((h) => h.sport === 'nfl' && h.id === x.id && normDay(h.date) === nflDay(x)); const mp = !(nhr && (nhr.status === 'Final' || nhr.status === 'Live')) && !(window.SSG && SSG.liveCard('nfl', x.id)) && window.SSG && SSG.mainCard('nfl', x.id); if (mp) pk.prepend(mp); const lv = window.SSG && SSG.liveCard('nfl', x.id); if (lv) pk.prepend(lv); }
+  { const gb = window.SSG && SSG.gameBets && SSG.gameBets('nfl', x.id, nflDay(x)); if (gb) { panels.bets = el('div', null, 'nflpanel'); panels.bets.append(gb); } } // last tab: Best bets
   const bar = el('div', null, 'nfltabs');
   const show = (k) => { NFL_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
   TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); bar.append(b); });

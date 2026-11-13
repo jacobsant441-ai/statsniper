@@ -246,6 +246,33 @@
     b.append(ic, l, r); b.addEventListener('click', () => (f && f.side && window.SSPP ? window.SSPP.focus(i.sp, f.stat, f.line, f.player, f.pid) : X.openGame(i.sp, i.id, i.day)));
     return b;
   };
+  // ---- Best bets for one game (its own tab on the game page): the game markets we rate, alt lines and player props
+  // with the same rules as the Bets page (our chance 75%+ paying $1.30+ for alt lines and props).
+  function gameBets(sp, id, day) {
+    const card = el('div', null, 'card gbcard'); card.append(el('h2', 'Best bets'));
+    if (!bbReady()) { card.append(skel(3)); return card; }
+    const ahead = new Set([sp + '|' + id + '|' + day]);
+    const hs = rows('history').find((h) => (h.sport || 'nba') === sp && h.id === id && nday(h.date) === nday(day)), lv = liveOf(sp, id, day);
+    if ((hs && (hs.status === 'Final' || hs.status === 'Live')) || (lv && lv.state !== 'pre')) card.append(el('p', 'This game has started, so betting has closed. These were the best bets before kick-off.', 'gbclosed'));
+    const gr = sp === 'nba' ? rows('games').find((x) => x.id === id && x.date === day) : rows('nflgames').find((x) => x.id === id);
+    const match = gr ? (sp === 'nba' ? gr.matchup : gr.away_name + ' @ ' + gr.home_name) : '';
+    // game markets: only the side we favour (50%+) with a real price
+    const plays = candidates(sp, id, day).filter((c) => c.price >= MIN_PRICE && c.chance >= 50).sort((a, b) => b.chance - a.chance).map((m) => ({ sp, id, day, match, time: '', m }));
+    const alts = altPlays(day).filter((i) => i.sp === sp && i.id === id);
+    const props = bookPlays(day, ahead).filter((i) => i.sp === sp && i.id === id);
+    if (!plays.length && !alts.length && !props.length) { card.append(el('p', 'No priced bets for this game yet. Prices are fetched at 8:15 am and 8:15 pm Sydney time.', 'muted')); return card; }
+    const sec = (title, list, n) => {
+      if (!list.length) return;
+      card.append(el('div', title + ' · ' + list.length, 'bbday bbsub'));
+      const box = el('div', null, 'gbrows'); list.slice(0, n).forEach((i) => box.append(bbRow(i))); card.append(box);
+      if (list.length > n) { const more = el('button', 'Show all ' + list.length + ' ›', 'bbmore'); more.type = 'button'; more.addEventListener('click', (e) => { e.stopPropagation(); box.replaceChildren(...list.map(bbRow)); more.remove(); }); card.append(more); }
+    };
+    sec('Game markets', plays, 6);
+    sec('Alt lines · our chance 75%+ at $1.30+', alts, 6);
+    sec('Player props · our chance 75%+ at $1.30+', props, 10);
+    return card;
+  }
+
   // Grey placeholder rows while data loads (instead of "Loading…").
   const skel = (n = 4) => { const w = el('div', null, 'skel'); w.setAttribute('aria-label', 'Loading'); for (let k = 0; k < n; k++) w.append(el('i')); return w; };
   const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind', 'propbook', 'altlines'].every((d) => dash.data(d).status !== 'loading');
@@ -941,5 +968,5 @@
     p.dataset.ct = '1'; const card = p.closest('.hg, .gcard'); if (card && /\b(won|lost|rgres|lvdone)\b/.test(card.className)) return;
     const m = p.textContent.match(/(\d+(?:\.\d+)?)%/); if (!m) return; const v = +m[1]; p.classList.add(v >= 70 ? 'cHi' : v >= 60 ? 'cMd' : 'cLo'); });
   new MutationObserver(() => { clearTimeout(tintAll.t); tintAll.t = setTimeout(tintAll, 60); }).observe(document.body, { childList: true, subtree: true });
-  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
+  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, gameBets, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();

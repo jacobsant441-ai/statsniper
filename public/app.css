@@ -1911,3 +1911,12 @@ html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html b
 html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html body .topbar .backbtn::before,html body #nflgame .backbtn::before,html body #fbgame .backbtn::before,html body .backbtn::before{content:''!important;width:13px!important;height:13px!important;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(45deg);margin:0 0 0 8px!important;font-size:0!important;display:block}
 html body .backbtn,html body #backbtn,html body #gamepage .backbtn,html body #nflgame .backbtn,html body #fbgame .backbtn,html body .topbar .backbtn{width:28px!important;height:30px!important;min-height:30px!important}
 html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html body .topbar .backbtn::before,html body #nflgame .backbtn::before,html body #fbgame .backbtn::before,html body .backbtn::before{width:10px!important;height:10px!important;border-left-width:2.2px;border-bottom-width:2.2px;margin:0 0 0 6px!important}
+/* main tab bar at the bottom on every screen size (computer too), centred */
+html body .bnav{position:fixed!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:min(520px,calc(100% - 20px));margin:0!important;z-index:40;display:grid!important;grid-template-columns:repeat(4,1fr);border-radius:24px!important;padding:6px!important;background:rgba(22,24,28,.94)!important;border:1px solid rgba(255,255,255,.08)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.6)!important}
+html body .bnav button{display:grid!important;justify-items:center;gap:2px;padding:7px 0 6px!important;border-radius:18px!important;font-size:.72rem!important;font-weight:600;color:#8f949d!important;background:none!important;border:0!important}
+html body .bnav button.on{background:rgba(255,255,255,.09)!important;color:#fff!important}
+html body .nt{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+html body .topbar{top:max(8px,env(safe-area-inset-top,0px))!important}
+html body #nflgame .backbtn,html body #fbgame .backbtn{top:max(8px,env(safe-area-inset-top,0px))!important}
+html body .bbpage .bbday,html body .bbpage .bbdrop>summary{top:max(6px,env(safe-area-inset-top,0px))!important}
+.gbclosed{margin:4px 0 8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);color:#c9ccd2;font-size:.82rem}
