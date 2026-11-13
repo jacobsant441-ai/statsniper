@@ -1957,7 +1957,7 @@ html.st-on .ssearch,html.st-on #appbar .sports{display:none!important}
 /* One "selected" look for every sport filter (Review bar incl. All sports, and the Games sport bar):
    a soft white fill with a white outline, text stays readable. */
 html body .lgbar button.on,html body .lgbar button[data-lg="all"].on,html body .lgbar button[data-rs="all"].on{background:rgba(255,255,255,.12)!important;color:#fff!important;border-color:rgba(255,255,255,.55)!important}
-html body .lgbar button.on i{background:var(--lg,#fff)!important}
+html body .lgbar button.on i:not(.ico){background-color:var(--lg,#fff)!important}
 /* Games: the sport circles become a bar like Review's (small logo + name, game count as a small badge) */
 html body .appbar .sports{display:flex;gap:6px;justify-content:space-between;overflow-x:auto;scrollbar-width:none;padding:6px;margin:4px 0 2px;border-radius:999px;background:rgba(18,23,32,.96);border:1px solid rgba(255,255,255,.08)}
 html body .appbar .sports::-webkit-scrollbar{display:none}
@@ -2002,3 +2002,11 @@ html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){
 html body .appbar .sports{width:fit-content!important;max-width:100%;margin:4px auto 2px!important;justify-content:center!important;gap:4px!important;padding:4px!important}
 html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 12px!important}
 html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 9px!important}
+/* Review: no search bar */
+html.rv-on .ssearch{display:none!important}
+/* Home-screen app (iPhone): iOS draws the page under the clock and fades the top edge, so start the page lower
+   and keep a solid black strip behind the clock that content can't scroll under. Safari / computer unchanged. */
+html.pwa body .nt{padding-top:38px!important}
+html.pwa body::before{content:'';position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 6px);background:#000;z-index:45;pointer-events:none}
+html.pwa body .topbar,html.pwa body #nflgame .backbtn,html.pwa body #fbgame .backbtn{top:calc(env(safe-area-inset-top,0px) + 12px)!important}
+html.pwa body .lgbar{top:calc(env(safe-area-inset-top,0px) + 8px)}

@@ -7,6 +7,8 @@
 // Chances for spreads and totals come from our projected margin and total (normal spread: NBA 12 / 17
 // points, NFL 13.5 / 13), at whatever line the price is for.
 (() => {
+  // opened from the iPhone home screen: mark the page so the top can sit below iOS's faded edge (app.css html.pwa)
+  try { if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('pwa'); } catch (e) { /* old browser */ }
   const X = window.SSX; if (!X) return;
   const { el, rows, badge, bdX } = X;
   const MIN_PRICE = 1.4;

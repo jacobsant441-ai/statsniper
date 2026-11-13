@@ -393,7 +393,7 @@ function redrawAll() { ['bestall', 'hslive', 'hpod', 'hgotn', 'hinj', 'hnews', '
 function syncChrome() {
   const ab = document.getElementById('appbar'); if (!ab) return;
   const sh = (id) => { const e = document.getElementById(id); return e && !e.hidden; };
-  ab.classList.toggle('onstart', sec === 'start'); document.documentElement.classList.toggle('st-on', sec === 'stand');
+  ab.classList.toggle('onstart', sec === 'start'); document.documentElement.classList.toggle('st-on', sec === 'stand'); document.documentElement.classList.toggle('rv-on', sec === 'review');
   ab.classList.toggle('nocal', !(sec === 'home' || sec === 'review'));
   ab.classList.toggle('compact', !!(sh('gamepage') || sh('fbgame') || sh('nflgame')));
   ab.classList.toggle('onreview', sec === 'review');
