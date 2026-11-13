@@ -76,7 +76,7 @@ page = page.replace(/<script src="((?:player|games)\.js)"><\/script>/g, (m, f) =
   if (!pageJsV[f]) throw new Error('page.html references a missing script: ' + f);
   return `<script src="${f}?v=${pageJsV[f]}"></script>`;
 });
-if (/<script src="(?!logos|player\.js|games\.js)/.test(page)) throw new Error('page.html references a script the web build does not ship');
+if (/<script src="(?!logos|player\.js|games\.js|standings\.js)/.test(page)) throw new Error('page.html references a script the web build does not ship');
 
 const shell = read('index.html');
 const fontLink = (shell.match(/<link href="https:\/\/fonts[^>]*>/) || [''])[0];
