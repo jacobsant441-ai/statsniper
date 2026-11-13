@@ -128,6 +128,11 @@ def autopull():
                 sys.stderr.write("[git] pull skipped: " + (r.stderr.strip() or r.stdout.strip())[:200] + "\n")
         except Exception as e:
             sys.stderr.write("[git] pull failed: %s\n" % e)
+        # bookmaker prices and the track record: fetched and graded in the cloud (odds job), kept on the odds-data branch
+        try:
+            subprocess.run(["bash", "scripts/odds-branch.sh", "pull"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+        except Exception as e:
+            sys.stderr.write("[odds] pull failed: %s\n" % e)
         settle_bets()
         time.sleep(300)
 
@@ -145,8 +150,7 @@ def settle_bets():
             r = subprocess.run(["node", "scripts/export-public.js", "--upload"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
             if r.returncode:
                 sys.stderr.write("[public] export failed: " + (r.stderr.strip() or r.stdout.strip())[:200] + "\n")
-        # value track record (valuelog.json, private): settle finished game / alt / prop bets (no credits)
-        subprocess.run(["node", "scripts/value-log.js", "grade"], cwd=str(ROOT.parent), capture_output=True, text=True, timeout=120, env=ENV)
+        # (the track record, valuelog.json, is graded in the cloud now and pulled from the odds-data branch above)
         if f.exists() and f.read_bytes() != before and before:
             bk = Path.home() / "Desktop" / "StatSniper" / "backups"
             if bk.is_dir():

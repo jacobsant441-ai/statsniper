@@ -10,6 +10,8 @@ on:
     - cron: '17 19 * * *'   # 19:17 UTC = 6:17 am Sydney: full daily refresh
     - cron: '7,37 * * * *'  # every 30 minutes: grade finished games (results)
     - cron: '27 * * * *'    # every hour: republish the site (fresh news, even when no results changed)
+    - cron: '15 21 * * *'   # 21:15 UTC = 8:15 am Sydney (AEDT): bookmaker prices for today (The Odds API, paid plan)
+    - cron: '15 9 * * *'    # 9:15 UTC = 8:15 pm Sydney (AEDT): early prices for tomorrow's NBA games
     - cron: '13 4 * * *'    # 4:13 UTC = 3:13 pm Sydney (AEDT; 2:13 pm in AEST): build tomorrow's picks and stats.
                             # GitHub usually starts scheduled runs 30-50 min late, so stats land around 4 pm.
   workflow_dispatch:
@@ -17,7 +19,7 @@ on:
       job:
         description: 'What to run by hand'
         type: choice
-        options: [full, results, picks]
+        options: [full, results, picks, odds-am, odds-pm]
         default: full
   push:
     branches: [main]
@@ -94,6 +96,11 @@ jobs:
           # starting lineups: ESPN depth charts before tip, actual starters once the game is on
           node scripts/fetch-lineups.js || echo "::warning::lineups failed"
           node scripts/fetch-game-zones.js || echo "::warning::per-game defence zones failed"
+      - name: Grade the bookmaker track record (odds-data branch)
+        run: |
+          bash scripts/odds-branch.sh pull
+          node scripts/value-log.js grade || echo "::warning::track record grading failed"
+          bash scripts/odds-branch.sh push
       - name: Commit changed data
         id: commit
         run: |
@@ -131,6 +138,8 @@ jobs:
           path: .cache
           key: soc-summary-${{ github.run_id }}
           restore-keys: soc-summary-
+      - name: Bookmaker data for the prop finder (odds-data branch)
+        run: bash scripts/odds-branch.sh pull
       - name: Build picks and stats
         env:
           MODE: ${{ github.event.schedule == '17 19 * * *' && 'morning' || 'evening' }}
@@ -174,11 +183,35 @@ jobs:
             for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Save the rated props back (odds-data branch)
+        run: bash scripts/odds-branch.sh push
+
+  odds:
+    # Bookmaker prices from The Odds API (paid plan, key in the ODDS_API_KEY secret, never in a file):
+    # 8:15 am Sydney for today's games, 8:15 pm for tomorrow's NBA games, or by hand with job = odds-am / odds-pm.
+    # The files go to the odds-data branch (one commit, replaced each run), not main.
+    if: github.event.schedule == '15 21 * * *' || github.event.schedule == '15 9 * * *' || (github.event_name == 'workflow_dispatch' && startsWith(github.event.inputs.job, 'odds'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bash scripts/odds-branch.sh pull
+      - name: Fetch prices and rate every line
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          MODE: ${{ (github.event.schedule == '15 9 * * *' || github.event.inputs.job == 'odds-pm') && 'pm' || 'am' }}
+        run: bash scripts/odds-run.sh "$MODE"
+      - run: bash scripts/odds-branch.sh push
 
   deploy:
-    needs: [refresh, results, picks]
+    needs: [refresh, results, picks, odds]
     # Publish on a code push, after a successful full refresh, or when a results run changed data.
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event.schedule == '27 * * * *' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true' || needs.picks.outputs.changed == 'true')
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event.schedule == '27 * * * *' || needs.refresh.result == 'success' || needs.results.outputs.changed == 'true' || needs.picks.outputs.changed == 'true' || needs.odds.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Cloudflare Pages (the site's own address, no username in it). Set these two repository secrets to turn it on.
@@ -193,6 +226,8 @@ jobs:
           node-version: 22
       - name: Latest news (ESPN headlines, into this build only; never committed)
         run: node scripts/fetch-news.js || echo "::warning::news fetch failed"
+      - name: Bookmaker data (odds-data branch, into this build)
+        run: bash scripts/odds-branch.sh pull
       - run: node scripts/build-web.js
       - name: Publish to Cloudflare Pages (https://statsniper.pages.dev, the only public address)
         if: env.CF_TOKEN != '' && env.CF_ACCOUNT != ''

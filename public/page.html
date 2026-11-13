@@ -1,7 +1,7 @@
 <meta name="dash-one-writer">
 <link rel="stylesheet" href="app.css">
 <div class="nt">
-<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><span>⌂</span>Home</button><button type="button" data-sec="home"><span>◎</span>Games</button><button type="button" data-sec="bets"><span>$</span>Bets</button><button type="button" data-sec="review"><span>✓</span>Review</button></nav>
+<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>Home</button><button type="button" data-sec="home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>Games</button><button type="button" data-sec="bets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-4"/></svg>Bets</button><button type="button" data-sec="review"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/></svg>Review</button></nav>
 <span class="livetick" data-draw="livetick" data-source="livegames" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></span>
 <div class="appbar" id="appbar" data-draw="appbar" data-source="games fixtures nflgames history schedule ufcfights bets pubbets"></div>
 <div class="ssearch" role="search"><label class="ssbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ssq" type="search" placeholder="Search teams, players, fighters" aria-label="Search teams, players and fighters" autocomplete="off" spellcheck="false"></label><div class="ssres" id="ssres" role="listbox" aria-label="Search results" data-draw="ssearch" data-source="pidx nfltable table"></div></div>
@@ -39,7 +39,7 @@
 <div class="gdetail nbahdw" data-draw="nbahd" data-source="games pred teams"></div>
 <div class="chips" id="chips" data-draw="chips" data-source="games"></div>
 <div class="rvres" data-draw="rvres" data-source="history archive"></div>
- <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp gzones"></div>
+ <div id="detail" data-draw="detail" data-source="troster games teams ladder log notes pred players pstats top lineups slips plog history boxes props75 props livegames livebox pbp gzones schedule"></div>
 </section>
 
 </div>
@@ -621,8 +621,8 @@ dash.draw('detail', (box) => {
       el('dt', 'Market (spread)'), el('dd', 'home margin ' + f1(p.posted_margin)));
     body.append(pk);
     { const md = document.createElement('details'); md.className = 'moredet'; md.append(el('summary', 'More detail'), ...[...body.childNodes].slice(1)); body.append(md); if (finalOf(current) || (window.SSG && SSG.liveCard('nba', current))) md.hidden = true; } // hidden (kept for the result tally) once the game has started
-    pc.classList.add('noring'); pc.append(body);
-    { const lv = window.SSG && SSG.liveCard('nba', current); if (lv) out.push(lv); const mpc = !lv && !finalOf(current) && window.SSG && SSG.mainCard('nba', current); if (mpc) out.push(mpc); } // Main play only before tip-off
+    pc.classList.add('noring'); pc.append(body); if (body.querySelector('.moredet[hidden]')) { pc.hidden = true; pc.style.setProperty('display', 'none', 'important'); } // started: nothing left to show (kept in the page for the result tally)
+    { const lv = window.SSG && SSG.liveCard('nba', current); if (lv) out.push(lv); const mpc = !lv && !finalOf(current) && window.SSG && SSG.mainCard('nba', current, nbaDay(g)); if (mpc) out.push(mpc); const bb = !lv && !finalOf(current) && window.SSG && SSG.b2bCard && SSG.b2bCard(current, nbaDay(g)); if (bb) out.push(bb); } // Main play only before tip-off
     out.push(pc);
   }
   {
@@ -835,7 +835,7 @@ dash.draw('detail', (box) => {
     const bxg = rows('boxes').find((x) => x.id === current && normDay(x.date) === nbaDay(g)); if (bxg) { const bc = el('div', null, 'card'); bc.append(el('h2', 'Box score')); const bw = el('div', null, 'bx'); bw.append(boxPanel(bxg)); bc.append(bw); out.push(bc); }
   }
   const ORD = ['Live', 'Main play', 'Most likely outcome', 'Lineups', 'Injuries', 'Final result', 'Why it went this way', 'Box score', 'Starting lineups', 'Injuries, lineups, props', '', 'Lines', '#grid', 'Totals ladder: both teams\' games', 'Every tracked player, this season', 'Game logs and common opponents', 'Highest-confidence props', 'Player props (most confident first)', 'How this prediction works', 'Same-game slips'];
-  const rank = (c) => { if (c.classList.contains('grid')) return ORD.indexOf('#grid'); const h = c.querySelector('h2'); const t = h ? h.textContent : (c.classList.contains('warn') ? '' : null); const i = t == null ? -1 : ORD.indexOf(t); return i < 0 ? 40 : i; };
+  const rank = (c) => { if (c.classList.contains('grid')) return ORD.indexOf('#grid'); const h = c.querySelector('h2'); const t = h ? h.textContent : (c.classList.contains('warn') ? '' : null); if (t === 'Back-to-backs') return 99; const i = t == null ? -1 : ORD.indexOf(t); return i < 0 ? 40 : i; };
   const f0 = finalOf(current);
   if (f0 && f0.status === 'Final') { // a game still in progress shows the Live card instead
     const hits = out.reduce((n, c) => n + c.querySelectorAll('.mk.hit').length, 0), miss = out.reduce((n, c) => n + c.querySelectorAll('.mk.miss').length, 0), na = out.reduce((n, c) => n + c.querySelectorAll('.mk.na').length, 0);
@@ -2382,7 +2382,7 @@ const rvCard = (h) => {
   const mid = el('div', null, 'mid');
   if (h.league) mid.append(lgLabel(h.league, 'rvlg'));
   const sc = fin ? (ufc ? (h.method || 'Final').replace('Decision - ', 'Dec · ') + (h.round ? ' · R' + h.round : '') : fb ? h.home_pts + ' – ' + h.away_pts : h.away_pts + ' – ' + h.home_pts) : (h.status === 'Live' ? 'Live' : 'Not started');
-  mid.append(el('strong', sc, ufc ? 'sm' : ''), el('span', fin ? 'FINAL' : h.status === 'Live' ? 'LIVE' : 'UPCOMING', 'pre'));
+  mid.append(el('strong', sc, ufc || !fin ? 'sm' : ''), el('span', fin ? 'FINAL' : h.status === 'Live' ? 'LIVE' : 'UPCOMING', 'pre'));
   const mu = el('div', null, 'mu'); mu.append(side(L), mid, side(R));
   const chips = el('div', null, 'chips');
   const wc = el('span', null, 'chip rvw ' + (hit || 'na')); wc.append(document.createTextNode('Pick: '), el('b', rvPickTxt(h) || 'none'), document.createTextNode(h.pick_pct != null ? ' ' + Math.round(h.pick_pct) + '%' : '')); wc.append(tick(hit, hit === 'hit' ? 'Right' : hit === 'miss' ? 'Wrong' : 'Not graded')); chips.append(wc);

@@ -55,9 +55,61 @@
   const priceTxt = (c) => (PUB ? '' : !c.price ? 'no price yet' : (c.est ? '≈ $' : '$') + c.price.toFixed(2) + (c.book && !c.est ? ' · ' + c.book : c.est ? ' (estimated)' : ''));
 
   // Main play card for an NBA or NFL game page.
-  function mainCard(sp, id) {
-    const list = candidates(sp, id); const m = pickMain(list); if (!m) return null;
-    const card = el('div', null, 'card gpcard'); card.append(el('h2', 'Main play'));
+  // ---- NBA back-to-backs: which team plays the night before or after this game (from past results, the current
+  // slate and the 30-day schedule), and which of the two games matters more (division > conference > other conference).
+  const NBA_DIV = { ATL: 'SE', CHA: 'SE', MIA: 'SE', ORL: 'SE', WAS: 'SE', BOS: 'AT', BKN: 'AT', NYK: 'AT', PHI: 'AT', TOR: 'AT', CHI: 'CE', CLE: 'CE', DET: 'CE', IND: 'CE', MIL: 'CE',
+    DEN: 'NW', MIN: 'NW', OKC: 'NW', POR: 'NW', UTA: 'NW', GSW: 'PA', LAC: 'PA', LAL: 'PA', PHX: 'PA', SAC: 'PA', DAL: 'SW', HOU: 'SW', MEM: 'SW', NOP: 'SW', SAS: 'SW' };
+  const confOf = (t) => (['SE', 'AT', 'CE'].includes(NBA_DIV[t]) ? 'East' : NBA_DIV[t] ? 'West' : '');
+  const MON = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  const dayNum = (key) => { const m = String(key || '').match(/(\d+) (\w{3})/); if (!m || MON[m[2]] == null) return null; const now = new Date(), sy = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1, mo = MON[m[2]]; return Math.round(Date.UTC(mo >= 6 ? sy : sy + 1, mo, Number(m[1])) / 864e5); };
+  const nbaAll = () => {
+    const out = new Map(), names = {};
+    const add = (id, away, home, day, an, hn) => { if (!id || !day) return; if (an) names[away] = an; if (hn) names[home] = hn; const n = dayNum(day); if (n == null) return; out.set(id + '|' + n, { id, away, home, n, day }); };
+    rows('history').filter((h) => (h.sport || 'nba') === 'nba').forEach((h) => add(h.id, h.away, h.home, normDayX(h.date), h.away_name, h.home_name));
+    rows('schedule').filter((h) => (h.sport || 'nba') === 'nba').forEach((h) => add(h.id, h.away, h.home, normDayX(h.date), h.away_name, h.home_name));
+    rows('games').forEach((g) => { const [an, hn] = String(g.matchup || '').split(' @ '); add(g.id, g.away, g.home, normDayX(g.date), an, hn); });
+    return { list: [...out.values()], names };
+  };
+  const normDayX = (d) => String(d || '').replace(/^(\w+) 0(\d) /, '$1 $2 ').trim();
+  const imp = (t, o) => (NBA_DIV[t] && NBA_DIV[t] === NBA_DIV[o] ? 3 : confOf(t) && confOf(t) === confOf(o) ? 2 : 1);
+  const IMPT = { 3: 'a division rival', 2: 'a conference game', 1: 'an other-conference game' };
+  function b2bInfo(id, day) {
+    const { list, names } = nbaAll(), n = dayNum(day); if (n == null) return null;
+    const g = list.find((x) => x.id === id && x.n === n); if (!g) return null;
+    const on = (t, k) => list.find((x) => x.n === k && (x.away === t || x.home === t));
+    const vs = (t, x) => (x.away === t ? 'at ' : 'vs ') + (names[x.away === t ? x.home : x.away] || (x.away === t ? x.home : x.away));
+    return [g.away, g.home].map((t) => {
+      const opp = t === g.away ? g.home : g.away, prev = on(t, n - 1), next = on(t, n + 1);
+      const last = list.filter((x) => x.n < n && (x.away === t || x.home === t)).sort((a, b) => b.n - a.n)[0];
+      return { t, name: names[t] || t, opp, tonight: imp(t, opp), prev: prev && { vs: vs(t, prev), imp: imp(t, prev.away === t ? prev.home : prev.away) }, next: next && { vs: vs(t, next), imp: imp(t, next.away === t ? next.home : next.away) }, rest: last ? n - last.n - 1 : null };
+    });
+  }
+  function b2bCard(id, day) {
+    const info = b2bInfo(id, day); if (!info || !info.some((x) => x.prev || x.next)) return null;
+    const card = el('div', null, 'card b2bcard'); card.append(el('h2', 'Back-to-backs'));
+    info.forEach((x) => {
+      const p = el('p'); p.append(el('b', x.name + ': '));
+      const bits = [];
+      if (x.prev) {
+        bits.push('2nd night of a back-to-back (played ' + x.prev.vs + ' last night, ' + IMPT[x.prev.imp] + ').');
+        bits.push(x.tonight > x.prev.imp ? 'Tonight is the bigger game for them: ' + IMPT[x.tonight] + '.' : x.tonight < x.prev.imp ? 'Tonight matters less to them (' + IMPT[x.tonight] + '), on tired legs.' : 'Tonight is also ' + (x.tonight === 3 ? 'against a division rival' : IMPT[x.tonight]) + '.');
+      }
+      if (x.next) {
+        bits.push((x.prev ? 'They also play tomorrow: ' : '1st night of a back-to-back: tomorrow ') + x.next.vs + ' (' + IMPT[x.next.imp] + ').');
+        bits.push(x.next.imp > x.tonight ? 'Tomorrow matters more to them, so watch for rest or lighter minutes tonight.' : x.next.imp < x.tonight ? 'Tonight is the bigger game for them (' + IMPT[x.tonight] + ').' : (x.tonight === 3 ? 'Both games are against division rivals.' : 'Both games are ' + IMPT[x.tonight].replace(/^an? /, '') + 's.'));
+      }
+      if (!bits.length) bits.push('Not on a back-to-back' + (x.rest != null ? ' (' + x.rest + (x.rest === 1 ? ' day' : ' days') + ' of rest).' : '.'));
+      p.append(document.createTextNode(bits.join(' '))); card.append(p);
+    });
+    return card;
+  }
+
+  function mainCard(sp, id, day) {
+    const list = candidates(sp, id, day); const m = pickMain(list); if (!m) return null;
+    const card = el('div', null, 'card gpcard');
+    const hd = el('div', null, 'gphd'); hd.append(el('h2', 'Main play'));
+    if (sp === 'nba' && day) { const tags = (b2bInfo(id, day) || []).filter((x) => x.prev).map((x) => el('span', 'B2B · 2nd night: ' + x.t, 'b2btag')); if (tags.length) { const tg = el('div', null, 'b2btags'); tg.append(...tags); hd.append(tg); } }
+    card.append(hd);
     const top = el('div', null, 'gptop'); top.append(el('b', m.pick, 'gpk'), el('span', m.chance + '% chance · ' + conf(m.chance), 'gpp'), el('span', priceTxt(m), 'gppr' + (m.price < MIN_PRICE ? ' low' : '')));
     card.append(top);
     const safest = list.slice().sort((a, b) => b.chance - a.chance)[0];
@@ -113,7 +165,8 @@
   const BOOK_MIN = 75, BOOK_PRICE = 1.3;
   // Public site (not this Mac): no market prices are shown, and the picks come from the cleaned public copies
   // (pubprops / pubalts / pubbets from export-public.js) because the private files never leave the Mac.
-  const PUB = !/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+  // Prices, books and edges show on the public site too since the paid Odds API plan (13 Nov 2026).
+  const PUB = false;
   const propSrc = () => (rows('propbook').length ? rows('propbook') : rows('pubprops').map((r) => ({ ...r, price: 0, pub: true })));
   const altSrc = () => (rows('altlines').length ? rows('altlines') : rows('pubalts').map((r) => ({ ...r, price: 0, pub: true })));
   // Alternate lines and totals (altlines, Mac only: fetch-alt-lines.js): our chance from the margin / total model
@@ -888,5 +941,5 @@
     p.dataset.ct = '1'; const card = p.closest('.hg, .gcard'); if (card && /\b(won|lost|rgres|lvdone)\b/.test(card.className)) return;
     const m = p.textContent.match(/(\d+(?:\.\d+)?)%/); if (!m) return; const v = +m[1]; p.classList.add(v >= 70 ? 'cHi' : v >= 60 ? 'cMd' : 'cLo'); });
   new MutationObserver(() => { clearTimeout(tintAll.t); tintAll.t = setTimeout(tintAll, 60); }).observe(document.body, { childList: true, subtree: true });
-  window.SSG = { newsOf, newsItem, defCourt, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
+  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();

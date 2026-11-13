@@ -1842,3 +1842,72 @@ button.ppmu.go:hover,button.ppmu.go:focus-visible{border-color:var(--sb-acc)}
 .backbtn,#backbtn,#gamepage #backbtn{font-size:0!important;width:42px;height:38px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:999px}
 .backbtn::before,#backbtn::before,#gamepage #backbtn::before{content:'‹'!important;font-size:1.6rem!important;font-weight:600;line-height:1;margin-top:-3px}
 #gamepage .backbtn,#nflgame .backbtn,#fbgame .backbtn,.topbar .backbtn,.backbtn{width:42px!important;height:38px!important;min-height:38px!important;padding:0!important}
+.gphd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.gphd h2{margin:0}
+.b2btags{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.b2btag{font-size:.7rem;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:999px;background:rgba(255,125,129,.14);color:#ff9a9d;border:1px solid rgba(255,125,129,.35);white-space:nowrap}
+.b2bcard p{margin:6px 0}
+
+/* ===== Look: Black & white (darker), plain-text pills, compact, Barlow Condensed (13 Nov 2026) ===== */
+:root,.nt{--sb-bg:#000;--sb-panel:#111317;--sb-raised:#1d2026;--sb-fg:#fff;--sb-muted:#8f949d;--sb-line:rgba(255,255,255,.07);--sb-line2:rgba(255,255,255,.14);--sb-acc:#fff;--sb-acc-ink:#000;--color-bg:#000;--color-panel:#111317;--color-fg:#fff;--color-fg-muted:#8f949d;--color-border-line:rgba(255,255,255,.08)}
+html,body,#dash-root{background:#000!important}
+html{font-size:15px}
+body,.nt{font-family:'Barlow','Inter',system-ui,sans-serif}
+/* headings, names and numbers in the condensed face */
+.nt h1,.nt h2,.nt h3,.mid strong,.stat b,.pick .w,.outcome .big,.result .big,#dtitle,.plid .nm,.tmname h1,.fgf .nm,.ftrecbig b,.tmrec b,.tmrk b,.rvt b,.betpill .bpp,.hhl,.tmrwh,.lgh2{font-family:'Barlow Condensed','Arial Narrow',sans-serif!important;letter-spacing:.005em}
+.nt h2{font-weight:700;text-transform:none}
+/* scores: condensed, a little smaller than before */
+.gcard .mid strong:not(.sm),.rvg .mid strong:not(.sm){font-size:1.9rem!important;font-weight:700!important;line-height:1}
+.gdetail .hd .mid strong{font-size:1.75rem!important}
+/* cards: darker grey on black, no coloured rims */
+.card,.gcard,.rvg,.hg,.tile{background:#111317!important;border-color:rgba(255,255,255,.07)!important;box-shadow:none!important}
+.gcard.on,.rvg.hit,.rvg.miss,.rgres.hit,.rgres.miss{border-color:rgba(255,255,255,.12)!important}
+/* the brand colour is now white: status words, links and pick text go white or grey instead of green */
+.mid .pre,.gcard .mid .pre{color:#fff!important;letter-spacing:.08em}
+.mid .pre.lvon{color:#ff4d4d!important}
+.mid .pk{color:#c9ccd2!important}
+.go,.gcard .go,.ft .go,.bbmore,a{color:#c9ccd2}
+.wn{background:rgba(255,255,255,.1)!important;color:#fff!important}
+.bd.logo,.tm .bd{box-shadow:none!important}
+.tm.win .bd,.rvg .tm.win .bd{outline:0!important;border-color:transparent!important;box-shadow:none!important}
+/* plain-text pills: no bubbles, small dots between, ticks and crosses keep their colours */
+.chips{gap:4px 14px!important;align-items:center!important}
+.chips .chip,.rvg .chip,#rvlist .chip{background:none!important;border:0!important;padding:0!important;border-radius:0!important;color:#8f949d!important;font-weight:500!important;font-size:.8rem!important;box-shadow:none!important}
+.chips .chip b,.rvg .chip b{color:#fff!important}
+.chips .chip + .chip::before{content:'';width:3px;height:3px;border-radius:50%;background:#4f545c;margin:0 9px 0 -8px;display:inline-block;align-self:center}
+.chips .chip.High,.chips .chip.Medium,.chips .chip.Low,.chips .chip.cOver,.chips .chip.cUnder,.chips .chip.cFav,.chips .chip.cDog,.chips .chip.cCoin{color:#c9ccd2!important}
+/* bottom tab bar on phones (and in the home-screen app) */
+@media (max-width:760px){
+  .bnav{position:fixed!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;left:10px;right:10px;margin:0!important;z-index:40;display:grid!important;grid-template-columns:repeat(4,1fr);border-radius:24px!important;padding:6px!important;background:rgba(22,24,28,.94)!important;border:1px solid rgba(255,255,255,.08)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.6)!important}
+  .bnav button{display:grid!important;justify-items:center;gap:2px;padding:7px 0 6px!important;border-radius:18px!important;font-size:.72rem!important;font-weight:600;color:#8f949d!important;background:none!important;border:0!important}
+  .bnav button span{font-size:1.15rem;line-height:1}
+  .bnav button.on{background:rgba(255,255,255,.09)!important;color:#fff!important}
+  .nt{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .topbar{top:max(8px,env(safe-area-inset-top,0px))!important}
+  #nflgame .backbtn,#fbgame .backbtn{top:max(8px,env(safe-area-inset-top,0px))!important}
+  .bbpage .bbday,.bbpage .bbdrop>summary{top:max(6px,env(safe-area-inset-top,0px))!important}
+}
+.bnav button.on{background:#fff;color:#000}
+html body .chips .chip,html body .chips .chip[class],html body .chips span.chip{background:none!important;background-color:transparent!important;border:0!important;padding:0!important;color:#8f949d!important}
+html body .chips .chip b{color:#fff!important}
+.rvg .mid strong.sm{font-size:1.15rem!important;line-height:1.1}
+html body .go,html body .ft .go,html body .rvg .go{color:#c9ccd2!important}
+.bnav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+:is(#pgrid,#nflgrid,#fbgrid,#ufcgrid,#detail,#rvlist,#nfldetail,#fbdetail,#view-start,#view-rv) .chips .chip.chip.chip{background:none!important;border:0!important;padding:0!important;color:#8f949d!important;box-shadow:none!important}
+.hs[data-sp]{--hs-c:#2d3037}
+html body .hsgo,html body .hsh .hsgo{background:#fff!important;color:#000!important}
+html body .hg .pk,html body .hg .pk.cHi,html body .hg .pk.cMd,html body .mid .pk.cHi,html body .mid .pk.cMd{color:#c9ccd2!important}
+html body .hg.won .pk{color:#2fbf71!important}
+html body .hg.lost .pk{color:#ef4b55!important}
+/* pill words keep their meaning colour (text only, no bubble); coin toss stays grey */
+:is(#pgrid,#nflgrid,#fbgrid,#ufcgrid,#detail,#rvlist,#nfldetail,#fbdetail,#view-start,#view-rv) .chips .chip.chip.chip:is(.cFav,.cOver,.High){color:#4be38c!important}
+:is(#pgrid,#nflgrid,#fbgrid,#ufcgrid,#detail,#rvlist,#nfldetail,#fbdetail,#view-start,#view-rv) .chips .chip.chip.chip:is(.cDog,.cUnder,.Low,.Lowmedium){color:#ff7d81!important}
+:is(#pgrid,#nflgrid,#fbgrid,#ufcgrid,#detail,#rvlist,#nfldetail,#fbdetail,#view-start,#view-rv) .chips .chip.chip.chip.Medium{color:#f5c45e!important}
+:is(#pgrid,#nflgrid,#fbgrid,#ufcgrid,#detail,#rvlist,#nfldetail,#fbdetail,#view-start,#view-rv) .chips .chip.chip.chip.cCoin{color:#8f949d!important}
+html body .backbtn,html body #backbtn,html body #gamepage .backbtn,html body #nflgame .backbtn,html body #fbgame .backbtn{background:none!important;border:0!important;box-shadow:none!important;color:#fff!important;width:36px!important;justify-content:flex-start!important}
+html body .backbtn::before{font-size:2.1rem!important;font-weight:400!important;color:#fff}
+html body .backbtn:hover{background:none!important;color:#c9ccd2!important}
+html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html body .topbar .backbtn::before,html body #nflgame .backbtn::before,html body #fbgame .backbtn::before,html body .backbtn::before{font-size:2.3rem!important;font-weight:300!important;line-height:1!important;margin-top:-4px}
+html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html body .topbar .backbtn::before,html body #nflgame .backbtn::before,html body #fbgame .backbtn::before,html body .backbtn::before{content:''!important;width:13px!important;height:13px!important;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(45deg);margin:0 0 0 8px!important;font-size:0!important;display:block}
+html body .backbtn,html body #backbtn,html body #gamepage .backbtn,html body #nflgame .backbtn,html body #fbgame .backbtn,html body .topbar .backbtn{width:28px!important;height:30px!important;min-height:30px!important}
+html body #gamepage #backbtn::before,html body #view-nba #backbtn::before,html body .topbar .backbtn::before,html body #nflgame .backbtn::before,html body #fbgame .backbtn::before,html body .backbtn::before{width:10px!important;height:10px!important;border-left-width:2.2px;border-bottom-width:2.2px;margin:0 0 0 6px!important}
