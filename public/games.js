@@ -10,6 +10,49 @@
   // opened from the iPhone home screen: mark the page so the top can sit below iOS's faded edge (app.css html.pwa)
   try { if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('pwa'); } catch (e) { /* old browser */ }
   const X = window.SSX; if (!X) return;
+  // ---- Pull to refresh (phones): at the top of a page, pull down; the StatSniper logo drops in, and past the line
+  // ("Release to refresh") letting go reloads the app with fresh data (and the loading screen). Short pulls just go back.
+  (() => {
+    if (!('ontouchstart' in window)) return;
+    const box = document.createElement('div'); box.id = 'ssptr';
+    box.innerHTML = '<span class="ptrlogo"><img src="icons/icon-192.png" alt=""></span><small>Pull to refresh</small>';
+    document.body.append(box);
+    const lab = box.querySelector('small'), logo = box.querySelector('.ptrlogo');
+    const LINE = 70, MAX = 110;
+    let y0 = null, x0 = 0, pull = 0, busy = false;
+    const set = (d) => { pull = d; box.style.transform = 'translate(-50%,' + (Math.min(d, MAX) - 60) + 'px)'; box.style.opacity = String(Math.min(1, d / 40)); logo.style.transform = 'rotate(' + d * 3 + 'deg)'; lab.textContent = d >= LINE ? 'Release to refresh' : 'Pull to refresh'; box.classList.toggle('ready', d >= LINE); };
+    const reset = () => { box.classList.add('back'); set(0); setTimeout(() => box.classList.remove('back'), 260); };
+    const blocked = (t) => !!(t.closest && t.closest('input,select,textarea,#ssload,.scroll,.scr,.hstrip,.days,.nfltabs,.lgbar,.sports,.chips'));
+    document.addEventListener('touchstart', (e) => { if (busy || e.touches.length !== 1 || window.scrollY > 0 || blocked(e.target)) { y0 = null; return; } y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (y0 == null || busy) return; const t = e.touches[0], dy = t.clientY - y0, dx = Math.abs(t.clientX - x0);
+      if (window.scrollY > 0 || dy <= 0 || dx > dy) { if (pull) reset(); if (dy < -5 || dx > dy) y0 = null; return; }
+      set(dy * 0.5);
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (y0 == null || busy) return; y0 = null;
+      if (pull >= LINE) { busy = true; box.classList.add('spin'); lab.textContent = 'Refreshing…'; set(LINE); setTimeout(() => location.reload(), 350); }
+      else if (pull) reset();
+    }, { passive: true });
+  })();
+
+  // ---- Loading screen (#ssload in page.html): fades once Home has its data (games and the first cards drawn).
+  // After 5 s it says it's still working; after 12 s it gets out of the way whatever happens.
+  (() => {
+    const ld = document.getElementById('ssload'); if (!ld) return;
+    const t0 = Date.now(); let gone = false;
+    const hide = () => { if (gone) return; gone = true; ld.classList.add('done'); setTimeout(() => ld.remove(), 450); };
+    const ready = () => { const d = dash.data('games'); const drawn = document.querySelector('#hgotn [data-draw] > *, .hstrip > *, #pgrid > *'); return d && d.status !== 'loading' && !!drawn; };
+    const tick = () => {
+      if (gone) return;
+      const ms = Date.now() - t0;
+      if (ready() && ms > 400) return hide();
+      if (ms > 5000) { const m = document.getElementById('ssloadmsg'); if (m) m.textContent = navigator.onLine === false ? 'You look offline. Showing what we have…' : 'Still loading… slow connection?'; }
+      if (ms > 12000) return hide();
+      setTimeout(tick, 150);
+    };
+    tick();
+  })();
   const { el, rows, badge, bdX } = X;
   const MIN_PRICE = 1.4;
   const phi = (z) => { const t = 1 / (1 + 0.2316419 * Math.abs(z)); const d = 0.3989423 * Math.exp(-z * z / 2); const q = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - q : q; };
