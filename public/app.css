@@ -2010,3 +2010,14 @@ html.pwa body .nt{padding-top:38px!important}
 html.pwa body::before{content:'';position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 6px);background:#000;z-index:45;pointer-events:none}
 html.pwa body .topbar,html.pwa body #nflgame .backbtn,html.pwa body #fbgame .backbtn{top:calc(env(safe-area-inset-top,0px) + 12px)!important}
 html.pwa body .lgbar{top:calc(env(safe-area-inset-top,0px) + 8px)}
+/* same grey as every other card: Review header card, its score tiles, and the sport bars (were blue-tinted) */
+html body header.hero{background:#111317!important;background-image:none!important;border-color:rgba(255,255,255,.07)!important;box-shadow:none!important}
+html body header.hero::before,html body header.hero::after{display:none!important}
+html body .rvt{background:#1d2026!important;background-image:none!important;border-color:rgba(255,255,255,.08)!important}
+html body .rvt.all{background:#1d2026!important;border-color:rgba(255,255,255,.3)!important}
+html body .lgbar,html body .appbar .sports{background:#111317!important;border-color:rgba(255,255,255,.08)!important}
+/* list headings: a clear gap above the first game card */
+html body #picks > h2,html body #nflpicks > h2,html body #fbpicks > h2,html body #ufcpicks > h2{margin:0 0 14px!important}
+/* Review score tiles: no coloured strip on the left */
+html body .rvt,html body .rvt.all{box-shadow:none!important;border-left-width:1px!important;border-left-color:rgba(255,255,255,.08)!important}
+html body .rvt::before,html body .rvt::after{display:none!important}

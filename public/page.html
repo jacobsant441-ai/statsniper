@@ -436,7 +436,7 @@ dash.draw('appbar', (box) => {
   const sp = el('div', null, 'sports');
   [['nba', '🏀'], ['fb', '⚽'], ['nfl', '🏈'], ['ufc', '🥊']].forEach(([k, ic]) => {
     const b = el('button', null, 'sp' + (k === sport ? ' on' : '')); b.type = 'button';
-    const c = el('span', null, 'c'); const ti = window.TAB_ICONS && window.TAB_ICONS[k]; if (ti) { const im = document.createElement('img'); im.src = ti; im.alt = SPN[k]; c.append(im); c.classList.add('ico'); } else c.textContent = ic; const n = gamesFor(k, selDay).length + histFor(k, selDay).length + schedFor(k, selDay).length; if (n) c.append(el('em', String(n)));
+    const c = el('span', null, 'c'); const ti = window.TAB_ICONS && window.TAB_ICONS[k]; if (ti) { const im = document.createElement('img'); im.src = ti; im.alt = SPN[k]; c.append(im); c.classList.add('ico'); } else c.textContent = ic; const n = new Set([...gamesFor(k, selDay), ...histFor(k, selDay), ...schedFor(k, selDay)].map((g) => g.id)).size; if (n) c.append(el('em', String(n))); // each game once (it can be in more than one list)
     b.append(c, el('span', SPN[k]));
     b.addEventListener('click', () => { sport = k; sec = 'home'; applyView(); }); sp.append(b);
   });
@@ -1109,6 +1109,7 @@ const gcardBase = (id, awayCode, awayName, awayRec, homeCode, homeName, homeRec,
   b.append(mu); return b;
 };
 const DRAW_fbgrid = (box) => {
+  { const n = gamesFor('fb', selDay).length, hh = document.querySelector('#fbpicks h2'); if (hh) hh.textContent = selDay + ' · ' + n + (n === 1 ? ' game' : ' games'); } // heading = the day, like NBA
   const f = rows('fixtures').filter((x) => fbDay(x) === selDay && (fbLg === 'all' || x.league === fbLg)); if (!rows('fixtures').length) return;
   if (!f.length && fbLg !== 'all') {
     const o = ssOff(selDay) || 0; let nx = null;
@@ -1383,6 +1384,7 @@ dash.draw('fbdetail', (box) => {
   nshow(FB_TAB[x.id] && panels[FB_TAB[x.id]] ? FB_TAB[x.id] : panels.pick ? 'pick' : Object.keys(panels)[0]);
 });
 const DRAW_nflgrid = (box) => {
+  { const n = gamesFor('nfl', selDay).length, hh = document.querySelector('#nflpicks h2'); if (hh) hh.textContent = selDay + ' · ' + n + (n === 1 ? ' game' : ' games'); } // heading = the day, like NBA
   const g = rows('nflgames').filter((x) => nflDay(x) === selDay); if (!rows('nflgames').length) return;
   if (!g.length) { box.replaceChildren(doneBox('nfl') || emptyBox('nfl')); return; }
   box.replaceChildren(...g.map((x) => {
@@ -1501,6 +1503,7 @@ function ufcHist(r) {
   return wrap;
 }
 // ---- UFC: each fighter's last 5 pro fights, from the fighter profiles (ufcp)
+const ufcRec = (nm) => { const fs = ufcLast(nm, 999); if (!fs) return null; let w = 0, l = 0, d = 0, nc = 0; fs.filter((f) => (Number(f.ufc) === 1 || f.ufc === true) && !/contender series/i.test(f.event || '')).forEach((f) => { if (f.res === 'W') w++; else if (f.res === 'L') l++; else if (/NC/.test(f.method || '')) nc++; else d++; }); return w + l + d + nc ? w + '-' + l + (d ? '-' + d : '') + (nc ? ' (' + nc + ' NC)' : '') : '0-0'; };
 const ufcLast = (name, n = 5) => { const id = ufcIdOf(name); const r = id && rows('ufcp').find((x) => String(x.id) === String(id)); return r ? ftFights(r).slice(0, n) : null; };
 const ufcFightTxt = (f) => (f.res === 'W' ? 'Won' : f.res === 'L' ? 'Lost' : f.res === 'D' ? 'Drew' : 'No contest') + ' vs ' + f.opp + ' · ' + (f.detail || f.method || '') + (f.round ? ' R' + f.round + ' ' + f.clock : '') + ' · ' + plDate(f.date);
 const ufcDots = (name) => {
@@ -1519,8 +1522,8 @@ function ufcLast5Box(r) {
   w.append(bar);
   names.forEach((nm, k) => {
     const c = el('div', null, 'l5col lvpane'); c.hidden = k !== pick;
-    const rec = k ? r.b_rec : r.a_rec;
-    c.append(el('b', nm.replace(/\s*\(c\)/, '') + (rec ? ' · ' + rec : '')));
+    const ov = (ufcProfile(ufcIdOf(nm)) || {}).rec || (k ? r.b_rec : r.a_rec), uf = ufcRec(nm);
+    c.append(el('b', nm.replace(/\s*\(c\)/, '') + (ov ? ' · ' + ov + ' overall' : '') + (uf ? ' · ' + uf + ' UFC' : '')));
     const fs = ufcLast(nm, 999);
     if (!fs) c.append(el('p', rows('ufcp').length ? 'No fight history on file.' : 'Loading fight history…', 'muted'));
     else fs.forEach((f) => { const row = el('div', null, 'l5r'); row.append(el('i', f.res === 'NC' ? '–' : f.res, f.res)); const t = el('div'); t.append(el('span', 'vs ' + f.opp), el('small', [(f.detail || f.method || ''), f.round ? 'R' + f.round + ' ' + f.clock : '', plDate(f.date), f.ufc ? 'UFC' : ''].filter(Boolean).join(' · '))); row.append(t); c.append(row); });
@@ -1535,7 +1538,8 @@ function ufcCard(r) {
   mid.append(el('span', r.date, 'dt'), el('strong', r.card || 'TBC'), el('span', [/\d/.test(r.kick || '') ? r.kick : '', r.weight, r.rounds ? r.rounds + ' rds' : ''].filter(Boolean).join(' · '), 'pre'));
   mid.append(el('span', ufcPrices(r), 'fsc'));
   mid.append(el('span', r.pick ? r.pick + ' · ' + r.pick_pct + '%' : 'no pick yet', 'pk'));
-  const mu = el('div', null, 'mu'); mu.append(side(r.a, r.a_rec, '#c8102e', r.pick === r.a), mid, side(r.b, r.b_rec, '#1d428a', r.pick === r.b));
+  const mu = el('div', null, 'mu'); const ovr = (nm, v) => ((ufcProfile(ufcIdOf(nm)) || {}).rec) || v; // overall pro record on the card
+  mu.append(side(r.a, ovr(r.a, r.a_rec), '#c8102e', r.pick === r.a), mid, side(r.b, ovr(r.b, r.b_rec), '#1d428a', r.pick === r.b));
   const ft = el('div', null, 'ft'); const chips = el('div', null, 'chips');
   chips.append(el('span', 'Confidence: ' + r.conf, 'chip ' + r.conf));
   const pc = el('span', 'Pick: ' + (r.pick || 'TBC'), 'chip'); if (r.status === 'Final' && r.result) pc.append(tick(r.result === r.pick ? 'hit' : 'miss', 'Winner: ' + r.result + (r.method ? ' by ' + r.method : '')));
@@ -1567,7 +1571,10 @@ function ufcTape(r) {
     t.append(w);
   };
   const recOf = (nm, v) => v || ((ufcProfile(ufcIdOf(nm)) || {}).rec) || null;
-  row('Record' + (r.rec_basis === 'ufc' ? ' (UFC)' : ''), recOf(r.a, r.a_rec), recOf(r.b, r.b_rec)); row('Age', r.a_age, r.b_age); row('Height', r.a_height, r.b_height); row('Reach (in)', r.a_reach, r.b_reach); row('Stance', r.a_stance, r.b_stance);
+  // UFC record counted from the fight history (UFC bouts only, not Dana White's Contender Series); overall = pro record in and outside the UFC
+  const proRec = (nm, v) => ((ufcProfile(ufcIdOf(nm)) || {}).rec) || (r.rec_basis === 'ufc' ? null : v) || null;
+  row('Record (UFC)', ufcRec(r.a) || (r.rec_basis === 'ufc' ? r.a_rec : null), ufcRec(r.b) || (r.rec_basis === 'ufc' ? r.b_rec : null));
+  row('Record (overall)', proRec(r.a, r.a_rec), proRec(r.b, r.b_rec)); row('Age', r.a_age, r.b_age); row('Height', r.a_height, r.b_height); row('Reach (in)', r.a_reach, r.b_reach); row('Stance', r.a_stance, r.b_stance);
   const pp = (v) => (v == null ? null : v + '%');
   row('Style', r.a_style, r.b_style); row('Fight-time lean', r.a_lean, r.b_lean); mk('fight');
   row('Strikes landed / min', r.a_slpm, r.b_slpm); row('Strikes absorbed / min', r.a_sapm, r.b_sapm);
