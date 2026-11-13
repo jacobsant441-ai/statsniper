@@ -179,6 +179,39 @@ const FORCE = process.argv.includes('--force');
       for (const side of ['Over', 'Under']) { const lp = linePrice(e, 'totals', (o) => o.name === side); if (lp && g.proj_total != null) { const ov = phi((Number(g.proj_total) - lp.point) / 13); out.push(row({ ...base, point: lp.point }, 'Total points', side + ' ' + lp.point, 100 * (side === 'Over' ? ov : 1 - ov), lp)); } }
     }
   }
+  // ---- UFC: fight winner and total rounds (Australian books; the Betfair exchange is left out because its prices are
+  // before commission). Method of victory (KO / submission / decision) isn't offered through The Odds API.
+  // Our chance for each fighter = 70% market (these live prices, margin removed) + 30% record model (ufcfights a_model);
+  // scripts/ufc-reprice.js then writes the same numbers back into the fight cards. Looks up to 7 days ahead
+  // (fight week), 2 credits a run, only when a card is coming up.
+  const ufc = read('ufcfights.json').filter((f) => f.status !== 'Final' && f.a && f.b);
+  if (ufc.length) {
+    const evl = await get(`${API}mma_mixed_martial_arts/events?apiKey=${KEY}&dateFormat=iso`);
+    const soon = (evl || []).filter((e) => { const t = new Date(e.commence_time).getTime(); return t > Date.now() - 2 * 3600000 && t < Date.now() + 7 * 86400000; });
+    if (!soon.length) console.log('mma: no fights in the next 7 days, skipped (0 credits)');
+    else {
+      const evs = (await odds('mma_mixed_martial_arts', 'h2h,totals')).map((e) => ({ ...e, bookmakers: (e.bookmakers || []).filter((b) => !/betfair_ex/.test(b.key)) }));
+      const cutN = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\(c\)/g, '').replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop();
+      for (const f of ufc) {
+        const e = evs.find((x) => [x.home_team, x.away_team].map(cutN).sort().join('|') === [f.a, f.b].map(cutN).sort().join('|')); if (!e) continue;
+        const isA = (o) => cutN(o.name) === cutN(f.a), isB = (o) => cutN(o.name) === cutN(f.b);
+        const pa = priceOf(e, 'h2h', isA), pb = priceOf(e, 'h2h', isB); if (!pa || !pb) continue;
+        let ma = 1 / pa.avg, mb = 1 / pb.avg; const sm = ma + mb; ma = (100 * ma) / sm; mb = 100 - ma;
+        const aOur = f.a_model != null ? 0.7 * ma + 0.3 * Number(f.a_model) : ma;
+        const base = { sp: 'ufc', league: 'UFC', game: f.id, match: String(f.a).replace(/\s*\(c\)/, '') + ' vs ' + String(f.b).replace(/\s*\(c\)/, ''), kick: e.commence_time, mkt_a: Math.round(ma * 10) / 10 };
+        out.push(row(base, 'Winner', String(f.a).replace(/\s*\(c\)/, '') + ' win', aOur, pa), row(base, 'Winner', String(f.b).replace(/\s*\(c\)/, '') + ' win', 100 - aOur, pb));
+        // total rounds: no model of our own yet, so "our" is the market's fair chance (margin removed)
+        const pts = [...new Set((e.bookmakers || []).flatMap((b) => (b.markets || []).filter((m) => m.key === 'totals').flatMap((m) => m.outcomes.map((o) => Number(o.point)))))];
+        for (const pt of pts) {
+          const ov = priceOf(e, 'totals', (o) => o.name === 'Over' && Number(o.point) === pt), un = priceOf(e, 'totals', (o) => o.name === 'Under' && Number(o.point) === pt);
+          if (!ov || !un) continue;
+          const fo = (100 / ov.avg) / (1 / ov.avg + 1 / un.avg);
+          out.push(row({ ...base, point: pt }, 'Total rounds', 'Over ' + pt + ' rounds', fo, ov), row({ ...base, point: pt }, 'Total rounds', 'Under ' + pt + ' rounds', 100 - fo, un));
+        }
+      }
+      console.log(`mma: ${ufc.length} fights on file, ${out.filter((r) => r && r.sp === 'ufc' && r.market === 'Winner').length / 2} priced`);
+    }
+  }
   const rows = out.filter(Boolean).map((r) => ({ ...r, fetched: FETCHED })).filter((r) => new Date(r.kick).getTime() > Date.now() - 2 * 3600000).sort((a, b) => b.edge - a.edge);
   fs.writeFileSync(path.join(DATA, 'odds.json'), JSON.stringify(rows));
   const val = rows.filter((r) => r.our >= 65 && r.edge >= 5).length;

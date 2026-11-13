@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One bookmaker-prices run (The Odds API, paid plan: about 15,000 of the 20,000 monthly credits).
-#   am (~8:15 am Sydney): game prices for every sport, NBA alternate lines and every NBA player market for
+#   am (~8:15 am Sydney): game prices for every sport (UFC: winner and total rounds in fight week, 2 credits), NBA alternate lines and every NBA player market for
 #      today's games, NFL player markets for today and tomorrow
 #   pm (~8:15 pm Sydney): game prices again, plus alternate lines and every player market for tomorrow's NBA games
 # Then rates every line with our own models (prop-finder.js, nfl-prop-finder.js) and snapshots them into the
@@ -15,7 +15,8 @@ KEEP=${KEEP:-300}
 MODE=${1:-am}
 if [ "$MODE" = pm ]; then NBA_DAY=$(day 1); else NBA_DAY=$(day 0); fi
 echo "odds run: $MODE, NBA slate $NBA_DAY"
-node scripts/fetch-odds.js --force | tail -1 || echo "::warning::game prices failed"
+node scripts/fetch-odds.js --force | tail -2 || echo "::warning::game prices failed"
+node scripts/ufc-reprice.js || echo "::warning::UFC reprice failed"   # live prices and picks into the fight cards (ufcfights.json, main)
 node scripts/fetch-alt-lines.js "$NBA_DAY" --keep=$KEEP | sed -n "1p;/altlines.json/p" || echo "::warning::alt lines failed"
 node scripts/fetch-props.js "$NBA_DAY" --all --keep=$KEEP || echo "::warning::NBA props failed"
 if [ "$MODE" = am ]; then

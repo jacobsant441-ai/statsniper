@@ -207,6 +207,15 @@ jobs:
           MODE: ${{ (github.event.schedule == '15 9 * * *' || github.event.inputs.job == 'odds-pm') && 'pm' || 'am' }}
         run: bash scripts/odds-run.sh "$MODE"
       - run: bash scripts/odds-branch.sh push
+      - name: Save the repriced UFC fight cards (main)
+        run: |
+          git config user.name "StatSniper data bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data/ufcfights.json
+          if git diff --cached --quiet; then echo "UFC cards unchanged"; else
+            git commit -m "UFC live prices $(date -u +%F\ %H:%M) UTC"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
+          fi
 
   deploy:
     needs: [refresh, results, picks, odds]

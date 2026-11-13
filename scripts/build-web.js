@@ -60,7 +60,7 @@ const logoFiles = fs.readdirSync(PUB).filter((f) => /^logos.*\.js$/.test(f));
 const logoV = Object.fromEntries(logoFiles.map((f) => [f, copy(f)]));
 fs.readdirSync(path.join(PUB, 'icons')).forEach((f) => copy(`icons/${f}`));
 // The page's own script files (loaded after the main page script, in this order).
-const PAGE_JS = ['player.js', 'games.js'];
+const PAGE_JS = ['player.js', 'games.js', 'standings.js'];
 // Each runs in its own scope (as in the local runtime), so their top-level names never clash with the page's.
 const wrapJs = (f) => { const dst = path.join(OUT, f); fs.writeFileSync(dst, '(function(){\n' + read(f) + '\n})();\n'); return hash(fs.readFileSync(dst)); };
 const pageJsV = Object.fromEntries(PAGE_JS.map((f) => [f, wrapJs(f)]));

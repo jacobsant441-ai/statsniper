@@ -1,7 +1,7 @@
 <meta name="dash-one-writer">
 <link rel="stylesheet" href="app.css">
 <div class="nt">
-<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>Home</button><button type="button" data-sec="home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>Games</button><button type="button" data-sec="bets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-4"/></svg>Bets</button><button type="button" data-sec="review"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/></svg>Review</button></nav>
+<nav class="bnav" id="bnav" aria-label="Sections"><button type="button" data-sec="start" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>Home</button><button type="button" data-sec="home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>Games</button><button type="button" data-sec="stand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Standings</button><button type="button" data-sec="bets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-4"/></svg>Bets</button><button type="button" data-sec="review"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/></svg>Review</button></nav>
 <span class="livetick" data-draw="livetick" data-source="livegames" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></span>
 <div class="appbar" id="appbar" data-draw="appbar" data-source="games fixtures nflgames history schedule ufcfights bets pubbets"></div>
 <div class="ssearch" role="search"><label class="ssbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ssq" type="search" placeholder="Search teams, players, fighters" aria-label="Search teams, players and fighters" autocomplete="off" spellcheck="false"></label><div class="ssres" id="ssres" role="listbox" aria-label="Search results" data-draw="ssearch" data-source="pidx nfltable table"></div></div>
@@ -53,16 +53,7 @@
 <div class="stats" id="fbstats" data-draw="fbstats" data-source="fixtures"></div>
 </header>
 <div class="lgbar" id="fblg" role="group" aria-label="League"><button type="button" data-lg="all" class="on" aria-pressed="true">All leagues</button><button type="button" data-lg="Premier League" style="--lg:#8b3fd9" aria-pressed="false"><i></i>Premier League</button><button type="button" data-lg="La Liga" style="--lg:#ee8707" aria-pressed="false"><i></i>La Liga</button><button type="button" data-lg="Champions League" style="--lg:#2b6cff" aria-pressed="false"><i></i>Champions League</button></div>
-<nav class="nav" id="fbnav"><a data-go="fbpicks">Picks</a><a data-go="fbtable">Tables</a><a data-go="fbres">Last round</a><a data-go="fbmethod">Method</a></nav>
 <section class="sec" id="fbpicks"><h2>Picks at a glance</h2><p class="muted">Most likely result for each fixture. The bar and circle colour show confidence: green high, yellow medium, red low.</p><div id="fbgrid" data-draw="fbgrid" data-source="fixtures table history livegames"></div></section>
-<section class="card sec" id="fbtable"><h2>League tables</h2><div class="grid" id="fbtab" data-draw="fbtab" data-source="table"></div></section>
-<section class="card sec" id="fbres"><h2>Last round's results</h2><div id="fbresg" data-draw="fbresg" data-source="results"></div></section>
-<section class="card sec" id="fbmethod" style="background:var(--blue);color:#fff;border-color:var(--blue)"><h2 style="color:#fff">Method</h2>
-<p>Provider chance: the win, draw and loss probabilities published for each fixture.</p>
-<p>My form rating: points per game for each side from the table, a home edge, and a flat 26% draw share, turned into a three-way chance.</p>
-<p>Champions League: the provider chance is DraftKings' moneyline for each fixture with the bookmaker margin removed, and my form rating is a goals model built from each club's games this season in all competitions, with a home edge.</p>
-<p>Final chance: 50% provider plus 50% my form rating. The pick is the most likely of home, draw or away. High is 60% or more, Medium is 48% or more, otherwise Low (close to a coin toss).</p>
-<p>Limits: no goals data yet, so there are no over/under goals, both-teams-to-score, lineups, injuries or player props for football. Form ratings use only this season's points per game, and the sample is under ten games per team. This is not betting advice.</p></section>
 </div>
 <div class="view" id="fbgame" hidden>
 <section class="card sec">
@@ -122,7 +113,7 @@
 <div class="topbar"><button type="button" class="backbtn" id="fgback">‹ Back</button></div>
 <div class="rvres" data-draw="rvres" data-source="history archive"></div>
 <header class="fghero" id="fghero" data-draw="fghero" data-source="ufcfights ufcp pidx hs_ufc hs_ufc_hd"></header>
-<section class="card sec"><h2>Tale of the tape</h2><p class="muted">Side by side: the stronger number in each row is highlighted.</p><div data-draw="fgtape" data-source="ufcfights ufcp pidx"></div></section>
+<section class="card sec fgsec"><div data-draw="fgtape" data-source="ufcfights ufcp pidx"></div></section>
 </div>
 <div class="view" id="view-ufc" hidden>
 <header class="hero ufchero">
@@ -141,15 +132,7 @@
 <p class="muted">Win chance, spread and total for every game. Each blends the bookmaker lines with a scoring model from this season's results. More stats will be added here as we go.</p>
 <div class="stats" id="nflstats" data-draw="nflstats" data-source="nflgames nflinfo"></div>
 </header>
-<nav class="nav" id="nflnav"><a data-go="nflpicks">Picks</a><a data-go="nfltab">Teams</a><a data-go="nflres">Last week</a><a data-go="nflmethod">Method</a></nav>
 <section class="sec" id="nflpicks"><h2>Picks at a glance</h2><p class="muted">Tap "Stats and breakdown" on any game for records, scoring and form. Colour shows confidence.</p><div class="pgrid" id="nflgrid" data-draw="nflgrid" data-source="nflgames nfltable history nflinfo livegames"></div></section>
-<section class="card sec" id="nfltab"><h2>All 32 teams</h2><p class="muted">Tap a heading to sort. Points are per game this season.</p><div class="scroll" id="nfltabbox" data-draw="nfltabbox" data-source="nfltable"></div></section>
-<section class="card sec" id="nflres"><h2>Last week's results</h2><div class="res" id="nflresg" data-draw="nflresg" data-source="nflresults"></div></section>
-<section class="card sec" id="nflmethod" style="background:var(--blue);color:#fff;border-color:var(--blue)"><h2 style="color:#fff">Method</h2>
-<p>Model score: each side's points per game blended with what the other side allows (home and away splits included), plus a small home edge.</p>
-<p>Final spread and total: 35% model, 65% bookmaker line. Win chance: 40% model, 60% moneyline price with the bookmaker margin removed.</p>
-<p>Confidence: High needs about 68% or more with the model and market agreeing on the winner. Medium needs 58% or more. A total lean needs the model to be 3 or more points off the posted total.</p>
-<p>Limits: seven weeks of games, injuries and lineups are in each game's breakdown but are not yet worked into the model score, and weather is not in, and the lines are the best prices across several books so numbers can differ slightly by book. This is not betting advice.</p></section>
 </div>
 <div class="view" id="nflgame" hidden>
 <section class="card sec">
@@ -160,6 +143,7 @@
 </section>
 </div>
 </div>
+<div class="view" id="view-stand" hidden><section class="card sec"><h2>Standings</h2><div data-draw="standings" data-source="tprof table nfltable ufcp ufcfights"></div></section></div>
 <div class="view" id="view-rv" hidden>
 <div class="topbar rvtop"><button type="button" class="backbtn" id="rvhome">‹ Back to home</button></div>
 <header class="hero">
@@ -409,7 +393,7 @@ function redrawAll() { ['bestall', 'hslive', 'hpod', 'hgotn', 'hinj', 'hnews', '
 function syncChrome() {
   const ab = document.getElementById('appbar'); if (!ab) return;
   const sh = (id) => { const e = document.getElementById(id); return e && !e.hidden; };
-  ab.classList.toggle('onstart', sec === 'start');
+  ab.classList.toggle('onstart', sec === 'start'); document.documentElement.classList.toggle('st-on', sec === 'stand');
   ab.classList.toggle('nocal', !(sec === 'home' || sec === 'review'));
   ab.classList.toggle('compact', !!(sh('gamepage') || sh('fbgame') || sh('nflgame')));
   ab.classList.toggle('onreview', sec === 'review');
@@ -429,6 +413,7 @@ function applyView() {
   document.querySelectorAll('#view-team').forEach((v) => { v.hidden = sec !== 'team'; });
   document.querySelectorAll('#view-fight').forEach((v) => { v.hidden = sec !== 'fight'; });
   document.querySelectorAll('#view-rvgame').forEach((v) => { v.hidden = sec !== 'rvgame'; });
+  document.querySelectorAll('#view-stand').forEach((v) => { v.hidden = sec !== 'stand'; });
   [['mainpage', 'gamepage'], ['fbmain', 'fbgame'], ['nflmain', 'nflgame']].forEach(([m, g]) => { document.getElementById(m).hidden = false; document.getElementById(g).hidden = true; });
   document.querySelectorAll('#bnav button').forEach((b) => b.classList.toggle('on', b.dataset.sec === sec));
   syncChrome(); redrawAll(); goTop();
@@ -1484,6 +1469,10 @@ dash.draw('rvall', (box) => { try {
 // ---- UFC
 const ufcDash = (v) => (v == null || v === '' ? '–' : String(v));
 const ufcOdds = (o) => (o == null || o === '' ? '–' : (o > 0 ? '+' + o : String(o)));
+// Live Australian prices (fetch-odds.js + ufc-reprice.js): best decimal price and book per fighter, and total rounds.
+const ufcPx = (p, bk) => (p ? '$' + Number(p).toFixed(2) + (bk ? ' ' + String(bk).replace(' (AU)', '') : '') : '–');
+const ufcPrices = (r) => (r.a_price ? ufcPx(r.a_price) + ' / ' + ufcPx(r.b_price) : r.a_odds != null ? ufcOdds(r.a_odds) + ' / ' + ufcOdds(r.b_odds) : 'odds not posted');
+const ufcRounds = (r) => (r.rounds_lines || []).map((x) => 'Rounds O/U ' + x.pt + ': Over ' + ufcPx(x.over, x.over_book) + ' · Under ' + ufcPx(x.under, x.under_book)).join(' · ');
 const ufcInit = (n) => String(n).replace(/\s*\(c\)/, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 const ufcGrp = (s) => { s = String(s || ''); if (/^Striker/.test(s)) return 'S'; if (/^(Wrestler|Grappler)/.test(s)) return 'G'; if (/^Balanced/.test(s)) return 'B'; return 'U'; };
 const ufcKind = (m) => (m === 'KO/TKO' ? 'S' : m === 'SUB' ? 'G' : 'M');
@@ -1544,7 +1533,7 @@ function ufcCard(r) {
   const side = (nm, rec, col, win) => { const d = el('div', null, 'tm' + (win ? ' win' : '')); const fid = ufcIdOf(nm), src = photo('ufc', fid); let bd; if (src) { bd = el('span', null, 'bd photo'); bd.style.borderColor = col; const im = document.createElement('img'); im.src = src; im.alt = ''; bd.append(im); } else { bd = el('span', ufcInit(nm), 'bd'); bd.style.background = col; } d.append(bd, el('b', nm), el('span', rec || 'record n/a', 'rec'), ufcDots(nm)); if (fid) { d.classList.add('go'); d.title = 'Open ' + nm + "'s profile"; d.addEventListener('click', (e) => { e.stopPropagation(); openFighter(fid); }); } return d; };
   const mid = el('div', null, 'mid');
   mid.append(el('span', r.date, 'dt'), el('strong', r.card || 'TBC'), el('span', [/\d/.test(r.kick || '') ? r.kick : '', r.weight, r.rounds ? r.rounds + ' rds' : ''].filter(Boolean).join(' · '), 'pre'));
-  mid.append(el('span', r.a_odds != null ? ufcOdds(r.a_odds) + ' / ' + ufcOdds(r.b_odds) : 'odds not posted', 'fsc'));
+  mid.append(el('span', ufcPrices(r), 'fsc'));
   mid.append(el('span', r.pick ? r.pick + ' · ' + r.pick_pct + '%' : 'no pick yet', 'pk'));
   const mu = el('div', null, 'mu'); mu.append(side(r.a, r.a_rec, '#c8102e', r.pick === r.a), mid, side(r.b, r.b_rec, '#1d428a', r.pick === r.b));
   const ft = el('div', null, 'ft'); const chips = el('div', null, 'chips');
@@ -1560,8 +1549,9 @@ function ufcCard(r) {
 function ufcTape(r) {
   const d = el('div', null, 'fgtape');
 
-  const t = el('div', null, 'vs'); const vh = el('div', null, 'vsh'); const lastN = (n) => n.replace(/\s*\(c\)/, '').split(' ').slice(-1)[0];
-  const ha = el('b', lastN(r.a)), hb = el('b', lastN(r.b)); vh.append(ha, el('span', 'VS'), hb); t.append(vh);
+  const lastN = (n) => n.replace(/\s*\(c\)/, '').split(' ').slice(-1)[0], G = {}; let t;
+  const mk = (k) => { t = el('div', null, 'vs'); const vh = el('div', null, 'vsh'); vh.append(el('b', lastN(r.a)), el('span', 'VS'), el('b', lastN(r.b))); t.append(vh); G[k] = t; }; // one table per tab
+  mk('tape');
   const LOW = /absorbed/i, BAR = /reach|landed|absorbed|accuracy|defence|takedowns|submission|market|model/i;
   const row = (lab, x, y) => {
     const w = el('div', null, 'vsr'); const na = parseFloat(x), nb = parseFloat(y); const bars = BAR.test(lab) && isFinite(na) && isFinite(nb) && (na > 0 || nb > 0);
@@ -1579,16 +1569,17 @@ function ufcTape(r) {
   const recOf = (nm, v) => v || ((ufcProfile(ufcIdOf(nm)) || {}).rec) || null;
   row('Record' + (r.rec_basis === 'ufc' ? ' (UFC)' : ''), recOf(r.a, r.a_rec), recOf(r.b, r.b_rec)); row('Age', r.a_age, r.b_age); row('Height', r.a_height, r.b_height); row('Reach (in)', r.a_reach, r.b_reach); row('Stance', r.a_stance, r.b_stance);
   const pp = (v) => (v == null ? null : v + '%');
-  row('Style', r.a_style, r.b_style); row('Fight-time lean', r.a_lean, r.b_lean);
+  row('Style', r.a_style, r.b_style); row('Fight-time lean', r.a_lean, r.b_lean); mk('fight');
   row('Strikes landed / min', r.a_slpm, r.b_slpm); row('Strikes absorbed / min', r.a_sapm, r.b_sapm);
   row('Strike accuracy', pp(r.a_stracc), pp(r.b_stracc)); row('Strike defence', pp(r.a_strdef), pp(r.b_strdef));
   row('Takedowns / 15 min', r.a_tdavg, r.b_tdavg); row('Takedown accuracy', pp(r.a_tdacc), pp(r.b_tdacc));
   row('Takedown defence', pp(r.a_tddef), pp(r.b_tddef)); row('Submission tries / 15 min', r.a_subavg, r.b_subavg);
-  row('Moneyline', r.a_odds != null ? ufcOdds(r.a_odds) : null, r.b_odds != null ? ufcOdds(r.b_odds) : null);
+  mk('odds'); row('Best price', r.a_price ? ufcPx(r.a_price, r.a_book) : r.a_odds != null ? ufcOdds(r.a_odds) : null, r.b_price ? ufcPx(r.b_price, r.b_book) : r.b_odds != null ? ufcOdds(r.b_odds) : null);
+  (r.rounds_lines || []).forEach((x) => row('Rounds O/U ' + x.pt, 'Over ' + ufcPx(x.over, x.over_book), 'Under ' + ufcPx(x.under, x.under_book)));
   row('Market win % (vig removed)', r.a_mkt != null ? r.a_mkt + '%' : null, r.b_mkt != null ? r.b_mkt + '%' : null);
   row('Record model %', r.a_model != null ? r.a_model + '%' : null, r.a_model != null ? Math.round((100 - r.a_model) * 10) / 10 + '%' : null);
-  const tw = el('div', null, 'scr'); tw.style.overflowX = 'auto'; tw.append(t);
-  d.append(tw, ufcLast5Box(r));
+  if (window.SSG && SSG.ufcTabs) { d.append(SSG.ufcTabs(r, G, ufcLast5Box(r))); return d; }
+  Object.values(G).forEach((x) => { const tw = el('div', null, 'scr'); tw.style.overflowX = 'auto'; tw.append(x); d.append(tw); }); d.append(ufcLast5Box(r));
   return d;
 }
 const DRAW_ufcgrid = (box) => {
@@ -2702,13 +2693,13 @@ dash.draw('fghero', (box) => {
     const bar = el('div', null, 'fgbar'), ia = el('i', null, 'a'), ib = el('i', null, 'b'); ia.style.width = pa + '%'; ib.style.width = (100 - pa) + '%'; bar.append(ia, ib);
     const pc = el('div', null, 'fgpct'); pc.append(el('span', r.a.split(' ').slice(-1)[0] + ' ' + Math.round(pa) + '%'), el('span', Math.round(100 - pa) + '% ' + r.b.split(' ').slice(-1)[0])); pk.append(bar, pc);
   }
-  const odds = r.a_odds != null ? 'Odds ' + ufcOdds(r.a_odds) + ' / ' + ufcOdds(r.b_odds) : 'Odds not posted yet';
+  const odds = r.a_price ? 'Best price ' + ufcPx(r.a_price, r.a_book) + ' / ' + ufcPx(r.b_price, r.b_book) + (ufcRounds(r) ? ' · ' + ufcRounds(r) : '') : r.a_odds != null ? 'Odds ' + ufcOdds(r.a_odds) + ' / ' + ufcOdds(r.b_odds) : 'Odds not posted yet';
   pk.append(el('div', odds, 'muted'));
   if (fin) { const hit = r.pick ? r.result === r.pick : null; pk.append(el('div', (hit === true ? '✓ ' : hit === false ? '✗ ' : '') + 'Result: ' + r.result + (r.method ? ' by ' + r.method : ''), 'fgres ' + (hit === true ? 'hit' : hit === false ? 'miss' : ''))); }
   box.replaceChildren(top, pk);
 });
 dash.draw('fgtape', (box) => { const r = fgRow(); if (!r) { box.replaceChildren(); return; } box.replaceChildren(ufcTape(r)); });
-const openFight = (id) => { if (sec !== 'fight') FG.prev = snapView(); FG.id = id; sec = 'fight'; applyView(); ['fghero', 'fgtape'].forEach((n) => dash.draw(n)); toView('view-fight'); };
+const openFight = (id) => { if (window.UFT) delete UFT[id]; if (sec !== 'fight') FG.prev = snapView(); FG.id = id; sec = 'fight'; applyView(); ['fghero', 'fgtape'].forEach((n) => dash.draw(n)); toView('view-fight'); };
 document.querySelectorAll('#fgback').forEach((b) => b.addEventListener('click', () => restoreView(FG.prev, { sec: 'home', sport: 'ufc' })));
 // Shared with player.js: in the live dashboard every script file runs in its own scope.
 // ---- Page history: every tap that changes page remembers the page you were on, so a swipe back returns there.
@@ -2731,7 +2722,7 @@ const navTo = (p) => {
   setTimeout(() => window.scrollTo(0, p.y || 0), 80);
 };
 const openBetResults = () => { sec = 'review'; applyView(); setTimeout(() => { const c = document.getElementById('mybetsrv'); if (c) { c.classList.add('open'); const hb = c.querySelector('.mbhead'); if (hb) hb.setAttribute('aria-expanded', 'true'); const d = c.querySelector('details'); if (d) d.open = true; c.scrollIntoView({ block: 'start' }); window.scrollBy(0, -120); } }, 60); };
-window.SSX = { navBack, navDepth: () => NAV.length, navList: () => NAV.map(pageKey), openBetResults, openBets, openGame: (sp, id, day) => { ssOpenDay(sp, day); if (sp === 'nba') goDetail(id); else if (sp === 'fb') fbNav.go(id); else nflNav.go(id); }, get current() { return current; }, el, rows, plCur, plNeed, atNeed, plTeamNames, plRow, plGames, h2hGames, plUpcoming, plDate, plDraw, atLabel, atKeys, atGames, atRow, badge, bdX, norm, f1, avatar, openTeam, openPlayer, openAthlete, toView, MON, PL, AT, AT_DS, AT_HS, AT_CUR, get sec() { return sec; }, get selDay() { return selDay; }, get dataGen() { return dataGen; } };
+window.SSX = { navBack, navDepth: () => NAV.length, navList: () => NAV.map(pageKey), openBetResults, openBets, openGame: (sp, id, day) => { ssOpenDay(sp, day); if (sp === 'nba') goDetail(id); else if (sp === 'fb') fbNav.go(id); else nflNav.go(id); }, get current() { return current; }, el, rows, plCur, plNeed, atNeed, plTeamNames, plRow, plGames, h2hGames, plUpcoming, plDate, plDraw, atLabel, atKeys, atGames, atRow, badge, bdX, norm, f1, avatar, openTeam, openFighter, openPlayer, openAthlete, toView, MON, PL, AT, AT_DS, AT_HS, AT_CUR, get sec() { return sec; }, get selDay() { return selDay; }, get dataGen() { return dataGen; } };
 </script>
 <script src="player.js"></script>
-<script src="games.js"></script>
+<script src="games.js"></script><script src="standings.js"></script>

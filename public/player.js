@@ -476,7 +476,7 @@ const VB = { sp: 'all', all: false };
 dash.draw('valboard', (box) => {
   const g = dash.data('odds');
   if (g.status !== 'ok' || !g.data.length) { box.replaceChildren(el('p', g.status === 'loading' ? 'Loading odds…' : 'No bookmaker odds loaded yet. They load in the daily run once the odds service is connected.', 'vbnone')); return; }
-  const rowsAll = g.data.filter((r) => new Date(r.kick).getTime() > Date.now() - 2 * 3600000);
+  const rowsAll = g.data.filter((r) => r.sp !== 'ufc' && new Date(r.kick).getTime() > Date.now() - 2 * 3600000); // UFC prices show on the fight cards only
   const pass = (r) => (VB.all ? r.our >= 55 && r.edge >= 2 : r.our >= 65 && r.edge >= 5);
   const list = rowsAll.filter((r) => (VB.sp === 'all' || r.sp === VB.sp) && pass(r)).sort((a, b) => b.edge - a.edge).slice(0, 30);
   const bar = el('div', null, 'vbbar');

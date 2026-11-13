@@ -1920,3 +1920,85 @@ html body .topbar{top:max(8px,env(safe-area-inset-top,0px))!important}
 html body #nflgame .backbtn,html body #fbgame .backbtn{top:max(8px,env(safe-area-inset-top,0px))!important}
 html body .bbpage .bbday,html body .bbpage .bbdrop>summary{top:max(6px,env(safe-area-inset-top,0px))!important}
 .gbclosed{margin:4px 0 8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);color:#c9ccd2;font-size:.82rem}
+.ufcm{margin:0 0 14px}
+.ufcmt tr.side-a td:first-child{box-shadow:inset 3px 0 0 #e03a4e;padding-left:9px}
+.ufcmt tr.side-b td:first-child{box-shadow:inset 3px 0 0 #3b7ddd;padding-left:9px}
+.uftabbar{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.uftabbar button{flex:none}
+.ufpane > .muted{margin:0 0 10px}
+html body .uftabbar button{font:inherit;font-size:.88rem;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:#1d2026;color:#fff;cursor:pointer;line-height:1.2;white-space:nowrap}
+html body .uftabbar button.on{background:#fff;color:#000;border-color:#fff}
+html body .bnav{grid-template-columns:repeat(5,1fr)!important;width:min(600px,calc(100% - 20px))}
+html body .bnav button{font-size:.66rem!important}
+.stctl{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+.stsel{display:grid;gap:4px;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#8f949d}
+.stsel select{font:inherit;font-size:.95rem;text-transform:none;letter-spacing:0;color:#fff;background:#1d2026;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 30px 8px 12px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c9ccd2 50%),linear-gradient(135deg,#c9ccd2 50%,transparent 50%);background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px;background-repeat:no-repeat;min-width:150px}
+.sth{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-size:1.15rem;margin:16px 0 6px}
+.sttbl{width:100%;border-collapse:collapse;font-size:.86rem;font-variant-numeric:tabular-nums}
+.sttbl th{color:#8f949d;font-weight:600;font-size:.72rem;text-align:left;padding:6px}
+.sttbl th.n,.sttbl td.n{text-align:right}
+.sttbl td{padding:7px 6px;border-top:1px solid rgba(255,255,255,.07);white-space:nowrap}
+.sttbl td.rk{color:#8f949d;width:1.6em}
+.sttbl tr.go{cursor:pointer}
+.sttbl tr.go:hover td{background:rgba(255,255,255,.04)}
+.sttbl tr.cut td{border-bottom:1px solid rgba(255,255,255,.35)}
+.sttbl tr.cut2 td{border-bottom:1px dashed rgba(255,255,255,.25)}
+.stnm{display:inline-flex;align-items:center;gap:8px}
+.stnm .bd{width:24px!important;height:24px!important;min-width:24px;font-size:.55rem}
+.stnm .bd img{width:100%;height:100%;object-fit:contain}
+.stnm .stav,.stnm .av{width:28px!important;height:28px!important;border-radius:50%;overflow:hidden;flex:none}
+.sttx{display:grid;line-height:1.2}
+.sttx small{color:#8f949d;font-size:.72rem;font-weight:500}
+.sttbl tr.champ td{background:rgba(245,192,74,.08)}
+.sttbl tr.champ td.rk{color:#f5c04a;font-weight:800}
+.sttbl tr.champ td:first-child{box-shadow:inset 3px 0 0 #f5c04a}
+/* Standings: no search bar or sport circles; the table moves up */
+html.st-on .ssearch,html.st-on #appbar .sports{display:none!important}
+/* One "selected" look for every sport filter (Review bar incl. All sports, and the Games sport bar):
+   a soft white fill with a white outline, text stays readable. */
+html body .lgbar button.on,html body .lgbar button[data-lg="all"].on,html body .lgbar button[data-rs="all"].on{background:rgba(255,255,255,.12)!important;color:#fff!important;border-color:rgba(255,255,255,.55)!important}
+html body .lgbar button.on i{background:var(--lg,#fff)!important}
+/* Games: the sport circles become a bar like Review's (small logo + name, game count as a small badge) */
+html body .appbar .sports{display:flex;gap:6px;justify-content:space-between;overflow-x:auto;scrollbar-width:none;padding:6px;margin:4px 0 2px;border-radius:999px;background:rgba(18,23,32,.96);border:1px solid rgba(255,255,255,.08)}
+html body .appbar .sports::-webkit-scrollbar{display:none}
+html body .appbar .sports button.sp{flex:1 0 auto;display:inline-flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:7px;padding:7px 12px!important;border-radius:999px;border:1px solid transparent;background:transparent!important;color:#8f949d;font:inherit;font-size:.86rem;font-weight:700;min-width:0;width:auto!important;height:auto!important;cursor:pointer}
+html body .appbar .sports button.sp .c{position:relative;width:22px!important;height:22px!important;min-width:22px;border-radius:50%;border:0!important;box-shadow:none!important;outline:0!important;background:none!important;display:grid;place-items:center;font-size:.9rem;padding:0!important;margin:0!important}
+html body .appbar .sports button.sp .c img{width:22px!important;height:22px!important;object-fit:contain;border-radius:50%}
+html body .appbar .sports button.sp .c em{position:absolute;top:-7px;right:-9px;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:#e5484d;color:#fff;font-size:.58rem;font-style:normal;font-weight:800;display:grid;place-items:center;line-height:1}
+html body .appbar .sports button.sp > span:last-child{font-size:.86rem!important;color:inherit!important;margin:0!important}
+html body .appbar .sports button.sp.on{background:rgba(255,255,255,.12)!important;color:#fff;border-color:rgba(255,255,255,.55)}
+html body .appbar .sports button.sp:hover{color:#fff}
+html body .appbar .sports button.sp .c em{top:50%!important;right:auto!important;left:-23px!important;transform:translateY(-50%)}
+html body .appbar .sports button.sp .c:has(em){margin-left:21px!important}
+html body .appbar .sports{gap:2px!important;padding:5px!important}
+html body .appbar .sports button.sp{flex:0 1 auto!important;padding:7px 9px!important;gap:6px!important;font-size:.82rem!important}
+html body .appbar .sports button.sp > span:last-child{font-size:.82rem!important}
+html body .appbar .sports button.sp .c em{left:-21px!important}
+html body .appbar .sports button.sp .c:has(em){margin-left:19px!important}
+/* game count on the right of the sport name */
+html body .appbar .sports button.sp{position:relative}
+html body .appbar .sports button.sp .c{position:static!important}
+html body .appbar .sports button.sp .c:has(em){margin-left:0!important}
+html body .appbar .sports button.sp:has(em){padding-right:30px!important}
+html body .appbar .sports button.sp .c em{left:auto!important;right:7px!important;top:50%!important;transform:translateY(-50%)}
+/* even spacing: four equal slots, each centred (logo, name, then the game count) */
+html body .appbar .sports{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px!important}
+html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 4px!important;justify-content:center;gap:5px!important;min-width:0}
+html body .appbar .sports button.sp .c{display:contents!important}
+html body .appbar .sports button.sp .c img{order:0;flex:none}
+html body .appbar .sports button.sp > span:last-child{order:1;overflow:hidden;text-overflow:ellipsis}
+html body .appbar .sports button.sp .c em{position:static!important;order:2;transform:none!important;flex:none}
+/* even gaps between the four sports (each as wide as it needs) */
+html body .appbar .sports{display:flex!important;justify-content:space-evenly!important;gap:0!important}
+html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){flex:0 0 auto!important;padding:7px 9px!important;gap:5px!important}
+html body .appbar .sports button.sp > span:last-child{overflow:visible;text-overflow:clip}
+html body .appbar .sports button.sp .c em{min-width:16px;height:16px;font-size:.6rem}
+/* the sport bar only on the Games tab (not Home, Review, Standings or open game pages) */
+html body .appbar.onstart .sports,html body .appbar.onreview .sports,html body .appbar.compact .sports,html.st-on body .appbar .sports{display:none!important}
+/* less room at the two ends: the four sports spread edge to edge */
+html body .appbar .sports{justify-content:space-between!important;padding:4px!important}
+html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 8px!important}
+/* sport bar hugs its four sports (centred), same small gap between each */
+html body .appbar .sports{width:fit-content!important;max-width:100%;margin:4px auto 2px!important;justify-content:center!important;gap:4px!important;padding:4px!important}
+html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 12px!important}
+html body .appbar .sports button.sp,html body .appbar .sports button.sp:has(em){padding:7px 9px!important}

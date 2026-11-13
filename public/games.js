@@ -273,6 +273,57 @@
     return card;
   }
 
+  // ---- UFC: how the fight ends. Our own chance of each fighter winning by KO/TKO, submission or decision, with a
+  // fair price (100 / chance) to compare against the bookies (method markets aren't in The Odds API).
+  //   chance(A by method) = chance A wins (our pick %) x share of A's wins by that method, where the share blends
+  //   A's own wins, B's losses (how B tends to lose) and the UFC base rates for the division (men / women).
+  const UFC_BASE = { men: { ko: 0.33, sub: 0.19, dec: 0.48 }, women: { ko: 0.18, sub: 0.20, dec: 0.62 } };
+  const UFC_PRIOR = 4; // base-rate weight, in fights: keeps short records sensible
+  const ufcName = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\(c\)/g, '').replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const ufcFightsOf = (name) => { const n = ufcName(name), r = rows('ufcp').find((x) => ufcName(x.name) === n); if (!r) return null; let f = r.f; if (typeof f === 'string') { try { f = JSON.parse(f); } catch (e) { f = []; } } return Array.isArray(f) ? f : []; };
+  const mKey = (m) => (/KO|TKO/.test(m) ? 'ko' : /SUB|SUMISSION/.test(m) ? 'sub' : /DEC/.test(m) ? 'dec' : null);
+  function ufcMethods(r) {
+    if (!r || !r.a || !r.b || !r.pick_pct) return null;
+    const fa = ufcFightsOf(r.a), fb = ufcFightsOf(r.b); if (!fa || !fb) return null;
+    const base = UFC_BASE[/women/i.test(r.weight || '') ? 'women' : 'men'];
+    const count = (fs, res) => { const c = { ko: 0, sub: 0, dec: 0 }; fs.forEach((x) => { const k = x[5] === res && mKey(String(x[6] || '')); if (k) c[k]++; }); return c; };
+    const share = (wins, losses) => { const t = {}; let s = 0; ['ko', 'sub', 'dec'].forEach((k) => { t[k] = wins[k] + losses[k] + UFC_PRIOR * base[k]; s += t[k]; }); ['ko', 'sub', 'dec'].forEach((k) => { t[k] /= s; }); return t; };
+    const pA = (r.pick === r.a ? r.pick_pct : 100 - r.pick_pct) / 100;
+    const sA = share(count(fa, 'W'), count(fb, 'L')), sB = share(count(fb, 'W'), count(fa, 'L'));
+    const nm = (x) => String(x).replace(/\s*\(c\)/, '').split(' ').slice(-1)[0];
+    const LAB = { ko: 'KO/TKO', sub: 'Submission', dec: 'Decision' };
+    const list = [];
+    ['ko', 'sub', 'dec'].forEach((k) => { list.push({ who: nm(r.a), side: 'a', k, p: pA * sA[k] }); list.push({ who: nm(r.b), side: 'b', k, p: (1 - pA) * sB[k] }); });
+    const card = el('div', null, 'card ufcm'); card.append(el('h2', 'How it ends'));
+    card.append(el('p', 'Our chance of each result, from both fighters\' records (how each wins, how the other loses) and our pick. The fair price is what the bet is worth to us: if your bookie pays more, it\'s value.', 'muted'));
+    const t = el('table', null, 'dtbl ufcmt'); const hr = el('tr'); ['Result', 'Our chance', 'Fair price'].forEach((h, j) => hr.append(el('th', h, j ? 'n' : ''))); t.append(hr);
+    list.sort((x, y) => y.p - x.p).forEach((x) => { const tr = el('tr', null, 'side-' + x.side); tr.append(el('td', x.who + ' by ' + LAB[x.k]), el('td', Math.round(x.p * 100) + '%', 'n'), el('td', x.p > 0.005 ? '$' + (1 / x.p).toFixed(2) : '–', 'n')); t.append(tr); });
+    const w = el('div', null, 'scroll'); w.append(t); card.append(w);
+    const fin = list.filter((x) => x.k !== 'dec').reduce((s2, x) => s2 + x.p, 0);
+    card.append(el('p', 'Goes the distance (any decision): ' + Math.round((1 - fin) * 100) + '% · fair $' + (1 / Math.max(0.01, 1 - fin)).toFixed(2) + '. Ends inside the distance: ' + Math.round(fin * 100) + '% · fair $' + (1 / Math.max(0.01, fin)).toFixed(2) + '.', 'muted'));
+    return card;
+  }
+
+  // UFC fight page: the breakdown split into tabs (Tape / Striking & grappling / Odds / Fight record); the tab picked is
+  // kept per fight while the page redraws, and a fight opened fresh starts on Tape.
+  const UFT = window.UFT = {};
+  function ufcTabs(r, G, recBox) {
+    const T = [['tape', 'Tape', 'Side by side: the stronger number in each row is highlighted.'], ['fight', 'Stats', 'Career UFC rates. The stronger number in each row is highlighted.'], ['odds', 'Odds', ''], ['rec', 'Record', '']];
+    const panes = {}, wrap = el('div', null, 'uftabs');
+    T.forEach(([k, , note]) => {
+      const p = el('div', null, 'ufpane'); if (note) p.append(el('p', note, 'muted'));
+      if (k === 'odds') { const hm = ufcMethods(r); if (hm) p.append(hm); }
+      if (G[k]) { const w = el('div', null, 'scr'); w.style.overflowX = 'auto'; w.append(G[k]); p.append(w); }
+      if (k === 'rec' && recBox) p.append(recBox);
+      if (p.childNodes.length) panes[k] = p;
+    });
+    const bar = el('div', null, 'nfltabs uftabbar');
+    const show = (k) => { UFT[r.id] = k; Object.entries(panes).forEach(([q, p]) => { p.hidden = q !== k; }); bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
+    T.forEach(([k, l]) => { if (!panes[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); const top = wrap.getBoundingClientRect().top + scrollY - 70; if (scrollY > top) window.scrollTo(0, top); }); bar.append(b); });
+    wrap.append(bar, ...Object.values(panes)); show(UFT[r.id] && panes[UFT[r.id]] ? UFT[r.id] : 'tape');
+    return wrap;
+  }
+
   // Grey placeholder rows while data loads (instead of "Loading…").
   const skel = (n = 4) => { const w = el('div', null, 'skel'); w.setAttribute('aria-label', 'Loading'); for (let k = 0; k < n; k++) w.append(el('i')); return w; };
   const bbReady = () => ['games', 'pred', 'fixtures', 'odds', 'propfind', 'propbook', 'altlines'].every((d) => dash.data(d).status !== 'loading');
@@ -968,5 +1019,5 @@
     p.dataset.ct = '1'; const card = p.closest('.hg, .gcard'); if (card && /\b(won|lost|rgres|lvdone)\b/.test(card.className)) return;
     const m = p.textContent.match(/(\d+(?:\.\d+)?)%/); if (!m) return; const v = +m[1]; p.classList.add(v >= 70 ? 'cHi' : v >= 60 ? 'cMd' : 'cLo'); });
   new MutationObserver(() => { clearTimeout(tintAll.t); tintAll.t = setTimeout(tintAll, 60); }).observe(document.body, { childList: true, subtree: true });
-  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, gameBets, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
+  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, gameBets, ufcMethods, ufcTabs, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();

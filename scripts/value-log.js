@@ -28,7 +28,7 @@ function snap() {
     if (old) { Object.assign(old, { our: row.our, price: row.price, book: row.book, implied: r1(100 / row.price), edge: r1(row.our - 100 / row.price), last: at }); updated++; }
     else { const x = { key, ...row, implied: r1(100 / row.price), edge: r1(row.our - 100 / row.price), our0: row.our, price0: row.price, first: at, last: at, status: 'open' }; by.set(key, x); log.push(x); added++; }
   };
-  for (const o of read('odds.json')) put({ src: 'game', sp: o.sp, game: o.game, day: sydDay(o.kick), kick: o.kick, match: o.match, market: o.market, pick: o.pick, point: o.point, our: Number(o.our), price: Number(o.price), book: o.book });
+  for (const o of read('odds.json').filter((x) => x.sp !== 'ufc')) put({ src: 'game', sp: o.sp, game: o.game, day: sydDay(o.kick), kick: o.kick, match: o.match, market: o.market, pick: o.pick, point: o.point, our: Number(o.our), price: Number(o.price), book: o.book });
   for (const a of read('altlines.json')) if (a.our >= 50 && a.price >= 1.2) put({ src: 'alt', sp: a.sp, game: a.game, day: a.day, kick: a.kick, match: a.match, market: a.market, pick: a.pick, point: a.point, our: a.our, price: a.price, book: a.book });
   for (const p of read('propbook.json')) if (p.chance >= 50 && p.price >= 1.2 && p.kick) put({ src: 'prop', sp: p.sp || 'nba', game: p.game, day: p.day, kick: p.kick, market: p.stat, pick: p.pick, stat: p.stat, line: p.line, side: p.side, pid: p.pid, player: p.player, team: p.team, our: p.chance, price: p.price, book: p.book });
   fs.writeFileSync(FILE, JSON.stringify(log));
