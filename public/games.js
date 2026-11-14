@@ -649,6 +649,7 @@
     const r = liveOf(sp, ref); if (!r || r.state === 'pre') return;
     const st = b.querySelector('.mid strong'), pre = b.querySelector('.mid .pre');
     if (st) st.textContent = sc(r.away_score) + ' – ' + sc(r.home_score);
+    const dup = b.querySelector('.mid .fsc'); if (dup) dup.remove(); // one score only: the live one (the saved result line can lag behind it)
     if (pre) { pre.textContent = stateTxt(r); pre.classList.add(r.state === 'in' ? 'lvon' : 'lvdone'); }
   }
 
@@ -722,20 +723,12 @@
         if (!pl.length) return;
         const pane = el('div', null, 'lvpane'); pane.hidden = team !== pick; panes[team] = pane; card.append(pane);
         if (sides.length < 2) pane.append(el('h3', team, 'lvteam'));
-        const t = el('table', null, 'lvbox');
+        let t = el('table', null, 'lvbox');
         if (sp === 'nba') {
-          const hr = el('tr'); ['Player', 'MIN', 'PTS', 'REB', 'AST', '3PM'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
           // starting five first, then the bench, each in ESPN's order (not sorted by points)
           const isSt = (p) => String(p.starter) === 'true';
           const ordered = pl.filter((p) => !p.s.dnp).map((p, i) => [p, i]).sort((a, b) => (isSt(b[0]) ? 1 : 0) - (isSt(a[0]) ? 1 : 0) || a[1] - b[1]).map((x) => x[0]);
-          let lastSt = null;
-          ordered.forEach((p) => {
-            if (isSt(p) !== lastSt) { lastSt = isSt(p); const sr = el('tr', null, 'lvgrp'); const td = el('td', lastSt ? 'Starters' : 'Bench'); td.colSpan = 6; sr.append(td); t.append(sr); }
-            const tr = el('tr'); const nm = el('td'); nm.append(el('b', p.player));
-            const pts = Number(p.s.points || 0);
-            tr.append(nm, el('td', String(p.s.minutes ?? '–'), 'n'), el('td', String(pts), 'n'), el('td', String(p.s.rebounds ?? '–'), 'n'), el('td', String(p.s.assists ?? '–'), 'n'), el('td', String(String(p.s['threePointFieldGoalsMade-threePointFieldGoalsAttempted'] || '0-0').split('-')[0]), 'n'));
-            t.append(tr);
-          });
+          t = boxTable(ordered.map(bxLive));
         } else { // NFL: the leading passer, rushers and receivers
           const lead = (k, n) => pl.filter((p) => p.s[k] != null).sort((a, b) => Number(b.s[k]) - Number(a.s[k])).slice(0, n);
           const hr = el('tr'); ['Player', 'Line'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
@@ -792,12 +785,12 @@
   };
   const tier = (r, n) => (r <= Math.round(n / 3) ? 'g' : r > Math.round((2 * n) / 3) ? 'r' : 'a');
   const COL = { g: '#1f9d55', a: '#c9971a', r: '#d64545' };
-  function courtSvg(team, Z) {
+  function courtSvg(team, Z, label) {
     const t = Z.T.find((x) => x.team === team); if (!t) return null;
     const c = (k) => COL[tier(Z.rk[k][team] || Z.n, Z.n)];
     const lab = (k, x, y, size) => { const r = Z.rk[k][team], p = Z.pct(t.z[k]); return '<text x="' + x + '" y="' + y + '" font-size="' + (size || 22) + '" text-anchor="middle" fill="#fff" font-weight="700">' + (p == null ? '–' : Math.round(p * 100) + '%') + '</text><text x="' + x + '" y="' + (y + (size || 22) * 0.95) + '" font-size="' + Math.round((size || 22) * 0.7) + '" text-anchor="middle" fill="#fff" opacity=".9">#' + r + '</text>'; };
     // half court, baseline at the top: 500 x 470 = 50 x 47 ft; basket 5.25 ft out; 3pt arc 23.75 ft; corners 22 ft, 14 ft deep
-    return '<svg viewBox="0 0 500 470" class="dcourt" role="img" aria-label="Opponent shooting by zone">' +
+    return '<svg viewBox="0 0 500 470" class="dcourt" role="img" aria-label="' + (label || 'Opponent shooting by zone') + '">' +
       '<rect x="0" y="0" width="500" height="470" fill="' + c('atb') + '"/>' +
       '<rect x="0" y="0" width="30" height="142" fill="' + c('lc') + '"/><rect x="470" y="0" width="30" height="142" fill="' + c('rc') + '"/>' +
       '<path d="M30 0 V142 A237.5 237.5 0 0 0 470 142 V0 Z" fill="' + c('mid') + '"/>' +
@@ -832,31 +825,128 @@
     box.append(el('p', 'Diff is percentage points of field goal % allowed: green means they held this opponent below their usual, red means they allowed more. Averages come from every other game they have played this season.', 'muted'));
     return box;
   }
-  function defCourt(id, day) {
-    const Z = zoneTable(); if (!Z) return null;
-    const teams = String(id).split('-').filter((c) => Z.T.some((t) => t.team === c)); if (!teams.length) return null;
-    const card = el('div', null, 'card dcard'); card.append(el('h2', 'Defence by court zone'));
-    card.append(el('p', 'What each defence allows from every part of the court this season: opponents\' field goal % (rank of 30, #1 = toughest). Green is a strength, red is where they are weakest.', 'muted'));
-    const tog = el('div', null, 'nblut'), panes = [];
-    const show = (i) => { panes.forEach((p, j) => { p.hidden = j !== i; }); tog.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j === i)); };
-    teams.forEach((team, i) => {
-      const t = Z.T.find((x) => x.team === team), pane = el('div', null, 'dpane');
-      const order = ZONES.map(([k, l]) => ({ k, l, r: Z.rk[k][team], p: Z.pct(t.z[k]), a: t.z[k] ? t.z[k][0] : 0 })).filter((z) => z.p != null);
-      const weak = order.filter((z) => z.r > Z.n / 2).sort((x, y) => y.r - x.r).slice(0, 2), strong = order.slice().sort((x, y) => x.r - y.r)[0];
-      pane.append(el('p', (weak.length ? 'Weakest: ' : 'No weak spot (every zone in the top half)') + weak.map((z) => z.l.replace(/ \(.*\)/, '').toLowerCase() + ' (' + Math.round(z.p * 100) + '% allowed, #' + z.r + ')').join(' and ') + '. Toughest: ' + strong.l.replace(/ \(.*\)/, '').toLowerCase() + ' (' + Math.round(strong.p * 100) + '%, #' + strong.r + ').', 'dsum'));
-      const svg = el('div', null, 'dsvg'); svg.innerHTML = courtSvg(team, Z); pane.append(svg);
-      const tb = el('table', null, 'dtbl'); const hr = el('tr'); ['Zone', 'Allowed', 'League', 'Shots', 'Rank'].forEach((h, j) => hr.append(el('th', h, j ? 'n' : ''))); tb.append(hr);
-      order.forEach((z) => { const tr = el('tr'); const rkc = el('td', null, 'n'); rkc.append(el('span', '#' + z.r, 'drk ' + tier(z.r, Z.n))); tr.append(el('td', z.l), el('td', Math.round(z.p * 100) + '%', 'n'), el('td', Z.lg[z.k] != null ? Math.round(Z.lg[z.k] * 100) + '%' : '–', 'n'), el('td', (z.a / (t.n || 1)).toFixed(1), 'n'), rkc); tb.append(tr); });
-      const w = el('div', null, 'scroll'); w.append(tb); pane.append(w);
-      pane.append(el('p', 'From every shot in ESPN play-by-play this season (' + t.n + ' games). Small samples early in the season.', 'muted'));
-      { const zg = zoneGame(team, id, day); if (zg) pane.append(zg); }
-      const b = el('button', null); b.type = 'button'; b.append(X.badge(team), document.createTextNode(team)); b.addEventListener('click', (e) => { e.stopPropagation(); show(i); }); tog.append(b);
-      panes.push(pane); card.append(pane);
+  // Offence by court zone: every player's shots this season (pbp player rows) added up per team, ranked best (highest FG%) first.
+  // Shots are counted for the club a player is on now, so a recent trade adds a little noise early in the season.
+  const zoneTableOff = () => {
+    const P = rows('pbp'), Td = P.filter((r) => r.k === 't'); if (!Td.length) return null;
+    const by = {};
+    P.filter((r) => r.k === 'p' && r.team && r.z).forEach((p) => {
+      const o = by[p.team] || (by[p.team] = { team: p.team, n: (Td.find((t) => t.team === p.team) || {}).n || 0, z: {} });
+      ZONES.forEach(([k]) => { const a = p.z[k]; if (!a) return; const q = o.z[k] || (o.z[k] = [0, 0]); q[0] += a[0]; q[1] += a[1]; });
     });
-    card.append(tog); show(0);
+    const T = Object.values(by); if (T.length < 2) return null;
+    const pct = (z) => (z && z[0] ? z[1] / z[0] : null), lg = {}, rk = {};
+    ZONES.forEach(([k]) => {
+      const a = T.reduce((t, x) => t + ((x.z[k] && x.z[k][0]) || 0), 0), m = T.reduce((t, x) => t + ((x.z[k] && x.z[k][1]) || 0), 0);
+      lg[k] = a ? m / a : null;
+      const order = T.filter((t) => pct(t.z[k]) != null).sort((x, y) => pct(y.z[k]) - pct(x.z[k])); // 1 = highest FG% (best offence)
+      rk[k] = Object.fromEntries(order.map((t, i) => [t.team, i + 1]));
+    });
+    return { T, lg, rk, n: T.length, pct };
+  };
+  // One team's court for one mode: map, summary line and zone table.
+  function zonePane(mode, Z, team, id, day) {
+    const t = Z.T.find((x) => x.team === team); if (!t) return null;
+    const off = mode === 'off', pane = el('div', null, 'dpane');
+    const order = ZONES.map(([k, l]) => ({ k, l, r: Z.rk[k][team], p: Z.pct(t.z[k]), a: t.z[k] ? t.z[k][0] : 0 })).filter((z) => z.p != null && z.r);
+    const nm = (z) => z.l.replace(/ \(.*\)/, '').toLowerCase(), pc = (z) => Math.round(z.p * 100) + '% ' + (off ? 'scored' : 'allowed') + ', #' + z.r;
+    const weak = order.filter((z) => z.r > Z.n / 2).sort((x, y) => y.r - x.r).slice(0, 2), strong = order.slice().sort((x, y) => x.r - y.r)[0];
+    pane.append(el('p', (weak.length ? 'Weakest: ' : 'No weak spot (every zone in the top half)') + weak.map((z) => nm(z) + ' (' + pc(z) + ')').join(' and ') + (strong ? '. ' + (off ? 'Best: ' : 'Toughest: ') + nm(strong) + ' (' + pc(strong) + ')' : '') + '.', 'dsum'));
+    const svg = el('div', null, 'dsvg'); svg.innerHTML = courtSvg(team, Z, off ? 'Team shooting by zone' : 'Opponent shooting by zone'); pane.append(svg);
+    const tb = el('table', null, 'dtbl'); const hr = el('tr'); ['Zone', off ? 'Scored' : 'Allowed', 'League', 'Shots', 'Rank'].forEach((h, j) => hr.append(el('th', h, j ? 'n' : ''))); tb.append(hr);
+    order.forEach((z) => { const tr = el('tr'); const rkc = el('td', null, 'n'); rkc.append(el('span', '#' + z.r, 'drk ' + tier(z.r, Z.n))); tr.append(el('td', z.l), el('td', Math.round(z.p * 100) + '%', 'n'), el('td', Z.lg[z.k] != null ? Math.round(Z.lg[z.k] * 100) + '%' : '–', 'n'), el('td', (z.a / (t.n || 1)).toFixed(1), 'n'), rkc); tb.append(tr); });
+    const w = el('div', null, 'scroll'); w.append(tb); pane.append(w);
+    pane.append(el('p', 'From every shot in ESPN play-by-play this season (' + t.n + ' games' + (off ? ', counted for the players now on the team' : '') + '). Small samples early in the season.', 'muted'));
+    if (!off) { const zg = zoneGame(team, id, day); if (zg) pane.append(zg); }
+    return pane;
+  }
+  // The Teams-tab court card: a Defence / Offence switch on top, and the team buttons underneath (both kept per game).
+  const DCSEL = {};
+  function defCourt(id, day) {
+    const ZD = zoneTable(); if (!ZD) return null;
+    const ZO = zoneTableOff();
+    const teams = String(id).split('-').filter((c) => ZD.T.some((t) => t.team === c)); if (!teams.length) return null;
+    const sel = DCSEL[id] || (DCSEL[id] = { mode: 'def', cur: 0 });
+    const INTRO = { def: 'What each defence allows from every part of the court this season: opponents\' field goal % (rank of 30, #1 = toughest). Green is a strength, red is where they are weakest.', off: 'What each offence scores from every part of the court this season: the team\'s own field goal % (rank of 30, #1 = best). Green is a strength, red is where they struggle.' };
+    const card = el('div', null, 'card dcard'), h2 = el('h2', ''), intro = el('p', '', 'muted'), mt = el('div', null, 'nblut dmode'), tog = el('div', null, 'nblut'), panes = [];
+    const show = () => {
+      panes.forEach((p) => { p.el.hidden = !(p.mode === sel.mode && p.i === sel.cur); });
+      tog.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j === sel.cur));
+      mt.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.m === sel.mode));
+      h2.textContent = sel.mode === 'off' ? 'Offence by court zone' : 'Defence by court zone'; intro.textContent = INTRO[sel.mode];
+    };
+    if (!ZO) sel.mode = 'def';
+    card.append(h2, intro);
+    if (ZO) { [['def', 'Defence'], ['off', 'Offence']].forEach(([m, l]) => { const b = el('button', l); b.type = 'button'; b.dataset.m = m; b.addEventListener('click', (e) => { e.stopPropagation(); sel.mode = m; show(); }); mt.append(b); }); card.append(mt); }
+    teams.forEach((team, i) => {
+      [['def', ZD], ['off', ZO]].forEach(([m, Z]) => { if (!Z) return; const pn = zonePane(m, Z, team, id, day); if (pn) { panes.push({ el: pn, mode: m, i }); card.append(pn); } });
+      const b = el('button', null); b.type = 'button'; b.append(X.badge(team), document.createTextNode(team)); b.addEventListener('click', (e) => { e.stopPropagation(); sel.cur = i; show(); }); tog.append(b);
+    });
+    if (sel.cur >= teams.length) sel.cur = 0;
+    card.append(tog); show();
     return card;
   }
 
+  // ---- Teams tab: one tab per team (instead of both teams' stats stacked), remembered per game.
+  const TMSEL = {};
+  function teamTabs(grid, teams) {
+    const cards = [...grid.children].filter((c) => c.classList.contains('card')); if (cards.length < 2 || !teams || teams.length < 2) return;
+    const key = teams[0].game || teams.map((t) => t.team).join('-');
+    const tog = el('div', null, 'nblut tmtog');
+    const show = (i) => { TMSEL[key] = i; cards.forEach((c, j) => { c.hidden = j !== i; }); tog.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j === i)); };
+    teams.forEach((t, i) => { const b = el('button'); b.type = 'button'; b.append(X.badge(t.team), document.createTextNode(t.team + ' (' + String(t.role).toLowerCase() + ')')); b.addEventListener('click', (e) => { e.stopPropagation(); show(i); }); tog.append(b); });
+    grid.classList.add('tmtab'); grid.prepend(tog); show(TMSEL[key] < cards.length ? TMSEL[key] || 0 : 0);
+  }
+
+  // ---- Review: "Our track record" is a dropdown (closed by default); its heading line shows the one-line summary.
+  dash.draw('trackrecsum', (box) => {
+    const g = dash.data('valuelog'), all = g.status === 'ok' && Array.isArray(g.data) ? g.data : [], done = all.filter((x) => x.status === 'won' || x.status === 'lost');
+    box.textContent = done.length ? done.length + ' bets · won ' + Math.round((100 * done.filter((x) => x.status === 'won').length) / done.length) + '%' : 'Nothing settled yet';
+  });
+
+  // ---- Review title ticker: "What we got right and wrong" slides off the left edge and comes back in from the right, non-stop
+  // (two copies of the text and a -50% slide make a seamless loop; it stands still for "reduce motion").
+  (() => {
+    const h = document.querySelector('#view-rv .hero h1'); if (!h || h.dataset.mq) return;
+    const t = h.textContent.trim(); h.dataset.mq = '1'; h.setAttribute('aria-label', t); h.classList.add('mqh');
+    const tr = el('span', null, 'mqtrack'); tr.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 2; i++) tr.append(el('span', t, 'mqi'));
+    h.replaceChildren(tr);
+  })();
+
+  // ---- Full box score: every usual stat for one team. The player column stays put and the rest swipes sideways.
+  // Rows come from the live feed (bxLive) or from the saved finished-game box (already plain numbers); extra columns
+  // (offensive / defensive rebounds, plus-minus) only show when the data has them.
+  const bxN = (v) => { const n = Number(v); return v != null && v !== '' && Number.isFinite(n) ? n : null; };
+  const bxPair = (t) => { const m = String(t || '').match(/^(\d+)-(\d+)$/); return m ? [Number(m[1]), Number(m[2])] : [null, null]; };
+  const bxLive = (p) => {
+    const s = p.s || {}, [fgm, fga] = bxPair(s['fieldGoalsMade-fieldGoalsAttempted']), [tpm, tpa] = bxPair(s['threePointFieldGoalsMade-threePointFieldGoalsAttempted']), [ftm, fta] = bxPair(s['freeThrowsMade-freeThrowsAttempted']);
+    return { name: p.player, starter: String(p.starter) === 'true', min: bxN(s.minutes), pts: bxN(s.points), reb: bxN(s.rebounds), ast: bxN(s.assists), stl: bxN(s.steals), blk: bxN(s.blocks), tov: bxN(s.turnovers), pf: bxN(s.fouls), fgm, fga, tpm, tpa, ftm, fta, orb: bxN(s.offensiveRebounds), drb: bxN(s.defensiveRebounds), pm: bxN(s.plusMinus) };
+  };
+  function boxTable(list) {
+    const has = (k) => list.some((p) => p[k] != null);
+    const sum = (k) => list.reduce((t, p) => t + (Number(p[k]) || 0), 0);
+    const v = (n) => (n == null ? '–' : String(n)), pr = (m, a) => (m == null || !a ? '–' : (Math.round((m / a) * 1000) / 10).toFixed(1)), pm = (n) => (n == null ? '–' : (n > 0 ? '+' : '') + n);
+    const COLS = [
+      ['MIN', (p) => v(p.min), (L) => sum('min')], ['PTS', (p) => v(p.pts), () => sum('pts')], ['REB', (p) => v(p.reb), () => sum('reb')], ['AST', (p) => v(p.ast), () => sum('ast')],
+      ['STL', (p) => v(p.stl), () => sum('stl')], ['BLK', (p) => v(p.blk), () => sum('blk')], ['TO', (p) => v(p.tov), () => sum('tov')], ['PF', (p) => v(p.pf), () => sum('pf')],
+      ['FG', (p) => (p.fga == null ? '–' : p.fgm + '-' + p.fga), () => sum('fgm') + '-' + sum('fga')], ['FG%', (p) => pr(p.fgm, p.fga), () => pr(sum('fgm'), sum('fga'))],
+      ['3PT', (p) => (p.tpa == null ? '–' : p.tpm + '-' + p.tpa), () => sum('tpm') + '-' + sum('tpa')], ['3P%', (p) => pr(p.tpm, p.tpa), () => pr(sum('tpm'), sum('tpa'))],
+      ['FT', (p) => (p.fta == null ? '–' : p.ftm + '-' + p.fta), () => sum('ftm') + '-' + sum('fta')], ['FT%', (p) => pr(p.ftm, p.fta), () => pr(sum('ftm'), sum('fta'))],
+    ];
+    if (has('orb')) COLS.push(['OREB', (p) => v(p.orb), () => sum('orb')]);
+    if (has('drb')) COLS.push(['DREB', (p) => v(p.drb), () => sum('drb')]);
+    if (has('pm')) COLS.push(['+/-', (p) => pm(p.pm), () => '']);
+    const t = el('table', null, 'lvbox fullbox'), hr = el('tr'); hr.append(el('th', 'Player')); COLS.forEach(([h]) => hr.append(el('th', h, 'n'))); t.append(hr);
+    const grouped = list.some((p) => p.starter != null); let last = null;
+    list.forEach((p) => {
+      if (grouped && !!p.starter !== last) { last = !!p.starter; const sr = el('tr', null, 'lvgrp'), td = el('td'); td.colSpan = COLS.length + 1; td.append(el('span', last ? 'Starters' : 'Bench', 'lvgl')); sr.append(td); t.append(sr); }
+      const tr = el('tr'), nm = el('td'), nb = el('b', String(p.name || '').replace(/^(\S)\S*\s+(?=\S)/, '$1. ')); nb.title = p.name || ''; nm.append(nb); tr.append(nm);
+      COLS.forEach(([, f]) => tr.append(el('td', f(p), 'n'))); t.append(tr);
+    });
+    const tt = el('tr', null, 'lvtot'); tt.append(el('td', 'Team')); COLS.forEach(([, , f]) => tt.append(el('td', String(f()), 'n'))); t.append(tt);
+    return t;
+  }
 
   // ---- Instant results: a game that is full time in the live feed is graded right away in the browser, with the
   // same rules as scripts/grade.js. The cloud grades it officially a few minutes later and its row replaces ours.
@@ -1064,5 +1154,5 @@
     p.dataset.ct = '1'; const card = p.closest('.hg, .gcard'); if (card && /\b(won|lost|rgres|lvdone)\b/.test(card.className)) return;
     const m = p.textContent.match(/(\d+(?:\.\d+)?)%/); if (!m) return; const v = +m[1]; p.classList.add(v >= 70 ? 'cHi' : v >= 60 ? 'cMd' : 'cLo'); });
   new MutationObserver(() => { clearTimeout(tintAll.t); tintAll.t = setTimeout(tintAll, 60); }).observe(document.body, { childList: true, subtree: true });
-  window.SSG = { newsOf, newsItem, defCourt, b2bCard, b2bInfo, gameBets, ufcMethods, ufcTabs, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
+  window.SSG = { boxTable, newsOf, newsItem, teamTabs, defCourt, b2bCard, b2bInfo, gameBets, ufcMethods, ufcTabs, liveHome, betPill, candidates, mainCard, pickMain, liveCard, liveDecor, merge, slipChips, provisional };
 })();

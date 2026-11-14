@@ -2043,3 +2043,43 @@ html,body{overscroll-behavior-y:none}
 #ssptr.ready small{color:#fff}
 #ssptr.spin .ptrlogo{animation:ssSpin .8s linear infinite}
 @keyframes ssSpin{to{transform:rotate(360deg)}}
+
+/* ---- Teams tab: one tab per team; court card Defence / Offence switch ---- */
+.tmtab{display:flex!important;flex-direction:column;gap:12px}
+.tmtog{margin:0 auto!important;width:100%;max-width:none!important}
+.dmode{margin:6px auto 12px!important;max-width:20rem!important}
+/* ---- Review title ticker: slides off the left edge and back in from the right, non-stop ---- */
+.mqh{overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}
+.mqtrack{display:inline-flex;animation:mqslide 16s linear infinite;will-change:transform}
+.mqi{flex:none;padding-right:2.6rem}
+@keyframes mqslide{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.mqtrack{animation:none}.mqi+.mqi{display:none}.mqh{white-space:normal;-webkit-mask-image:none;mask-image:none}}
+
+/* ---- Review game page, Result tab: the header and the result cards fill the width; cards sit two side by side ---- */
+.rvres .rvrh{flex-wrap:nowrap;gap:10px}
+.rvres .rvrs{flex:1 1 0;min-width:0}
+.rvres .rvrs strong{font-size:clamp(1rem,4.4vw,1.3rem)}
+.rvres .rvrbig{flex:none;max-width:44%;text-align:left;line-height:1.15;padding:8px 12px}
+.rvres .rvrrows{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rvres .rvrrow{text-align:left;align-items:flex-start;padding:12px}
+.rvres .rvrrow>div{flex:1 1 auto;min-width:0}
+.rvres .rvrrow b{overflow-wrap:anywhere}
+.rvres .rvrrow .mk{flex:none}
+.rvres .rvrrow:last-child:nth-child(odd){grid-column:1/-1}
+/* ---- Box scores: every usual stat; swipe sideways, the player column stays in place ---- */
+.scroll:has(> .fullbox){overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.scroll:has(> .fullbox)::before{content:"Swipe sideways for all stats \203A";display:block;position:sticky;left:0;width:max-content;font-size:.74rem;color:var(--sb-muted);margin:0 0 6px}
+.fullbox{border-collapse:separate!important;border-spacing:0;width:max-content!important;min-width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+.fullbox th,.fullbox td{padding:8px 10px!important;white-space:nowrap;text-align:right!important;border-top:1px solid var(--sb-line)}
+.fullbox th{border-top:0;color:var(--sb-muted);font-weight:700}
+.fullbox th:first-child,.fullbox td:first-child{position:sticky;left:0;z-index:2;text-align:left!important;white-space:normal;width:6.6rem;min-width:6.6rem;max-width:6.6rem;background:var(--color-panel,#111317);box-shadow:1px 0 0 var(--sb-line)}
+.fullbox tr.lvgrp td:first-child{position:static;width:auto;min-width:0;max-width:none;box-shadow:none;background:none;color:var(--sb-muted);font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.fullbox .lvgl{position:sticky;left:10px;display:inline-block}
+.fullbox tr.lvtot td{font-weight:800;border-top:2px solid var(--sb-line2)}
+/* Result tab: the verdict is plain coloured text with a plain tick / cross, no bubble */
+.rvres .rvrbig{background:none!important;border-radius:0;padding:0;gap:6px;font-size:1rem;align-items:flex-start}
+.rvres .rvrbig .mk{background:none!important;width:auto;height:auto;border-radius:0;font-size:1.15rem;line-height:1.1;color:inherit}
+.rvres .rvrrow .mk{background:none!important;width:auto;height:auto;border-radius:0;font-size:1.25rem;line-height:1}
+.rvres .rvrrow .mk.hit{color:#4be38c!important}.rvres .rvrrow .mk.miss{color:#ff7d81!important}.rvres .rvrrow .mk.na{color:var(--sb-muted)!important}
+/* Result banner label: same grey as the other small labels */
+.rvres .rvrs .pre{color:var(--sb-muted)}

@@ -10,8 +10,7 @@
 <div class="hsnone-all" id="hsempty" hidden><b>No games today.</b><span>Picks has the next games for every sport.</span><button type="button" class="hsgo2" id="hsemptygo">Go to Picks ›</button></div>
 <div class="hhero">
 <div class="hslive" data-draw="hslive" data-source="livegames schedule"></div>
-<section class="card hcard" id="hgotn"><h2>Game of the night</h2><div data-draw="hgotn" data-source="games pred teams fixtures nflgames odds propbook altlines history"></div></section>
-<section class="card hcard" id="hnews"><h2>Latest news</h2><div data-draw="hnews" data-source="news"></div></section>
+<section class="card hcard" id="hgotn"><h2>Game of the day</h2><div data-draw="hgotn" data-source="games pred teams fixtures nflgames odds propbook altlines history"></div></section>
 </div>
 <div class="hsgrid">
 <section class="hs" data-sp="nba"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="nba"></span><div class="hst"><h2>NBA</h2><span class="hsc" data-draw="hscount" data-sp="nba" data-source="games schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="nba" aria-label="Open NBA">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="nba" data-source="games schedule pred history final livegames"></div></section>
@@ -19,6 +18,7 @@
 <section class="hs" data-sp="nfl"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="nfl"></span><div class="hst"><h2>NFL</h2><span class="hsc" data-draw="hscount" data-sp="nfl" data-source="nflgames schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="nfl" aria-label="Open NFL">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="nfl" data-source="nflgames schedule history livegames"></div></section>
 <section class="hs" data-sp="ufc"><header class="hsh"><span class="hsi" data-draw="hsicon" data-sp="ufc"></span><div class="hst"><h2>UFC</h2><span class="hsc" data-draw="hscount" data-sp="ufc" data-source="ufcfights schedule history">—</span></div><button type="button" class="hsgo" data-go-sp="ufc" aria-label="Open UFC">Open <span aria-hidden="true">›</span></button></header><div class="hstrip" data-draw="hstrip" data-sp="ufc" data-source="ufcfights ufcevents schedule history"></div></section>
 </div>
+<section class="card hcard" id="hnews"><h2>Latest news</h2><div data-draw="hnews" data-source="news"></div></section>
 <section class="card hcard" id="hinj"><h2>New injuries · last 2 days</h2><div data-draw="hinj" data-source="troster pgl games pred fixtures nflgames odds propbook altlines history hs_nba"></div></section>
 </div>
 <div class="view" id="view-nba" hidden>
@@ -67,7 +67,7 @@
 </div>
 <div class="view" id="view-bets" hidden>
 <section class="card hcard" id="hpod"><h2>Pick of the day</h2><div data-draw="hpod" data-source="games pred fixtures nflgames odds props propfind propbook altlines troster history hs_nba hs_nfl hs_nfl2 pubprops pubalts"></div></section>
-<section class="card sec mbwrap open" id="mybets"><button type="button" class="mbhead" aria-expanded="true"><h2>Jacob's picks</h2><span class="mbsum" data-draw="mybetsum" data-source="bets pubbets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybets" data-source="bets pubbets"></div></div></section>
+<section class="card sec mbwrap" id="mybets"><button type="button" class="mbhead" aria-expanded="false"><h2>Jacob's picks</h2><span class="mbsum" data-draw="mybetsum" data-source="bets pubbets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybets" data-source="bets pubbets"></div></div></section>
 <section class="card bb bbpage"><h2>Best bets</h2><div data-draw="bestall" data-source="games pred fixtures nflgames odds history props propfind propbook altlines valuelog troster hs_nba hs_nfl hs_nfl2 news pubprops pubalts"></div></section>
 </div>
 <div class="view" id="view-player" hidden>
@@ -155,7 +155,7 @@
 </header>
 <div class="lgbar" id="rvsp" role="group" aria-label="Sport"><button type="button" data-rs="all" class="on" aria-pressed="true">All sports</button><button type="button" data-rs="nba" style="--lg:#1d6fe0" aria-pressed="false"><i></i>NBA</button><button type="button" data-rs="fb" style="--lg:#8b3fd9" aria-pressed="false"><i></i>Football</button><button type="button" data-rs="nfl" style="--lg:#2c7be5" aria-pressed="false"><i></i>NFL</button><button type="button" data-rs="ufc" style="--lg:#d20a0a" aria-pressed="false"><i></i>UFC</button></div>
 <section class="card sec mbwrap" id="mybetsrv"><button type="button" class="mbhead" aria-expanded="false"><h2>My bet results</h2><span class="mbsum" data-draw="mybetsrvsum" data-source="bets"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="mybetsrv" data-source="bets"></div></div></section>
-<section class="card sec" id="trackrec"><h2>Our track record</h2><div data-draw="trackrec" data-source="valuelog"></div></section>
+<section class="card sec mbwrap" id="trackrec"><button type="button" class="mbhead" aria-expanded="false"><h2>Our track record</h2><span class="mbsum" data-draw="trackrecsum" data-source="valuelog"></span><i class="mbchev" aria-hidden="true"></i></button><div class="mbbody"><div data-draw="trackrec" data-source="valuelog"></div></div></section>
 <section class="sec" id="rvlist"><h2>Every pick, graded</h2><p class="muted">✓ right, ✗ wrong. Tap a pick for the full game.</p><div data-draw="rvlist" data-source="history pidx hs_ufc archive"></div></section>
 
 <section class="card sec" id="rvrec"><h2>Our record</h2><p class="muted">Winner picks right, then side bets (totals, both teams to score, spreads). Pushes and coin tosses are not counted.</p><div class="scroll" data-draw="rvrec" data-source="history"></div></section>
@@ -306,14 +306,7 @@ const boxTabs = (g) => {
     if (sides.length < 2) pane.append(el('h3', nm || c, 'lvteam'));
     const flagged = ps.some((p) => p.starter != null), isSt = (p, i) => (flagged ? !!p.starter : i < 5);
     const list = ps.map((p, i) => [p, isSt(p, i), i]).sort((a, b) => (b[1] ? 1 : 0) - (a[1] ? 1 : 0) || a[2] - b[2]);
-    const t = el('table', null, 'lvbox'); const hr = el('tr'); ['Player', 'MIN', 'PTS', 'REB', 'AST', '3PM'].forEach((x, i) => hr.append(el('th', x, i ? 'n' : ''))); t.append(hr);
-    let last = null;
-    list.forEach(([p, st]) => {
-      if (st !== last) { last = st; const sr = el('tr', null, 'lvgrp'); const td = el('td', st ? 'Starters' : 'Bench'); td.colSpan = 6; sr.append(td); t.append(sr); }
-      const tr = el('tr'); const nmc = el('td'); nmc.append(el('b', p.name));
-      tr.append(nmc, el('td', String(p.min ?? '–'), 'n'), el('td', String(p.pts ?? 0), 'n'), el('td', String(p.reb ?? 0), 'n'), el('td', String(p.ast ?? 0), 'n'), el('td', String(p.tpm ?? 0), 'n'));
-      t.append(tr);
-    });
+    const t = window.SSG && SSG.boxTable ? SSG.boxTable(list.map(([p, st]) => ({ ...p, starter: st }))) : el('table');
     const sw = el('div', null, 'scroll'); sw.append(t); pane.append(sw); w.append(pane);
   });
   return w;
@@ -721,6 +714,7 @@ dash.draw('detail', (box) => {
 
   const tg = el('div', null, 'grid');
   teams.forEach((t) => tg.append(teamCard(t, g)));
+  if (window.SSG && SSG.teamTabs) SSG.teamTabs(tg, teams);
   out.push(tg);
   { const dc = window.SSG && SSG.defCourt && SSG.defCourt(current, nbaDay(g)); if (dc) out.push(dc); }
   { const gb = window.SSG && SSG.gameBets && SSG.gameBets('nba', current, nbaDay(g)); if (gb) out.push(gb); } // last tab: Best bets
@@ -857,7 +851,7 @@ dash.draw('detail', (box) => {
   const nshow = (k) => { NB_TAB[current] = k; Object.entries(npan).forEach(([q, p]) => { p.hidden = q !== k; }); nbar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
   NT.forEach(([k, l]) => { if (!npan[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', () => { nshow(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); nbar.append(b); });
   box.replaceChildren(nbar, ...NT.map(([k]) => npan[k]).filter(Boolean));
-  nshow(NB_TAB[current] && npan[NB_TAB[current]] ? NB_TAB[current] : npan.pick ? 'pick' : Object.keys(npan)[0]); // a game opened from a card starts on Game
+  nshow(NB_TAB[current] && npan[NB_TAB[current]] ? NB_TAB[current] : rvInTabs() && npan.res ? 'res' : npan.pick ? 'pick' : Object.keys(npan)[0]); // a game opened from a card starts on Game; from Review, on Result
 });
 if (current) setTimeout(() => dash.setLink(current), 0);
 
@@ -1052,7 +1046,7 @@ function nflMore(x) {
   const bar = el('div', null, 'nfltabs');
   const show = (k) => { NFL_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
   TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); show(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); bar.append(b); });
-  d.append(bar, ...TABS.map(([k]) => panels[k]).filter(Boolean)); show(NFL_TAB[x.id] && panels[NFL_TAB[x.id]] ? NFL_TAB[x.id] : panels.pick ? 'pick' : Object.keys(panels)[0]);
+  d.append(bar, ...TABS.map(([k]) => panels[k]).filter(Boolean)); show(NFL_TAB[x.id] && panels[NFL_TAB[x.id]] ? NFL_TAB[x.id] : panels.rv ? 'rv' : panels.pick ? 'pick' : Object.keys(panels)[0]);
   return d;
 }
 dash.draw('nfltabbox', (box) => {
@@ -1382,7 +1376,7 @@ dash.draw('fbdetail', (box) => {
   const nshow = (k) => { FB_TAB[x.id] = k; Object.entries(panels).forEach(([q, p]) => { p.hidden = q !== k; }); nbar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === k)); };
   TABS.forEach(([k, l]) => { if (!panels[k]) return; const b = el('button', l); b.type = 'button'; b.dataset.k = k; b.addEventListener('click', (e) => { e.stopPropagation(); nshow(k); try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (er) { window.scrollTo(0, 0); } }); nbar.append(b); });
   box.replaceChildren(hd, nbar, ...TABS.map(([k]) => panels[k]).filter(Boolean));
-  nshow(FB_TAB[x.id] && panels[FB_TAB[x.id]] ? FB_TAB[x.id] : panels.pick ? 'pick' : Object.keys(panels)[0]);
+  nshow(FB_TAB[x.id] && panels[FB_TAB[x.id]] ? FB_TAB[x.id] : panels.rv ? 'rv' : panels.pick ? 'pick' : Object.keys(panels)[0]);
 });
 const DRAW_nflgrid = (box) => {
   { const n = gamesFor('nfl', selDay).length, hh = document.querySelector('#nflpicks h2'); if (hh) hh.textContent = selDay + ' · ' + n + (n === 1 ? ' game' : ' games'); } // heading = the day, like NBA
@@ -1536,7 +1530,7 @@ function ufcCard(r) {
   const b = el('div', null, 'pick tile gcard ufcc');
   const side = (nm, rec, col, win) => { const d = el('div', null, 'tm' + (win ? ' win' : '')); const fid = ufcIdOf(nm), src = photo('ufc', fid); let bd; if (src) { bd = el('span', null, 'bd photo'); bd.style.borderColor = col; const im = document.createElement('img'); im.src = src; im.alt = ''; bd.append(im); } else { bd = el('span', ufcInit(nm), 'bd'); bd.style.background = col; } d.append(bd, el('b', nm), el('span', rec || 'record n/a', 'rec'), ufcDots(nm)); if (fid) { d.classList.add('go'); d.title = 'Open ' + nm + "'s profile"; d.addEventListener('click', (e) => { e.stopPropagation(); openFighter(fid); }); } return d; };
   const mid = el('div', null, 'mid');
-  mid.append(el('span', r.date, 'dt'), el('strong', r.card || 'TBC'), el('span', [/\d/.test(r.kick || '') ? r.kick : '', r.weight, r.rounds ? r.rounds + ' rds' : ''].filter(Boolean).join(' · '), 'pre'));
+  mid.append(el('span', r.date, 'dt'), el('strong', r.card || 'TBC'), el('span', [r.weight, r.rounds ? r.rounds + '\u00a0rds' : ''].filter(Boolean).join(' · '), 'pre'));
   mid.append(el('span', ufcPrices(r), 'fsc'));
   mid.append(el('span', r.pick ? r.pick + ' · ' + r.pick_pct + '%' : 'no pick yet', 'pk'));
   const mu = el('div', null, 'mu'); const ovr = (nm, v) => ((ufcProfile(ufcIdOf(nm)) || {}).rec) || v; // overall pro record on the card
